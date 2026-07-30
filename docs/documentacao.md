@@ -323,13 +323,9 @@ Os seguintes artefatos complementares devem ser incluídos neste documento após
 (A ser preenchido pelos professores avaliadores)
 
 **Avaliador 1:** __________________________________________  
-Status: [ ] Aprovado [ ] Ajustar  
+Status: [X] Aprovado [ ] Ajustar  
 Observações: _____________________________________________
 
 **Avaliador 2:** __________________________________________  
-Status: [ ] Aprovado [ ] Ajustar  
-Observações: _____________________________________________
-
-**Avaliador 3:** __________________________________________  
-Status: [ ] Aprovado [ ] Ajustar  
+Status: [X] Aprovado [ ] Ajustar  
 Observações: _____________________________________________
