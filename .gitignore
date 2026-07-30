@@ -1,0 +1,25 @@
+# === DEPENDÊNCIAS ===
+node_modules/
+.pnpm-debug.log*
+.modules.yaml
+
+# === VARIÁVEIS DE AMBIENTE E SEGURANÇA ===
+.env
+.env.*
+!.env.example
+
+# === FRONT-END (Vite / React) ===
+dist/
+build/
+
+# === BACK-END (Python) ===
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# === SISTEMA OPERACIONAL ===
+.DS_Store
+Thumbs.db

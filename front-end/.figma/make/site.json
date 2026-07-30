@@ -1,0 +1,10 @@
+{
+  "description": "Automates debt collection by importing data, configuring communication rules, and sending multichannel reminders with real-time monitoring for financial teams.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
