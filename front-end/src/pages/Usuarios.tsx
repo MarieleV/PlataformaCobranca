@@ -1,6 +1,15 @@
 import { useState } from "react"
 
-const usuarios = [
+interface Usuario {
+  id: string
+  nome: string
+  email: string
+  perfil: "admin" | "gestor" | "operador"
+  status: "ativo" | "inativo"
+  ultimo_acesso: string
+}
+
+const usuarios: Usuario[] = [
   { id: "U-001", nome: "Mariele Vieira da Silva", email: "mariele.vieira@consulth.com.br", perfil: "admin", status: "ativo", ultimo_acesso: "30/07 08:01" },
   { id: "U-002", nome: "Fellipe Junkes", email: "fellipe.junkes@consulth.com.br", perfil: "gestor", status: "ativo", ultimo_acesso: "29/07 17:42" },
   { id: "U-003", nome: "Heloizi Vargas", email: "heloizi.vargas@coop-sc.com.br", perfil: "operador", status: "ativo", ultimo_acesso: "30/07 07:55" },
@@ -8,10 +17,22 @@ const usuarios = [
   { id: "U-005", nome: "Aline Moraes", email: "aline.moraes@consulth.com.br", perfil: "gestor", status: "inativo", ultimo_acesso: "15/07 09:30" },
 ]
 
-const perfilColor: Record<string, string> = {
-  admin: "#EF4444",
-  gestor: "#A78BFA",
-  operador: "#3B82F6",
+const perfilStyles: Record<string, { badge: string, avatarBg: string, avatarText: string }> = {
+  admin: {
+    badge: "bg-rose-50 text-rose-700 border-rose-200",
+    avatarBg: "bg-rose-50",
+    avatarText: "text-rose-600",
+  },
+  gestor: {
+    badge: "bg-violet-50 text-violet-700 border-violet-200",
+    avatarBg: "bg-violet-50",
+    avatarText: "text-violet-600",
+  },
+  operador: {
+    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    avatarBg: "bg-blue-50",
+    avatarText: "text-blue-600",
+  },
 }
 
 const perfilLabel: Record<string, string> = {
@@ -24,210 +45,175 @@ export default function Usuarios() {
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div className="p-7 overflow-y-auto h-full">
-      <div className="mb-7 flex items-start justify-between">
+    <div className="p-6 sm:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
+      
+      {/* --- HEADER --- */}
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--foreground)" }}>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Gestão de Usuários
           </h1>
-          <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4 }}>
+          <p className="text-sm text-slate-500 mt-1">
             Apenas administradores podem gerenciar usuários e permissões (RN06).
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2.5 rounded"
-          style={{ background: "var(--primary)", color: "#fff", fontSize: 13, fontFamily: "var(--font-display)", fontWeight: 600 }}
+          className="self-start sm:self-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-600/20 transition-all flex items-center gap-2"
         >
-          + Convidar Usuário
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+          Convidar Usuário
         </button>
       </div>
 
-      {/* Perfil legend */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* --- PERFIL LEGEND CARDS --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { perfil: "admin", desc: "Acesso total: usuários, régua, importação, monitoramento" },
           { perfil: "gestor", desc: "Dashboard, régua, devedores, monitoramento" },
           { perfil: "operador", desc: "Importação de lotes, lista de devedores" },
-        ].map((p) => (
-          <div
-            key={p.perfil}
-            className="p-4 rounded"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                style={{
-                  fontSize: 11,
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 700,
-                  color: perfilColor[p.perfil],
-                  background: `${perfilColor[p.perfil]}15`,
-                  padding: "2px 7px",
-                  borderRadius: 3,
-                }}
-              >
-                {p.perfil.toUpperCase()}
-              </span>
+        ].map((p) => {
+          const style = perfilStyles[p.perfil]
+          return (
+            <div
+              key={p.perfil}
+              className="p-5 rounded-2xl bg-white border border-slate-200/60 shadow-sm"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wide uppercase border ${style.badge}`}>
+                  {p.perfil}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">{p.desc}</p>
             </div>
-            <p style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5 }}>{p.desc}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {/* Table */}
-      <div className="rounded overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)" }}>
-              {["ID", "Nome", "E-mail", "Perfil", "Status", "Último acesso", "Ações"].map((h) => (
-                <th
-                  key={h}
-                  className="px-5 py-3 text-left"
-                  style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 500 }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((u, i) => (
-              <tr
-                key={u.id}
-                style={{ borderBottom: i < usuarios.length - 1 ? "1px solid var(--border)" : "none" }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)" }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent" }}
-              >
-                <td className="px-5 py-3.5">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted-foreground)" }}>{u.id}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: `${perfilColor[u.perfil]}20`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: perfilColor[u.perfil],
-                        flexShrink: 0,
-                      }}
-                    >
-                      {u.nome.split(" ").slice(0, 2).map((n) => n[0]).join("")}
-                    </div>
-                    <span style={{ fontSize: 13, color: "var(--foreground)", fontWeight: 500 }}>{u.nome}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted-foreground)" }}>{u.email}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: 700,
-                      color: perfilColor[u.perfil],
-                      background: `${perfilColor[u.perfil]}15`,
-                      padding: "2px 7px",
-                      borderRadius: 3,
-                    }}
+      {/* --- TABLE CONTAINER --- */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-50/50">
+              <tr>
+                {["ID", "Nome", "E-mail", "Perfil", "Status", "Último acesso", "Ações"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider"
                   >
-                    {perfilLabel[u.perfil]}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-2">
-                    <span
-                      style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        background: u.status === "ativo" ? "var(--accent)" : "var(--muted-foreground)",
-                        display: "inline-block",
-                      }}
-                    />
-                    <span style={{ fontSize: 12, color: u.status === "ativo" ? "var(--accent)" : "var(--muted-foreground)", textTransform: "capitalize" }}>
-                      {u.status}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted-foreground)" }}>{u.ultimo_acesso}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex gap-2">
-                    <button
-                      className="px-3 py-1 rounded text-xs transition-all"
-                      style={{ background: "var(--secondary)", color: "var(--foreground)", fontSize: 11 }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)" }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--secondary)" }}
-                    >
-                      Editar
-                    </button>
-                    {u.status === "ativo" && (
-                      <button
-                        className="px-3 py-1 rounded text-xs transition-all"
-                        style={{ background: "rgba(239,68,68,0.08)", color: "var(--danger)", fontSize: 11, border: "1px solid rgba(239,68,68,0.15)" }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.15)" }}
-                        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)" }}
-                      >
-                        Desativar
-                      </button>
-                    )}
-                  </div>
-                </td>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {usuarios.map((u) => {
+                const style = perfilStyles[u.perfil]
+                return (
+                  <tr
+                    key={u.id}
+                    className="hover:bg-slate-50/80 transition-colors"
+                  >
+                    <td className="px-6 py-4 font-mono text-xs font-medium text-slate-400">
+                      {u.id}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${style.avatarBg} ${style.avatarText} flex-shrink-0`}
+                        >
+                          {u.nome.split(" ").slice(0, 2).map((n) => n[0]).join("")}
+                        </div>
+                        <span className="text-slate-900 font-semibold text-[13px]">{u.nome}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                      {u.email}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold font-mono border ${style.badge}`}>
+                        {perfilLabel[u.perfil]}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            u.status === "ativo" ? "bg-emerald-500" : "bg-slate-300"
+                          }`}
+                        />
+                        <span className={`text-xs font-medium capitalize ${
+                          u.status === "ativo" ? "text-emerald-700" : "text-slate-500"
+                        }`}>
+                          {u.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                      {u.ultimo_acesso}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 transition-colors"
+                        >
+                          Editar
+                        </button>
+                        {u.status === "ativo" && (
+                          <button
+                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 hover:bg-rose-100 transition-colors"
+                          >
+                            Desativar
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Invite modal */}
+      {/* --- INVITE MODAL --- */}
       {showModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50"
-          style={{ background: "rgba(0,0,0,0.7)" }}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/40 backdrop-blur-sm p-4"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="rounded p-7"
-            style={{ background: "var(--card)", border: "1px solid var(--border-strong)", width: 440 }}
+            className="rounded-2xl bg-white p-6 sm:p-7 border border-slate-200/60 shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--foreground)", marginBottom: 6 }}>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1">
               Convidar novo usuário
             </h3>
-            <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginBottom: 20 }}>
+            <p className="text-xs text-slate-500 mb-6">
               Um e-mail de convite com link de acesso será enviado.
             </p>
+            
             <div className="space-y-4">
-              {[
-                { label: "Nome completo", placeholder: "ex: João da Silva" },
-                { label: "E-mail corporativo", placeholder: "joao@empresa.com.br" },
-              ].map((f) => (
-                <div key={f.label}>
-                  <label style={{ fontSize: 12, color: "var(--muted-foreground)", display: "block", marginBottom: 6 }}>{f.label}</label>
-                  <input
-                    placeholder={f.placeholder}
-                    className="w-full px-3 py-2.5 rounded outline-none"
-                    style={{ background: "var(--secondary)", border: "1px solid var(--border-strong)", color: "var(--foreground)", fontSize: 13 }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)" }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)" }}
-                  />
-                </div>
-              ))}
               <div>
-                <label style={{ fontSize: 12, color: "var(--muted-foreground)", display: "block", marginBottom: 6 }}>Perfil de acesso</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nome completo</label>
+                <input
+                  placeholder="ex: João da Silva"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">E-mail corporativo</label>
+                <input
+                  placeholder="joao@empresa.com.br"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Perfil de acesso</label>
                 <select
-                  className="w-full px-3 py-2.5 rounded outline-none"
-                  style={{ background: "var(--secondary)", border: "1px solid var(--border-strong)", color: "var(--foreground)", fontSize: 13 }}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
                 >
                   <option value="operador">Operador</option>
                   <option value="gestor">Gestor</option>
@@ -235,17 +221,16 @@ export default function Usuarios() {
                 </select>
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+
+            <div className="flex gap-3 mt-8">
               <button
-                className="flex-1 py-2.5 rounded"
-                style={{ background: "var(--primary)", color: "#fff", fontSize: 13, fontFamily: "var(--font-display)", fontWeight: 600 }}
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-600/20 transition-all"
                 onClick={() => setShowModal(false)}
               >
                 Enviar convite
               </button>
               <button
-                className="px-5 py-2.5 rounded"
-                style={{ background: "var(--secondary)", color: "var(--foreground)", fontSize: 13 }}
+                className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-semibold transition-all shadow-sm"
                 onClick={() => setShowModal(false)}
               >
                 Cancelar
