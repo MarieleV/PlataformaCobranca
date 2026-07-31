@@ -55,122 +55,92 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
   }
 
   return (
-    <div className="p-7 overflow-y-auto h-full">
-      <div className="mb-7">
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--foreground)" }}>
+    <div className="p-6 sm:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
+      
+      {/* --- HEADER --- */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Importar Lote de Devedores
         </h1>
-        <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4 }}>
+        <p className="text-sm text-slate-500 mt-1">
           Faça upload de arquivos CSV ou Excel (.xlsx). O processamento é assíncrono com feedback em tempo real.
         </p>
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 320px" }}>
-        {/* Upload area */}
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* --- UPLOAD AREA (Spans 7 columns) --- */}
+        <div className="lg:col-span-7 space-y-4">
           {phase === "idle" && (
             <div
-              className="rounded flex flex-col items-center justify-center text-center transition-all cursor-pointer"
-              style={{
-                background: dragging ? "rgba(59,130,246,0.08)" : "var(--card)",
-                border: `2px dashed ${dragging ? "var(--primary)" : "var(--border-strong)"}`,
-                minHeight: 260,
-                padding: "40px 24px",
-              }}
+              className={`rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer p-10 bg-white border-2 border-dashed shadow-sm min-h-[320px] ${
+                dragging
+                  ? "border-blue-600 bg-blue-50/40"
+                  : "border-slate-300 hover:border-slate-400"
+              }`}
               onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
             >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 12,
-                  background: "rgba(59,130,246,0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 16,
-                  fontSize: 24,
-                }}
-              >
-                ↑
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 shadow-sm">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
               </div>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--foreground)", marginBottom: 8 }}>
+              <p className="font-bold text-slate-900 text-base mb-1">
                 Arraste o arquivo aqui
               </p>
-              <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginBottom: 20 }}>
+              <p className="text-sm text-slate-500 mb-6">
                 ou clique para selecionar do computador
               </p>
-              <p style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)" }}>
+              <span className="font-mono text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-md">
                 CSV · XLSX · máx 50.000 registros · 20MB
-              </p>
+              </span>
               <input
                 ref={inputRef}
                 type="file"
                 accept=".csv,.xlsx"
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={handleFileChange}
               />
             </div>
           )}
 
           {(phase === "uploading" || phase === "processing") && (
-            <div
-              className="rounded p-8 flex flex-col items-center justify-center"
-              style={{ background: "var(--card)", border: "1px solid var(--border)", minHeight: 260 }}
-            >
-              <div
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                  color: "var(--muted-foreground)",
-                  marginBottom: 6,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: "var(--primary)",
-                    display: "inline-block",
-                    animation: "pulse 1s infinite",
-                  }}
-                />
+            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm min-h-[320px]">
+              <div className="flex items-center gap-2 font-mono text-xs font-semibold text-slate-500 mb-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                </span>
                 {phase === "uploading" ? "Enviando arquivo..." : "Processando registros..."}
               </div>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--foreground)", marginBottom: 20 }}>
+              
+              <p className="font-bold text-slate-900 text-base mb-6">
                 {fileName}
               </p>
-              <div style={{ width: "100%", maxWidth: 360 }}>
-                <div className="flex justify-between mb-2">
-                  <span style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)" }}>
+
+              <div className="w-full max-w-sm space-y-2">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="font-semibold text-slate-500">
                     {phase === "uploading" ? "Upload" : "Validação Pandas"}
                   </span>
-                  <span style={{ fontSize: 11, color: "var(--primary)", fontFamily: "var(--font-mono)" }}>
+                  <span className="font-bold text-blue-600">
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <div style={{ height: 4, background: "var(--secondary)", borderRadius: 2, overflow: "hidden" }}>
+                
+                <div className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
                   <div
-                    style={{
-                      height: "100%",
-                      width: `${progress}%`,
-                      background: "var(--primary)",
-                      borderRadius: 2,
-                      transition: "width 0.1s ease",
-                      boxShadow: "0 0 8px var(--primary)",
-                    }}
+                    className="h-full bg-blue-600 rounded-full transition-all duration-150 shadow-sm"
+                    style={{ width: `${progress}%` }}
                   />
                 </div>
               </div>
+
               {phase === "processing" && (
-                <p style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)", marginTop: 16 }}>
+                <p className="font-mono text-xs text-slate-400 mt-6 animate-pulse">
                   Aplicando regras RN01–RN04 linha a linha…
                 </p>
               )}
@@ -178,44 +148,30 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           )}
 
           {phase === "done" && (
-            <div
-              className="rounded p-8 flex flex-col items-center justify-center text-center"
-              style={{ background: "var(--card)", border: "1px solid rgba(16,185,129,0.2)", minHeight: 260 }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  background: "rgba(16,185,129,0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  color: "var(--accent)",
-                  marginBottom: 16,
-                }}
-              >
-                ✓
+            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center text-center border border-emerald-200 shadow-sm min-h-[320px]">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--foreground)", marginBottom: 4 }}>
+              
+              <p className="font-bold text-slate-900 text-xl mb-1">
                 Arquivo processado!
               </p>
-              <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginBottom: 24 }}>
-                {fileName} · 3.248 registros analisados
+              <p className="text-sm text-slate-500 mb-8 font-medium">
+                {fileName} · <span className="font-mono text-slate-700 font-bold">3.248 registros analisados</span>
               </p>
-              <div className="flex gap-3">
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
                 <button
                   onClick={onValidated}
-                  className="px-5 py-2.5 rounded font-medium"
-                  style={{ background: "var(--accent)", color: "#fff", fontSize: 13, fontFamily: "var(--font-display)", fontWeight: 600 }}
+                  className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-sm shadow-emerald-600/20 transition-all"
                 >
                   Ver Relatório de Validação
                 </button>
                 <button
                   onClick={reset}
-                  className="px-5 py-2.5 rounded"
-                  style={{ background: "var(--secondary)", color: "var(--foreground)", fontSize: 13 }}
+                  className="px-5 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm"
                 >
                   Novo upload
                 </button>
@@ -224,16 +180,15 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           )}
         </div>
 
-        {/* Rules + template */}
-        <div className="space-y-4">
-          <div
-            className="rounded p-5"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-          >
-            <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--foreground)", marginBottom: 14 }}>
+        {/* --- RULES + TEMPLATE SIDEBAR (Spans 5 columns) --- */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Colunas Obrigatórias */}
+          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm">
+            <h2 className="font-bold text-slate-900 text-base mb-4">
               Colunas obrigatórias
-            </p>
-            <div className="space-y-2.5">
+            </h2>
+            <div className="space-y-3">
               {[
                 { col: "cpf_cnpj", desc: "CPF (11 dígitos) ou CNPJ (14 dígitos)" },
                 { col: "nome_devedor", desc: "Nome completo ou razão social" },
@@ -243,34 +198,21 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
                 { col: "data_vencimento", desc: "Formato DD/MM/AAAA" },
               ].map((c) => (
                 <div key={c.col} className="flex items-start gap-3">
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 11,
-                      color: "var(--primary)",
-                      background: "rgba(59,130,246,0.1)",
-                      padding: "1px 6px",
-                      borderRadius: 3,
-                      flexShrink: 0,
-                      marginTop: 1,
-                    }}
-                  >
+                  <span className="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 flex-shrink-0 mt-0.5">
                     {c.col}
                   </span>
-                  <p style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5 }}>{c.desc}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{c.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div
-            className="rounded p-5"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
-          >
-            <p style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--foreground)", marginBottom: 8 }}>
+          {/* Regras de Validação */}
+          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm">
+            <h2 className="font-bold text-slate-900 text-base mb-4">
               Regras de validação
-            </p>
-            <div className="space-y-2">
+            </h2>
+            <div className="space-y-2.5">
               {[
                 "CPF/CNPJ inválido → linha rejeitada (RN04)",
                 "Valor negativo → linha rejeitada",
@@ -278,22 +220,24 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
                 "Linha duplicada → mantém mais recente",
                 "Máximo 50.000 registros por arquivo",
               ].map((r, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span style={{ color: "var(--warning)", fontSize: 12, flexShrink: 0 }}>·</span>
-                  <p style={{ fontSize: 12, color: "var(--muted-foreground)", lineHeight: 1.5 }}>{r}</p>
+                <div key={i} className="flex items-start gap-2.5">
+                  <span className="text-amber-500 font-bold text-sm flex-shrink-0">·</span>
+                  <p className="text-xs text-slate-600 leading-relaxed">{r}</p>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Baixar Planilha Modelo */}
           <button
-            className="w-full py-3 rounded flex items-center justify-center gap-2 transition-all"
-            style={{ background: "var(--secondary)", color: "var(--foreground)", fontSize: 13, border: "1px solid var(--border-strong)" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)" }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--secondary)" }}
+            className="w-full py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold font-mono transition-all shadow-sm flex items-center justify-center gap-2"
           >
-            <span>↓</span> Baixar Planilha Modelo (.xlsx)
+            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar Planilha Modelo (.xlsx)
           </button>
+
         </div>
       </div>
     </div>

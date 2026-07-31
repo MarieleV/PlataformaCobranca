@@ -34,11 +34,11 @@ const statusLabel: Record<string, string> = {
   sem_contato: "Sem contato",
 }
 
-const statusColor: Record<string, string> = {
-  em_cobranca: "#3B82F6",
-  quitado: "#10B981",
-  negociando: "#F59E0B",
-  sem_contato: "#EF4444",
+const statusStyles: Record<string, string> = {
+  em_cobranca: "bg-blue-50 text-blue-700 border-blue-200",
+  quitado: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  negociando: "bg-amber-50 text-amber-700 border-amber-200",
+  sem_contato: "bg-rose-50 text-rose-700 border-rose-200",
 }
 
 export default function Devedores() {
@@ -57,54 +57,40 @@ export default function Devedores() {
   })
 
   return (
-    <div className="p-7 overflow-y-auto h-full">
-      <div className="mb-6 flex items-start justify-between">
+    <div className="p-6 sm:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
+      
+      {/* --- HEADER --- */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--foreground)" }}>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Devedores
           </h1>
-          <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4 }}>
-            {devedores.length} devedores na carteira ativa · filtro aplicado: {filtered.length}
+          <p className="text-sm text-slate-500 mt-1">
+            <span className="font-semibold text-slate-700">{devedores.length}</span> devedores na carteira ativa · filtro aplicado: <span className="font-semibold text-slate-700">{filtered.length}</span>
           </p>
         </div>
-        <button
-          className="px-4 py-2.5 rounded"
-          style={{ background: "var(--card)", border: "1px solid var(--border-strong)", fontSize: 13, color: "var(--foreground)" }}
-        >
-          ↓ Exportar CSV
+        
+        <button className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold font-mono transition-all shadow-sm">
+          <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Exportar CSV
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-5 flex-wrap">
+      {/* --- FILTERS --- */}
+      <div className="flex flex-wrap gap-3 mb-6">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nome ou CPF/CNPJ…"
-          className="px-3 py-2 rounded outline-none transition-all"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--foreground)",
-            fontSize: 13,
-            width: 280,
-            fontFamily: "var(--font-sans)",
-          }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = "var(--primary)" }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border-strong)" }}
+          className="w-full sm:w-80 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-400"
         />
 
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 rounded outline-none"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--foreground)",
-            fontSize: 13,
-            fontFamily: "var(--font-sans)",
-          }}
+          className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
         >
           <option value="todos">Todos os status</option>
           <option value="em_cobranca">Em cobrança</option>
@@ -116,14 +102,7 @@ export default function Devedores() {
         <select
           value={canalFilter}
           onChange={(e) => setCanalFilter(e.target.value)}
-          className="px-3 py-2 rounded outline-none"
-          style={{
-            background: "var(--card)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--foreground)",
-            fontSize: 13,
-            fontFamily: "var(--font-sans)",
-          }}
+          className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
         >
           <option value="todos">Todos os canais</option>
           <option value="e-mail">E-mail</option>
@@ -132,95 +111,71 @@ export default function Devedores() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="rounded overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border)" }}>
-              {["ID", "Devedor", "Valor", "Dias em atraso", "Canal", "Status", "Último contato"].map((h) => (
-                <th
-                  key={h}
-                  className="px-5 py-3 text-left"
-                  style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.04em", fontWeight: 500 }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((d, i) => (
-              <tr
-                key={d.id}
-                style={{
-                  borderBottom: i < filtered.length - 1 ? "1px solid var(--border)" : "none",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)" }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent" }}
-              >
-                <td className="px-5 py-3.5">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted-foreground)" }}>{d.id}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <p style={{ fontSize: 13, color: "var(--foreground)", fontWeight: 500 }}>{d.nome}</p>
-                  <p style={{ fontSize: 11, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)" }}>{d.cpf}</p>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: d.valor > 10000 ? "#F59E0B" : "var(--foreground)",
-                    }}
+      {/* --- TABLE CONTAINER --- */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
+            <thead className="bg-slate-50/50">
+              <tr>
+                {["ID", "Devedor", "Valor", "Dias em atraso", "Canal", "Status", "Último contato"].map((h) => (
+                  <th
+                    key={h}
+                    className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider"
                   >
-                    {d.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 13,
-                      color: d.dias >= 60 ? "var(--danger)" : d.dias >= 30 ? "var(--warning)" : "var(--foreground)",
-                    }}
-                  >
-                    D+{d.dias}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>{d.canal}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span
-                    className="px-2 py-1 rounded-sm"
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "var(--font-mono)",
-                      color: statusColor[d.status],
-                      background: `${statusColor[d.status]}15`,
-                      border: `1px solid ${statusColor[d.status]}30`,
-                    }}
-                  >
-                    {statusLabel[d.status]}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted-foreground)" }}>
-                    {d.ultimo_contato}
-                  </span>
-                </td>
+                    {h}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((d) => (
+                <tr
+                  key={d.id}
+                  className="hover:bg-slate-50/80 transition-colors cursor-pointer"
+                >
+                  <td className="px-6 py-4 font-mono text-xs font-medium text-slate-400">
+                    {d.id}
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="font-semibold text-slate-900 text-[13px]">{d.nome}</p>
+                    <p className="font-mono text-xs text-slate-400 mt-0.5">{d.cpf}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`font-mono text-xs font-bold ${
+                      d.valor > 10000 ? "text-amber-600" : "text-slate-900"
+                    }`}>
+                      {d.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`font-mono text-xs font-bold ${
+                      d.dias >= 60 ? "text-rose-600" : d.dias >= 30 ? "text-amber-600" : "text-slate-700"
+                    }`}>
+                      D+{d.dias}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-medium text-slate-600">{d.canal}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border ${statusStyles[d.status]}`}>
+                      {statusLabel[d.status]}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-mono text-xs text-slate-400">
+                    {d.ultimo_contato}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-        {filtered.length === 0 && (
-          <div className="py-16 text-center">
-            <p style={{ fontSize: 14, color: "var(--muted-foreground)" }}>Nenhum devedor encontrado com os filtros aplicados.</p>
-          </div>
-        )}
+          {filtered.length === 0 && (
+            <div className="py-16 text-center">
+              <p className="text-sm text-slate-500 font-medium">Nenhum devedor encontrado com os filtros aplicados.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
