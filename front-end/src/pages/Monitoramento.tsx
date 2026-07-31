@@ -39,15 +39,33 @@ const newLogPool: Omit<LogEntry, "id">[] = [
   { ts: "", level: "DEBUG", source: "api", msg: "POST /api/v1/auth/refresh → 200 OK [3ms]" },
   { ts: "", level: "OK", source: "sendgrid", msg: "Webhook: delivery confirmado para D-3846 (Marcos Tinoco ME)" },
   { ts: "", level: "ERROR", source: "twilio", msg: "Falha ao enviar SMS para D-3844: número inválido +5500000000. Reagendando." },
-  { ts: "", level: "INFO", source: "worker-02", msg: "Retentatva agendada: D-3844 em 30 minutos (1/3)" },
+  { ts: "", level: "INFO", source: "worker-02", msg: "Retentativa agendada: D-3844 em 30 minutos (1/3)" },
 ]
 
-const levelColor: Record<string, string> = {
-  INFO: "#3B82F6",
-  WARN: "#F59E0B",
-  ERROR: "#EF4444",
-  DEBUG: "#64748B",
-  OK: "#10B981",
+const activeFilterStyles: Record<string, string> = {
+  todos: "bg-slate-700 text-white border-slate-700 shadow-sm",
+  INFO: "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-600/20",
+  OK: "bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20",
+  WARN: "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/20",
+  ERROR: "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-600/20",
+  DEBUG: "bg-slate-500 text-white border-slate-500 shadow-sm",
+}
+
+// Cores pastéis e elegantes para o fundo slate-800
+const termTagColor: Record<string, string> = {
+  INFO: "text-blue-400",
+  WARN: "text-amber-400",
+  ERROR: "text-rose-400",
+  DEBUG: "text-slate-400",
+  OK: "text-emerald-400",
+}
+
+const termMsgColor: Record<string, string> = {
+  INFO: "text-slate-300",
+  WARN: "text-amber-100",
+  ERROR: "text-rose-100",
+  DEBUG: "text-slate-400",
+  OK: "text-emerald-100",
 }
 
 function now() {
@@ -82,146 +100,148 @@ export default function Monitoramento() {
   const displayed = filter === "todos" ? logs : logs.filter((l) => l.level === filter)
 
   return (
-    <div className="p-7 flex flex-col h-full overflow-hidden">
-      <div className="mb-5 flex items-start justify-between flex-shrink-0">
+    <div className="p-6 sm:p-8 flex flex-col h-full overflow-hidden bg-slate-50 font-sans">
+      
+      {/* --- HEADER & CONTROLS --- */}
+      <div className="mb-6 flex flex-col xl:flex-row xl:items-start justify-between flex-shrink-0 gap-4">
         <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22, color: "var(--foreground)" }}>
-            Monitoramento
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Monitoramento de Sistema
           </h1>
-          <p style={{ fontSize: 13, color: "var(--muted-foreground)", marginTop: 4 }}>
-            Log de sistema em tempo real — workers, filas, APIs externas
+          <p className="text-sm text-slate-500 mt-1">
+            Log em tempo real — workers, filas e chamadas de APIs externas.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Level filters */}
-          <div className="flex gap-1">
+        
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1.5 p-1 bg-white border border-slate-200 rounded-lg shadow-sm">
             {["todos", "INFO", "OK", "WARN", "ERROR", "DEBUG"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className="px-2.5 py-1 rounded text-xs transition-all"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  background: filter === f ? (levelColor[f] || "var(--primary)") : "var(--card)",
-                  color: filter === f ? "#fff" : levelColor[f] || "var(--muted-foreground)",
-                  border: `1px solid ${filter === f ? (levelColor[f] || "var(--primary)") : "var(--border-strong)"}`,
-                  opacity: filter === f ? 1 : 0.7,
-                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold font-mono transition-all border ${
+                  filter === f
+                    ? activeFilterStyles[f]
+                    : "bg-transparent text-slate-500 border-transparent hover:bg-slate-100"
+                }`}
               >
                 {f}
               </button>
             ))}
           </div>
 
+          <div className="h-8 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
           <button
             onClick={() => setRunning((r) => !r)}
-            className="flex items-center gap-2 px-3 py-2 rounded transition-all"
-            style={{
-              background: running ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)",
-              border: `1px solid ${running ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
-              color: running ? "var(--danger)" : "var(--accent)",
-              fontSize: 12,
-              fontFamily: "var(--font-mono)",
-            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold font-mono transition-all border shadow-sm ${
+              running 
+                ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100" 
+                : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
+            }`}
           >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: running ? "var(--danger)" : "var(--accent)",
-                display: "inline-block",
-              }}
-            />
-            {running ? "Pausar" : "Retomar"}
+            <span className="relative flex h-2 w-2">
+              {running && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${running ? "bg-rose-500" : "bg-emerald-500"}`}></span>
+            </span>
+            {running ? "Pausar Live" : "Retomar Live"}
           </button>
 
           <button
             onClick={() => setLogs([])}
-            className="px-3 py-2 rounded"
-            style={{ background: "var(--card)", border: "1px solid var(--border-strong)", fontSize: 12, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)" }}
+            className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-semibold font-mono hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
           >
             Limpar
           </button>
         </div>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-3 mb-4 flex-shrink-0">
+      {/* --- STATS BAR --- */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 flex-shrink-0">
         {[
-          { label: "Total", value: logs.length, color: "var(--foreground)" },
-          { label: "OK", value: logs.filter((l) => l.level === "OK").length, color: "var(--accent)" },
-          { label: "WARN", value: logs.filter((l) => l.level === "WARN").length, color: "var(--warning)" },
-          { label: "ERROR", value: logs.filter((l) => l.level === "ERROR").length, color: "var(--danger)" },
+          { label: "Total Logs", value: logs.length, color: "text-slate-900", icon: "bg-slate-100 text-slate-600" },
+          { label: "Sucesso (OK)", value: logs.filter((l) => l.level === "OK").length, color: "text-emerald-600", icon: "bg-emerald-50 text-emerald-600" },
+          { label: "Avisos (WARN)", value: logs.filter((l) => l.level === "WARN").length, color: "text-amber-500", icon: "bg-amber-50 text-amber-500" },
+          { label: "Erros (ERROR)", value: logs.filter((l) => l.level === "ERROR").length, color: "text-rose-600", icon: "bg-rose-50 text-rose-600" },
         ].map((s) => (
           <div
             key={s.label}
-            className="px-4 py-3 rounded flex items-center justify-between"
-            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+            className="px-5 py-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-between"
           >
-            <span style={{ fontSize: 12, color: "var(--muted-foreground)", fontFamily: "var(--font-mono)" }}>{s.label}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 18, color: s.color }}>{s.value}</span>
+            <div>
+              <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{s.label}</span>
+              <span className={`font-mono font-bold text-2xl ${s.color}`}>{s.value}</span>
+            </div>
+            <div className={`w-2 h-8 rounded-full ${s.icon.split(' ')[0]}`}></div>
           </div>
         ))}
       </div>
 
-      {/* Terminal */}
-      <div
-        ref={termRef}
-        className="rounded flex-1 overflow-y-auto p-4"
-        style={{
-          background: "#060A0F",
-          border: "1px solid var(--border-strong)",
-          fontFamily: "var(--font-mono)",
-          fontSize: 12,
-          lineHeight: 1.8,
-          minHeight: 0,
-        }}
-      >
-        <div style={{ marginBottom: 8, color: "#3B82F6", fontSize: 11 }}>
-          # Plataforma de Cobrança Automatizada — System Log · {running ? "● LIVE" : "⏸ PAUSED"}
+      {/* --- PROFESSIONAL LOG VIEWER (Dark Mode Suave) --- */}
+      <div className="flex-1 rounded-2xl bg-slate-800 border border-slate-700/60 shadow-sm flex flex-col overflow-hidden">
+        
+        {/* Barra de Título (Fica 100% isolada e parada no topo) */}
+        <div className="px-5 py-3.5 bg-slate-900/40 border-b border-slate-700/60 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider font-sans">
+              Console de Execução
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {running ? (
+              <span className="text-emerald-400 text-xs font-medium flex items-center gap-1.5 font-sans bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Conectado
+              </span>
+            ) : (
+              <span className="text-amber-400 text-xs font-medium flex items-center gap-1.5 font-sans bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                Pausado
+              </span>
+            )}
+          </div>
         </div>
-        {displayed.map((log) => (
-          <div
-            key={log.id}
-            className="flex gap-3"
-            style={{ paddingBottom: 1 }}
-          >
-            <span style={{ color: "#475569", flexShrink: 0, width: 96 }}>{log.ts}</span>
-            <span
-              style={{
-                color: levelColor[log.level],
-                flexShrink: 0,
-                width: 44,
-                fontWeight: 700,
-              }}
-            >
-              {log.level}
-            </span>
-            <span style={{ color: "#64748B", flexShrink: 0, width: 90 }}>[{log.source}]</span>
-            <span
-              style={{
-                color:
-                  log.level === "ERROR"
-                    ? "#FCA5A5"
-                    : log.level === "WARN"
-                    ? "#FCD34D"
-                    : log.level === "OK"
-                    ? "#6EE7B7"
-                    : "#94A3B8",
-                flex: 1,
-              }}
-            >
-              {log.msg}
-            </span>
+
+        {/* Área Rolável de Logs */}
+        <div
+          ref={termRef}
+          className="flex-1 overflow-y-auto p-5 font-mono text-[13px] leading-relaxed custom-scrollbar"
+        >
+          <div className="space-y-1">
+            {displayed.map((log) => (
+              <div
+                key={log.id}
+                className="flex flex-col sm:flex-row gap-x-4 gap-y-1 hover:bg-slate-700/30 rounded px-2 -mx-2 py-1 transition-colors group"
+              >
+                {/* Timestamp */}
+                <span className="text-slate-500 flex-shrink-0 w-28 group-hover:text-slate-400 transition-colors">
+                  {log.ts}
+                </span>
+                
+                {/* Badge Level */}
+                <span className={`${termTagColor[log.level]} flex-shrink-0 w-12 font-bold`}>
+                  {log.level}
+                </span>
+                
+                {/* Source (Serviço/Worker) */}
+                <span className="text-slate-400/70 flex-shrink-0 w-28 truncate">
+                  [{log.source}]
+                </span>
+                
+                {/* Mensagem */}
+                <span className={`${termMsgColor[log.level]} flex-1 break-words font-medium tracking-wide`}>
+                  {log.msg}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-        {running && (
-          <div style={{ color: "#3B82F6", marginTop: 4 }}>
-            <span style={{ animation: "none" }}>█</span>
-          </div>
-        )}
+        </div>
       </div>
+      
     </div>
   )
 }
