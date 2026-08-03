@@ -32,23 +32,28 @@ export default function App() {
       <Sidebar current={page} onNavigate={setPage} onLogout={() => setLoggedIn(false)} />
 
       <main className="flex-1 overflow-hidden flex flex-col bg-slate-50">
+        
         {/* --- TOP BAR --- */}
-        <div className="h-14 px-7 border-b border-slate-200/60 bg-white flex items-center justify-between flex-shrink-0 shadow-sm/5">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="font-mono text-xs text-slate-400">Plataforma de Cobrança</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-900 font-semibold">{pageTitles[page]}</span>
+        <div className="h-16 px-8 border-b border-slate-200/80 bg-white flex items-center justify-between flex-shrink-0 z-10">
+          
+          {/* Navegação Estrutural (Breadcrumbs) */}
+          <div className="flex items-center gap-2.5 text-sm">
+            <span className="font-medium text-slate-500">
+              Plataforma
+            </span>
+            <svg className="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="text-black font-bold tracking-tight">
+              {pageTitles[page]}
+            </span>
           </div>
 
+          {/* Metadados / Perfil */}
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs text-slate-400">
-              v1.0.0-beta
+            <span className="font-mono text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+              Consulth Soluções
             </span>
-            
-            <div className="flex items-center gap-2 text-xs font-mono bg-emerald-50/50 border border-emerald-200/60 px-3 py-1 rounded-md shadow-sm">
-              <span className="text-emerald-500 text-[10px] animate-pulse">●</span>
-              <span className="font-semibold text-emerald-700">API online</span>
-            </div>
           </div>
         </div>
 
