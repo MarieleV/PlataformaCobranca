@@ -17,21 +17,22 @@ const usuarios: Usuario[] = [
   { id: "U-005", nome: "Aline Moraes", email: "aline.moraes@consulth.com.br", perfil: "gestor", status: "inativo", ultimo_acesso: "15/07 09:30" },
 ]
 
+// Estilos semânticos refinados (Tons pastéis para fundo, escuros para texto)
 const perfilStyles: Record<string, { badge: string, avatarBg: string, avatarText: string }> = {
   admin: {
-    badge: "bg-rose-50 text-rose-700 border-rose-200",
-    avatarBg: "bg-rose-50",
-    avatarText: "text-rose-600",
+    badge: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm",
+    avatarBg: "bg-rose-100/80",
+    avatarText: "text-rose-700",
   },
   gestor: {
-    badge: "bg-violet-50 text-violet-700 border-violet-200",
-    avatarBg: "bg-violet-50",
-    avatarText: "text-violet-600",
+    badge: "bg-violet-50 text-violet-700 border-violet-200 shadow-sm",
+    avatarBg: "bg-violet-100/80",
+    avatarText: "text-violet-700",
   },
   operador: {
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
-    avatarBg: "bg-blue-50",
-    avatarText: "text-blue-600",
+    badge: "bg-blue-50 text-blue-700 border-blue-200 shadow-sm",
+    avatarBg: "bg-blue-100/80",
+    avatarText: "text-blue-700",
   },
 }
 
@@ -53,13 +54,14 @@ export default function Usuarios() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Gestão de Usuários
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1 font-medium">
             Apenas administradores podem gerenciar usuários e permissões (RN06).
           </p>
         </div>
+        {/* Botão Principal no estilo Black High-End */}
         <button
           onClick={() => setShowModal(true)}
-          className="self-start sm:self-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-600/20 transition-all flex items-center gap-2"
+          className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 active:bg-slate-900 text-white text-sm font-bold shadow-xl shadow-black/10 transition-all flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -79,36 +81,36 @@ export default function Usuarios() {
           return (
             <div
               key={p.perfil}
-              className="p-5 rounded-2xl bg-white border border-slate-200/60 shadow-sm"
+              className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm transition-all hover:border-slate-300"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wide uppercase border ${style.badge}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider uppercase border ${style.badge}`}>
                   {p.perfil}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed">{p.desc}</p>
+              <p className="text-xs font-medium text-slate-500 leading-relaxed">{p.desc}</p>
             </div>
           )
         })}
       </div>
 
       {/* --- TABLE CONTAINER --- */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+        <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50/50">
               <tr>
                 {["ID", "Nome", "E-mail", "Perfil", "Status", "Último acesso", "Ações"].map((h) => (
                   <th
                     key={h}
-                    className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                    className="px-7 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100/80">
               {usuarios.map((u) => {
                 const style = perfilStyles[u.perfil]
                 return (
@@ -116,54 +118,49 @@ export default function Usuarios() {
                     key={u.id}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="px-6 py-4 font-mono text-xs font-medium text-slate-400">
+                    <td className="px-7 py-4 font-mono text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                       {u.id}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-7 py-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${style.avatarBg} ${style.avatarText} flex-shrink-0`}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold ${style.avatarBg} ${style.avatarText} flex-shrink-0 shadow-sm`}
                         >
                           {u.nome.split(" ").slice(0, 2).map((n) => n[0]).join("")}
                         </div>
-                        <span className="text-slate-900 font-semibold text-[13px]">{u.nome}</span>
+                        <span className="text-slate-900 font-bold text-[13px] tracking-tight">{u.nome}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                    <td className="px-7 py-4 font-mono text-[11px] font-medium text-slate-500">
                       {u.email}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold font-mono border ${style.badge}`}>
+                    <td className="px-7 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider uppercase border ${style.badge}`}>
                         {perfilLabel[u.perfil]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            u.status === "ativo" ? "bg-emerald-500" : "bg-slate-300"
-                          }`}
-                        />
-                        <span className={`text-xs font-medium capitalize ${
-                          u.status === "ativo" ? "text-emerald-700" : "text-slate-500"
-                        }`}>
-                          {u.status}
-                        </span>
-                      </div>
+                    <td className="px-7 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1.5 rounded-md text-[10px] font-bold font-mono tracking-widest uppercase border ${
+                        u.status === "ativo" 
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                          : "bg-slate-50 text-slate-500 border-slate-200"
+                      }`}>
+                        {u.status}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                    <td className="px-7 py-4 font-mono text-xs font-medium text-slate-500">
                       {u.ultimo_acesso}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-7 py-4">
                       <div className="flex items-center gap-2">
                         <button
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold hover:bg-slate-200 transition-colors"
+                          className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:text-black transition-colors shadow-sm"
                         >
                           Editar
                         </button>
                         {u.status === "ativo" && (
                           <button
-                            className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold border border-rose-200 hover:bg-rose-100 transition-colors"
+                            className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition-colors shadow-sm"
                           >
                             Desativar
                           </button>
@@ -181,39 +178,39 @@ export default function Usuarios() {
       {/* --- INVITE MODAL --- */}
       {showModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/40 backdrop-blur-sm p-4"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/40 backdrop-blur-sm p-4 transition-all"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="rounded-2xl bg-white p-6 sm:p-7 border border-slate-200/60 shadow-2xl w-full max-w-md"
+            className="rounded-3xl bg-white p-7 sm:p-9 border border-slate-200/80 shadow-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-1">
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
               Convidar novo usuário
             </h3>
-            <p className="text-xs text-slate-500 mb-6">
+            <p className="text-sm font-medium text-slate-500 mb-8">
               Um e-mail de convite com link de acesso será enviado.
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nome completo</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Nome completo</label>
                 <input
                   placeholder="ex: João da Silva"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">E-mail corporativo</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">E-mail corporativo</label>
                 <input
                   placeholder="joao@empresa.com.br"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all placeholder:text-slate-400"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Perfil de acesso</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Perfil de acesso</label>
                 <select
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all cursor-pointer"
                 >
                   <option value="operador">Operador</option>
                   <option value="gestor">Gestor</option>
@@ -222,15 +219,15 @@ export default function Usuarios() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-8">
+            <div className="flex gap-3 mt-10">
               <button
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-600/20 transition-all"
+                className="flex-1 py-3.5 rounded-xl bg-black hover:bg-slate-900 active:scale-[0.99] text-white text-sm font-bold shadow-xl shadow-black/10 transition-all"
                 onClick={() => setShowModal(false)}
               >
                 Enviar convite
               </button>
               <button
-                className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-semibold transition-all shadow-sm"
+                className="px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black text-sm font-bold transition-all shadow-sm"
                 onClick={() => setShowModal(false)}
               >
                 Cancelar

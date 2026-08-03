@@ -43,28 +43,28 @@ const newLogPool: Omit<LogEntry, "id">[] = [
 ]
 
 const activeFilterStyles: Record<string, string> = {
-  todos: "bg-slate-700 text-white border-slate-700 shadow-sm",
+  todos: "bg-black text-white border-black shadow-sm shadow-black/10",
   INFO: "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-600/20",
   OK: "bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20",
   WARN: "bg-amber-500 text-white border-amber-500 shadow-sm shadow-amber-500/20",
   ERROR: "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-600/20",
-  DEBUG: "bg-slate-500 text-white border-slate-500 shadow-sm",
+  DEBUG: "bg-neutral-600 text-white border-neutral-600 shadow-sm",
 }
 
-// Cores pastéis e elegantes para o fundo slate-800
+// Cores pastéis e elegantes para o fundo preto
 const termTagColor: Record<string, string> = {
   INFO: "text-blue-400",
   WARN: "text-amber-400",
   ERROR: "text-rose-400",
-  DEBUG: "text-slate-400",
+  DEBUG: "text-neutral-400",
   OK: "text-emerald-400",
 }
 
 const termMsgColor: Record<string, string> = {
-  INFO: "text-slate-300",
+  INFO: "text-neutral-200",
   WARN: "text-amber-100",
   ERROR: "text-rose-100",
-  DEBUG: "text-slate-400",
+  DEBUG: "text-neutral-400",
   OK: "text-emerald-100",
 }
 
@@ -177,16 +177,16 @@ export default function Monitoramento() {
         ))}
       </div>
 
-      {/* --- PROFESSIONAL LOG VIEWER (Dark Mode Suave) --- */}
-      <div className="flex-1 rounded-2xl bg-slate-800 border border-slate-700/60 shadow-sm flex flex-col overflow-hidden">
+      {/* --- PROFESSIONAL LOG VIEWER (Dark Mode - Preto) --- */}
+      <div className="flex-1 rounded-2xl bg-black border border-neutral-800 shadow-sm flex flex-col overflow-hidden">
         
-        {/* Barra de Título (Fica 100% isolada e parada no topo) */}
-        <div className="px-5 py-3.5 bg-slate-900/40 border-b border-slate-700/60 flex items-center justify-between flex-shrink-0">
+        {/* Barra de Título */}
+        <div className="px-5 py-3.5 bg-neutral-900/50 border-b border-neutral-800 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider font-sans">
+            <span className="text-xs font-bold text-neutral-300 uppercase tracking-wider font-sans">
               Console de Execução
             </span>
           </div>
@@ -209,16 +209,16 @@ export default function Monitoramento() {
         {/* Área Rolável de Logs */}
         <div
           ref={termRef}
-          className="flex-1 overflow-y-auto p-5 font-mono text-[13px] leading-relaxed custom-scrollbar"
+          className="flex-1 overflow-y-auto p-5 font-mono text-[13px] leading-relaxed custom-scrollbar bg-[#0a0a0a]"
         >
           <div className="space-y-1">
             {displayed.map((log) => (
               <div
                 key={log.id}
-                className="flex flex-col sm:flex-row gap-x-4 gap-y-1 hover:bg-slate-700/30 rounded px-2 -mx-2 py-1 transition-colors group"
+                className="flex flex-col sm:flex-row gap-x-4 gap-y-1 hover:bg-neutral-800/50 rounded px-2 -mx-2 py-1 transition-colors group"
               >
                 {/* Timestamp */}
-                <span className="text-slate-500 flex-shrink-0 w-28 group-hover:text-slate-400 transition-colors">
+                <span className="text-neutral-500 flex-shrink-0 w-28 group-hover:text-neutral-400 transition-colors">
                   {log.ts}
                 </span>
                 
@@ -228,7 +228,7 @@ export default function Monitoramento() {
                 </span>
                 
                 {/* Source (Serviço/Worker) */}
-                <span className="text-slate-400/70 flex-shrink-0 w-28 truncate">
+                <span className="text-neutral-600 flex-shrink-0 w-28 truncate">
                   [{log.source}]
                 </span>
                 

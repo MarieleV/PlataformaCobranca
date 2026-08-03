@@ -11,25 +11,25 @@ interface Regra {
   taxaEntrega: string
 }
 
-// Estilos padronizados para os canais via Tailwind
-const canalStyles: Record<string, { badge: string, activeCard: string, text: string, ring: string }> = {
+// Estilos semânticos refinados (Tons pastéis para fundo, escuros para texto)
+const canalStyles: Record<string, { badge: string, activeCard: string, text: string, toggle: string }> = {
   email: {
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    badge: "bg-blue-50 text-blue-700 border-blue-200 shadow-sm",
     activeCard: "border-blue-500 shadow-md shadow-blue-500/10 ring-1 ring-blue-500",
     text: "text-blue-600",
-    ring: "ring-blue-500"
+    toggle: "bg-blue-500",
   },
   sms: {
-    badge: "bg-violet-50 text-violet-700 border-violet-200",
+    badge: "bg-violet-50 text-violet-700 border-violet-200 shadow-sm",
     activeCard: "border-violet-500 shadow-md shadow-violet-500/10 ring-1 ring-violet-500",
     text: "text-violet-600",
-    ring: "ring-violet-500"
+    toggle: "bg-violet-500",
   },
   whatsapp: {
-    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm",
     activeCard: "border-emerald-500 shadow-md shadow-emerald-500/10 ring-1 ring-emerald-500",
     text: "text-emerald-600",
-    ring: "ring-emerald-500"
+    toggle: "bg-emerald-500",
   },
 }
 
@@ -91,9 +91,9 @@ const devedoresPipeline = [
 ]
 
 const statusStyles: Record<string, string> = {
-  aguardando: "bg-slate-100 text-slate-700 border-slate-200",
-  enviado: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  falha: "bg-rose-50 text-rose-700 border-rose-200",
+  aguardando: "bg-slate-100 text-slate-600 border-slate-200",
+  enviado: "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm",
+  falha: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm",
 }
 
 // Função para renderizar o template destacando as variáveis {exemplo}
@@ -101,7 +101,7 @@ const renderTemplateString = (text: string) => {
   return text.split(/(\{.*?\})/g).map((part, i) => {
     if (part.startsWith("{") && part.endsWith("}")) {
       return (
-        <span key={i} className="text-blue-600 font-semibold bg-blue-50 px-1 py-0.5 rounded mx-0.5">
+        <span key={i} className="text-blue-700 font-bold bg-blue-50/80 px-1.5 py-0.5 rounded-md border border-blue-200 shadow-sm mx-0.5">
           {part}
         </span>
       )
@@ -131,11 +131,12 @@ export default function ReguaCobranca() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Régua de Cobrança
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1 font-medium">
             Configure os canais, prazos e templates de comunicação por perfil de devedor.
           </p>
         </div>
-        <button className="self-start sm:self-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm shadow-blue-600/20 transition-all flex items-center gap-2">
+        {/* Botão de Ação Principal: Mantido no Preto High-End */}
+        <button className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 active:bg-slate-900 text-white text-sm font-bold shadow-xl shadow-black/10 transition-all flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
           Nova Regra
         </button>
@@ -152,19 +153,21 @@ export default function ReguaCobranca() {
               key={r.id}
               onClick={() => setSelectedId(r.id)}
               className={`rounded-2xl p-5 cursor-pointer transition-all duration-200 border bg-white ${
-                active ? style.activeCard : "border-slate-200/60 hover:border-slate-300 shadow-sm"
-              } ${!r.ativa && !active ? "opacity-60 grayscale-[0.2]" : ""}`}
+                active 
+                  ? style.activeCard 
+                  : "border-slate-200/80 hover:border-slate-300 shadow-sm"
+              } ${!r.ativa && !active ? "opacity-60 grayscale-[0.3]" : ""}`}
             >
               <div className="flex items-start justify-between mb-4">
-                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wide uppercase border ${style.badge}`}>
+                <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider uppercase border ${style.badge}`}>
                   {canalLabel[r.canal]}
                 </span>
                 
-                {/* Custom Toggle Switch */}
+                {/* Custom Toggle Switch adaptado com a cor do canal */}
                 <button
                   onClick={(e) => { e.stopPropagation(); toggle(r.id) }}
                   className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                    r.ativa ? "bg-emerald-500" : "bg-slate-300"
+                    r.ativa ? style.toggle : "bg-slate-200"
                   }`}
                 >
                   <span
@@ -175,15 +178,15 @@ export default function ReguaCobranca() {
                 </button>
               </div>
 
-              <p className="font-bold text-slate-900 text-sm mb-1 line-clamp-1" title={r.nome}>
+              <p className="font-bold text-slate-900 text-sm mb-1 line-clamp-1 tracking-tight" title={r.nome}>
                 {r.nome}
               </p>
-              <p className="text-xs font-mono font-semibold text-slate-500 mb-4">
+              <p className="text-xs font-mono font-bold text-slate-500 mb-4">
                 D+{r.prazo}
               </p>
 
               <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-500 font-medium">
                   <strong className="text-slate-900">{r.devedores}</strong> devedores
                 </span>
                 <span className={`text-xs font-bold font-mono ${style.text}`}>
@@ -200,18 +203,18 @@ export default function ReguaCobranca() {
         
         {/* DETAIL PANEL (Spans 5 columns) */}
         {selected && (
-          <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm flex flex-col h-full">
+          <div className="lg:col-span-5 bg-white rounded-3xl p-7 border border-slate-200/80 shadow-sm flex flex-col h-full">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <p className="font-bold text-lg text-slate-900 tracking-tight">{selected.nome}</p>
-                <span className="font-mono text-xs font-semibold text-slate-400">{selected.id}</span>
+                <p className="font-bold text-lg text-slate-900 tracking-tight mb-0.5">{selected.nome}</p>
+                <span className="font-mono text-[11px] font-bold text-slate-400 uppercase tracking-widest">{selected.id}</span>
               </div>
-              <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${canalStyles[selected.canal].badge}`}>
+              <span className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${canalStyles[selected.canal].badge}`}>
                 {canalLabel[selected.canal]}
               </span>
             </div>
 
-            <div className="space-y-1 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="space-y-1 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
               {[
                 { label: "Canal de Disparo", value: canalLabel[selected.canal] },
                 { label: "Prazo da Régua", value: `D+${selected.prazo} (após vencimento)` },
@@ -219,9 +222,9 @@ export default function ReguaCobranca() {
               ].map((f) => (
                 <div key={f.label} className="flex items-center justify-between py-2 border-b border-slate-200/50 last:border-0">
                   <span className="text-xs font-medium text-slate-500">{f.label}</span>
-                  <span className={`text-xs font-semibold ${
+                  <span className={`text-xs font-bold ${
                     f.label.includes("Status") 
-                      ? selected.ativa ? "text-emerald-600" : "text-slate-500" 
+                      ? selected.ativa ? canalStyles[selected.canal].text : "text-slate-400" 
                       : "text-slate-900"
                   }`}>
                     {f.value}
@@ -231,19 +234,19 @@ export default function ReguaCobranca() {
             </div>
 
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                 Template de mensagem
               </p>
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 font-mono text-sm text-slate-700 leading-relaxed shadow-inner h-32 overflow-y-auto">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 font-mono text-[13px] text-slate-700 leading-relaxed shadow-inner h-36 overflow-y-auto custom-scrollbar">
                 {renderTemplateString(selected.template)}
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100">
-              <button className="flex-1 py-2.5 rounded-lg font-semibold text-sm bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+            <div className="flex gap-3 mt-8 pt-6 border-t border-slate-100">
+              <button className="flex-1 py-3 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black transition-colors shadow-sm">
                 Editar Regra
               </button>
-              <button className="px-4 py-2.5 rounded-lg font-semibold text-sm bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors shadow-sm">
+              <button className="px-5 py-3 rounded-xl font-bold text-sm bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors shadow-sm">
                 Excluir
               </button>
             </div>
@@ -251,10 +254,12 @@ export default function ReguaCobranca() {
         )}
 
         {/* PIPELINE TABLE (Spans 7 columns) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
-          <div className="px-6 py-5 border-b border-slate-100">
-            <h2 className="text-base font-bold text-slate-900">Devedores no Pipeline</h2>
-            <p className="text-xs text-slate-500 mt-1">Próximos disparos programados para hoje, 08h00 BRT</p>
+        <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-7 py-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Devedores no Pipeline</h2>
+              <p className="text-xs font-medium text-slate-500 mt-1">Próximos disparos programados para hoje, 08h00 BRT</p>
+            </div>
           </div>
           
           <div className="overflow-x-auto flex-1">
@@ -262,32 +267,32 @@ export default function ReguaCobranca() {
               <thead className="bg-slate-50/50">
                 <tr>
                   {["Devedor", "Valor", "D+", "Canal", "Status"].map((h) => (
-                    <th key={h} className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th key={h} className="px-7 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100/80">
                 {devedoresPipeline.map((d, i) => (
                   <tr key={i} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-800 text-[13px]">{d.nome}</p>
-                      <p className="font-mono text-xs text-slate-400 mt-0.5">{d.cpf}</p>
+                    <td className="px-7 py-4">
+                      <p className="font-bold text-slate-800 text-[13px]">{d.nome}</p>
+                      <p className="font-mono text-[11px] font-medium text-slate-400 mt-0.5">{d.cpf}</p>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="font-mono text-xs font-semibold text-slate-700">{d.valor}</span>
+                    <td className="px-7 py-4">
+                      <span className="font-mono text-xs font-bold text-slate-700">{d.valor}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-7 py-4">
                       <span className="font-mono text-xs font-bold text-slate-500">+{d.dias}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold font-mono tracking-wide uppercase border ${canalStyles[d.canal].badge}`}>
+                    <td className="px-7 py-4">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider uppercase border ${canalStyles[d.canal].badge}`}>
                         {canalLabel[d.canal]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold capitalize border ${statusStyles[d.status]}`}>
+                    <td className="px-7 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1.5 rounded-md text-[10px] font-bold font-mono tracking-widest uppercase border ${statusStyles[d.status]}`}>
                         {d.status}
                       </span>
                     </td>
