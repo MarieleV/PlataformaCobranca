@@ -1,111 +1,105 @@
 <p align="center">
-  <img src="https://files.engaged.com.br/5db0810e95b4f900077e887e/account/5db0810e95b4f900077e887e/xMCS8NFKTMqwhefy8WLd_catolica-horizontal.png" alt="Católica SC" width="260"/>
+  <img src="https://files.engaged.com.br/5db0810e95b4f900077e887e/account/5db0810e95b4f900077e887e/xMCS8NFKTMqwhefy8WLd_catolica-horizontal.png" alt="Católica SC" width="220"/>
 </p>
 
 <h1 align="center">Plataforma de Cobrança Automatizada</h1>
 
 <p align="center">
-  <strong>Engenharia de Software — Católica SC</strong><br/>
-  Projeto de Portfólio · Linha Web / Dados / Automação
+  <strong>Engenharia de Software — Católica SC</strong><br/>
+  Projeto de Portfólio · SaaS Fintech B2B · Automação e Mensageria Assíncrona
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python" alt="Python"/>
-  <img src="https://img.shields.io/badge/FastAPI-0.110-009688?logo=fastapi" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/RabbitMQ-broker-FF6600?logo=rabbitmq" alt="RabbitMQ"/>
-  <img src="https://img.shields.io/badge/Docker-containerized-2496ED?logo=docker" alt="Docker"/>
-  <img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions" alt="CI/CD"/>
-  <img src="https://img.shields.io/badge/Quality-SonarCloud-F3702A?logo=sonarcloud" alt="SonarCloud"/>
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/React_18-20232A?logo=react&logoColor=61DAFB" alt="React"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwind-css&logoColor=white" alt="Tailwind CSS"/>
+  <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white" alt="Vite"/>
+  <span style="margin: 0 4px;">|</span>
+  <img src="https://img.shields.io/badge/Python_3.11-14354C?logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
+  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker"/>
 </p>
 
 ---
 
-## 1. Visão do Produto e Impacto
+## 1. Visão Arquitetural
 
-### 1.1 Contexto e Problema
+O sistema foi desenhado sob uma arquitetura de microsserviços e processamento assíncrono para suportar alta volumetria de dados. O objetivo principal é automatizar o ciclo completo de inadimplência corporativa, substituindo processos manuais e descentralizados (planilhas soltas e e-mails manuais) por um pipeline auditável, escalável e integrado.
 
-A inadimplência é um desafio estrutural para empresas de diversos segmentos no Brasil. O país ultrapassa **70 milhões de pessoas físicas inadimplentes**, e empresas de médio porte perdem, em média, entre **3% e 8%** da receita bruta anual em decorrência de cobranças mal executadas ou não realizadas.
-
-O processo tradicional de cobrança é majoritariamente **manual**: analistas financeiros exportam planilhas do ERP, filtram devedores individualmente, enviam e-mails um a um e registram contatos em outros sistemas. Esse fluxo apresenta limitações críticas:
-
-- ❌ Alto custo operacional com tarefas repetitivas e de baixo valor
-- ❌ Inconsistência na régua de comunicação — cada analista aplica regras diferentes
-- ❌ Ausência de rastreabilidade e auditoria das ações realizadas
-- ❌ Impossibilidade de escalar sem aumentar o quadro de funcionários
-- ❌ Dados de retorno não realimentam o sistema de forma automatizada
-
-Este projeto propõe substituir esse fluxo por uma **plataforma web integrada** que automatiza a ingestão de dados de inadimplentes, aplica réguas de cobrança configuráveis e executa disparos de comunicação multicanal (e-mail, SMS, WhatsApp) de forma programada e monitorada.
+### Fluxo de Dados (Data Pipeline)
+1. **Ingestão:** Upload de planilhas (CSV/XLSX) via portal Web.
+2. **Mensageria (RabbitMQ):** O arquivo é enfileirado para evitar bloqueio da thread principal da API.
+3. **Processamento (Workers):** Serviços em background (Celery) validam os dados utilizando `Pandas`, aplicando regras de negócio rigorosas (validação de CPF/CNPJ, valores, formatos).
+4. **Orquestração (Scheduler):** Uma *cron* avalia diariamente os devedores elegíveis com base nas réguas de cobrança dinâmicas.
+5. **Disparo Multicanal:** Integração com APIs externas (SendGrid, Twilio, Meta) para envio de E-mail, SMS e WhatsApp.
 
 ---
 
-### 1.2 Origem da Demanda e Evidências
+## 2. Tecnologias e Stack
 
-Foram realizadas entrevistas exploratórias com 5 profissionais da área financeira e 15 profissionais da área de cobrança da empresa parceira. Principais achados:
+### 🎨 Front-End (Web App)
+- **Framework & Build:** React 18 com Vite, garantindo HMR instantâneo e bundle otimizado.
+- **Linguagem:** TypeScript estrito para segurança de tipagem de *models* e respostas da API.
+- **Styling & UI/UX:** Tailwind CSS aplicado sob um Design System *High-End*.
+- **Roteamento & Estado:** Roteamento de Single Page Application (SPA) com controle de sessão via JWT.
 
-| Achado | % dos Entrevistados |
-|---|---|
-| Processo de envio de comunicações de cobrança realizado manualmente | 100% |
-| Sem rastreabilidade sobre quais devedores receberam qual tipo de comunicação | 80% |
-| Dificuldade em manter régua padronizada entre analistas | 100% |
-| Sem solução dedicada integrada (usam combinações de planilhas Excel, e-mail corporativo e sistemas legados) | 100% |
-
----
-
-### 1.3 Análise de Soluções Existentes (Benchmark)
-
-| Solução | Público-Alvo | Pontos Fortes | Limitações |
-|---|---|---|---|
-| Receita Certa | PMEs | Interface amigável, integração com Pix | Sem customização de régua, sem importação por CSV |
-| Assertiva Cobranças | Empresas de médio porte | Automação básica de comunicação | Custo elevado, sem observabilidade |
-| Iugu / Vindi | E-commerce e SaaS | Plataforma de pagamentos robusta | Foco em recorrência, não em cobranças de carteira |
-| Planilha + Disparador de e-mail | Qualquer empresa | Baixo custo, familiar | Sem automação, sem rastreabilidade, sem escala |
-
-> **Diferencial:** nenhuma das soluções analisadas oferece simultaneamente: (1) importação flexível de lotes via CSV/Excel com validação automatizada; (2) configuração visual da régua de cobrança por perfil de devedor; (3) execução de jobs programados com monitoramento em tempo real via dashboard. O projeto preenche essa lacuna com uma arquitetura moderna, open source e auditável.
+### ⚙️ Back-End & Infraestrutura
+- **Core API:** FastAPI (Python 3.11) priorizando performance e documentação autogerada (OpenAPI/Swagger).
+- **Processamento de Dados:** Pandas para validação massiva de lotes de importação.
+- **Brokers & Workers:** RabbitMQ + Celery + Redis para gerenciamento de filas e execução de tarefas assíncronas.
+- **Persistência:** PostgreSQL como banco de dados relacional primário.
+- **Containerização:** Orquestração completa de ambientes via Docker e Docker Compose.
 
 ---
 
-### 1.4 Público-Alvo
+## 3. Design System e Implementação de UI/UX
 
-O sistema é direcionado a **empresas de médio porte** — cooperativas, varejistas, clínicas e prestadoras de serviço — que realizam a gestão interna de suas carteiras de inadimplentes. O projeto é desenvolvido em parceria com a **Consulth Soluções Empresariais**, especializada em recuperação de crédito e cobrança B2B.
+A interface foi projetada visando um padrão **SaaS Corporativo Premium**, com forte inspiração em ferramentas modernas para desenvolvedores e financeiro (ex: Vercel, Stripe).
 
-| Perfil | Descrição |
-|---|---|
-| **Analista de Cobrança / Financeiro** (usuário primário) | Possui nível intermediário de conhecimento tecnológico, realiza importações de lotes e monitora disparos via portal web. |
-| **Gestor Financeiro** (usuário secundário) | Configura os parâmetros estratégicos da régua de cobrança e analisa métricas no dashboard. |
-| **Administrador** | Gerencia usuários, permissões e configurações globais do sistema. |
+- **Clean UI & Dark Mode Semântico:** Utilização intensiva da paleta monocromática (`slate-50` para fundos expansivos, `black` puro para botões primários e painéis de conversão).
+- **Redução de Carga Cognitiva:** Cores vibrantes (Azul, Verde, Roxo e Vermelho) foram transformadas em tons pastéis sutis, aplicados exclusivamente onde são necessários para indicar *status* e canais semânticos (SMS, WhatsApp, Email).
+- **Componentização:** Utilização de bordas arredondadas modernas (`rounded-2xl` e `rounded-3xl`), sombras suaves acopladas com o tom do componente (`shadow-black/10`), e tipografia geométrica (`Inter` / `font-sans`).
 
 ---
 
-### 1.5 Objetivos do Projeto
+## 4. Módulos e Funcionalidades Principais
 
-**Objetivo Geral:** Desenvolver uma plataforma web para automação do ciclo de cobrança de inadimplentes, desde a ingestão e validação de dados até o disparo multicanal de comunicações e o monitoramento dos resultados, com arquitetura orientada a qualidade, segurança e observabilidade.
+### 📥 Importador de Lotes e Validador (Pandas)
+- Pipeline assíncrono com feedback de progresso em tempo real no front-end.
+- Validação estrita linha a linha (RN01-RN04).
+- Geração automática de **Relatório de Inconsistências** detalhando a célula e a regra violada antes da consolidação no banco.
 
-**Objetivos Específicos:**
+### 📏 Motor de Regras (Régua de Cobrança)
+- Interface visual para configuração de *workflows* de cobrança (`D+5`, `D+15`, `D+30`).
+- Suporte a templates dinâmicos com interpolação de variáveis em tempo real (ex: `{nome}`, `{valor}`).
+- Vinculação de canais de disparo específicos por etapa (Escalada de cobrança).
 
-1. Implementar um pipeline assíncrono de ingestão e validação de arquivos CSV/Excel com feedback detalhado de erros por linha.
-2. Desenvolver um módulo de configuração visual da régua de cobrança, permitindo definir canais e prazos por perfil de devedor.
-3. Automatizar a execução de jobs de disparo de comunicações (e-mail e SMS) com agendamento configurável.
-4. Criar um dashboard de monitoramento com métricas de execução, taxa de entrega e taxa de conversão.
-5. Garantir qualidade de código com TDD, CI/CD automatizado e análise estática via SonarCloud.
+### 🖥️ Console de Monitoramento (Live Logs)
+- Terminal simulado na web para observabilidade do sistema.
+- Acompanhamento do log dos *workers*, status das filas (`RabbitMQ`), consumo de memória (`Redis`) e latência/retorno de APIs de mensageria de terceiros (`SendGrid`, `Twilio`).
+
+### 👥 Gestão de Acesso Baseada em Perfis (RBAC)
+- Arquitetura de permissões segregada: `Administrador`, `Gestor` e `Operador`.
+- Proteção de rotas sensíveis e controle de ações globais na aplicação.
 
 ---
 
-### 1.6 Métricas de Sucesso (KPIs)
+## 5. Qualidade e CI/CD
 
-| KPI | Meta |
-|---|---|
-| Tempo de resposta da API (P95) | < 300ms |
-| Throughput de processamento de lote | > 10.000 registros/minuto |
-| Cobertura de testes automatizados (backend) | ≥ 80% |
-| Cobertura de testes (frontend) | ≥ 25% |
-| Disponibilidade do serviço | ≥ 99% |
-| Taxa de sucesso nos disparos de e-mail | > 95% |
-| Qualidade Sonar Cloud (Quality Gate) | Aprovado (sem blockers/criticals) |
+O projeto segue metodologias rigorosas de Engenharia de Software para garantir a sustentabilidade do código a longo prazo:
+
+- **CI/CD:** Pipelines automatizados no **GitHub Actions** para Linting, Build e Run de testes a cada Pull Request.
+- **Análise Estática:** Integração com **SonarCloud** para garantir o *Quality Gate* (Zero bugs críticos, vulnerabilidades ou Code Smells na master).
+- **Testes Automatizados:** 
+  - Backend: `pytest` focado nos *core flows* (cálculo de régua, parsers e validação de CSV). Meta: ≥ 80%.
+  - Frontend: Testes unitários para lógica de renderização de componentes críticos. Meta: ≥ 25%.
+- **Disponibilidade Alvo:** Arquitetura desenhada para SLA de 99% e tempo de resposta de API (P95) inferior a 300ms.
 
 ---
 
 <p align="center">
-  <sub>Documento técnico completo disponível em <code>/docs/documentacao_v2.md</code> e no <a href="https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada?node-id=0-1&t=vxq6D6561lNc1dOZ-1">Figma do Projeto</a>.</sub>
+  <sub>Documentação arquitetural aprofundada disponível em <code>/docs</code> e wireframes no <a href="https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada">Figma do Projeto</a>.</sub><br/>
+  <sub>© 2026 Plataforma de Cobrança Automatizada. Desenvolvido para TCC - Engenharia de Software.</sub>
 </p>
