@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import logoTcc from "../assets/logo-tcc.png"
 
 type Page =
   | "dashboard"
@@ -87,9 +88,11 @@ export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps)
       
       {/* --- LOGO --- */}
       <div className="px-6 py-6 border-b border-slate-100 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-black text-white font-mono font-bold text-sm flex items-center justify-center shadow-sm shadow-black/20">
-          CA
-        </div>
+        <img 
+          src={logoTcc}
+          alt="Logo Cobrança Automatizada" 
+          className="w-10 h-10 object-contain flex-shrink-0 rounded-md" 
+        />
         <div>
           <p className="font-bold text-slate-900 text-sm tracking-tight leading-none mb-1">
             Cobrança
