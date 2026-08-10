@@ -54,7 +54,8 @@ export default function RelatorioValidacao() {
           </p>
         </div>
         
-        <button className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold font-mono transition-all shadow-sm">
+        {/* Sombra suavizada no botão de Exportar */}
+        <button className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold font-mono transition-all shadow-sm shadow-slate-200/50">
           <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
@@ -87,7 +88,8 @@ export default function RelatorioValidacao() {
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white border border-slate-200/60 shadow-sm"
+            // Sombra suavizada nos Cards de Status
+            className="p-5 rounded-2xl bg-white border border-slate-200/60 shadow-sm shadow-slate-200/50"
           >
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
               {s.label}
@@ -107,7 +109,8 @@ export default function RelatorioValidacao() {
       </div>
 
       {/* --- PROGRESS BAR VISUAL --- */}
-      <div className="mb-6 rounded-2xl bg-white p-5 border border-slate-200/60 shadow-sm">
+      {/* Sombra suavizada no container da Barra de Progresso */}
+      <div className="mb-6 rounded-2xl bg-white p-5 border border-slate-200/60 shadow-sm shadow-slate-200/50">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Distribuição do lote</p>
           <span className="text-xs font-mono text-slate-400">100% processado</span>
@@ -135,7 +138,8 @@ export default function RelatorioValidacao() {
       </div>
 
       {/* --- ERROR TABLE CONTAINER --- */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+      {/* Sombra suavizada no container principal da Tabela */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 overflow-hidden">
         
         {/* Table Header com Filtros */}
         <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -153,7 +157,8 @@ export default function RelatorioValidacao() {
                 onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition-all ${
                   filter === f
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200/60"
+                    // Sombra suavizada no botão de filtro que está ativo (selecionado)
+                    ? "bg-white text-slate-900 shadow-sm shadow-slate-200/50 border border-slate-200/60"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
