@@ -17,20 +17,20 @@ const usuarios: Usuario[] = [
   { id: "U-005", nome: "Aline Moraes", email: "aline.moraes@consulth.com.br", perfil: "gestor", status: "inativo", ultimo_acesso: "15/07 09:30" },
 ]
 
-// Estilos semânticos refinados (Tons pastéis para fundo, escuros para texto)
+// Estilos semânticos refinados (Sombras das badges suavizadas)
 const perfilStyles: Record<string, { badge: string, avatarBg: string, avatarText: string }> = {
   admin: {
-    badge: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm",
+    badge: "bg-rose-50 text-rose-700 border-rose-200 shadow-sm shadow-slate-200/50",
     avatarBg: "bg-rose-100/80",
     avatarText: "text-rose-700",
   },
   gestor: {
-    badge: "bg-violet-50 text-violet-700 border-violet-200 shadow-sm",
+    badge: "bg-violet-50 text-violet-700 border-violet-200 shadow-sm shadow-slate-200/50",
     avatarBg: "bg-violet-100/80",
     avatarText: "text-violet-700",
   },
   operador: {
-    badge: "bg-blue-50 text-blue-700 border-blue-200 shadow-sm",
+    badge: "bg-blue-50 text-blue-700 border-blue-200 shadow-sm shadow-slate-200/50",
     avatarBg: "bg-blue-100/80",
     avatarText: "text-blue-700",
   },
@@ -55,10 +55,9 @@ export default function Usuarios() {
             Gestão de Usuários
           </h1>
           <p className="text-sm text-slate-500 mt-1 font-medium">
-            Apenas administradores podem gerenciar usuários e permissões (RN06).
+            Apenas administradores podem gerenciar usuários e permissões.
           </p>
         </div>
-        {/* Botão Principal no estilo Black High-End */}
         <button
           onClick={() => setShowModal(true)}
           className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 active:bg-slate-900 text-white text-sm font-bold shadow-xl shadow-black/10 transition-all flex items-center gap-2"
@@ -81,7 +80,7 @@ export default function Usuarios() {
           return (
             <div
               key={p.perfil}
-              className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm transition-all hover:border-slate-300"
+              className="p-5 rounded-3xl bg-white border border-slate-200/80 shadow-sm shadow-slate-200/50 transition-all hover:border-slate-300"
             >
               <div className="flex items-center gap-2 mb-3">
                 <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono tracking-wider uppercase border ${style.badge}`}>
@@ -95,7 +94,7 @@ export default function Usuarios() {
       </div>
 
       {/* --- TABLE CONTAINER --- */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm shadow-slate-200/50 overflow-hidden flex flex-col">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50/50">
@@ -124,7 +123,7 @@ export default function Usuarios() {
                     <td className="px-7 py-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold ${style.avatarBg} ${style.avatarText} flex-shrink-0 shadow-sm`}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold ${style.avatarBg} ${style.avatarText} flex-shrink-0 shadow-sm shadow-slate-200/50`}
                         >
                           {u.nome.split(" ").slice(0, 2).map((n) => n[0]).join("")}
                         </div>
@@ -142,8 +141,8 @@ export default function Usuarios() {
                     <td className="px-7 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1.5 rounded-md text-[10px] font-bold font-mono tracking-widest uppercase border ${
                         u.status === "ativo" 
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                          : "bg-slate-50 text-slate-500 border-slate-200"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm shadow-slate-200/50" 
+                          : "bg-slate-50 text-slate-500 border-slate-200 shadow-sm shadow-slate-200/50"
                       }`}>
                         {u.status}
                       </span>
@@ -154,13 +153,13 @@ export default function Usuarios() {
                     <td className="px-7 py-4">
                       <div className="flex items-center gap-2">
                         <button
-                          className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:text-black transition-colors shadow-sm"
+                          className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:text-black transition-colors shadow-sm shadow-slate-200/50"
                         >
                           Editar
                         </button>
                         {u.status === "ativo" && (
                           <button
-                            className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition-colors shadow-sm"
+                            className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 text-xs font-bold hover:bg-rose-50 transition-colors shadow-sm shadow-slate-200/50"
                           >
                             Desativar
                           </button>
@@ -182,7 +181,7 @@ export default function Usuarios() {
           onClick={() => setShowModal(false)}
         >
           <div
-            className="rounded-3xl bg-white p-7 sm:p-9 border border-slate-200/80 shadow-2xl w-full max-w-md"
+            className="rounded-3xl bg-white p-7 sm:p-9 border border-slate-200/80 shadow-2xl shadow-slate-200/60 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
@@ -209,13 +208,20 @@ export default function Usuarios() {
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Perfil de acesso</label>
-                <select
-                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all cursor-pointer"
-                >
-                  <option value="operador">Operador</option>
-                  <option value="gestor">Gestor</option>
-                  <option value="admin">Administrador</option>
-                </select>
+                <div className="relative">
+                  <select
+                    className="appearance-none w-full pl-4 pr-12 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all cursor-pointer"
+                  >
+                    <option value="operador">Operador</option>
+                    <option value="gestor">Gestor</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -227,7 +233,7 @@ export default function Usuarios() {
                 Enviar convite
               </button>
               <button
-                className="px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black text-sm font-bold transition-all shadow-sm"
+                className="px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black text-sm font-bold transition-all shadow-sm shadow-slate-200/50"
                 onClick={() => setShowModal(false)}
               >
                 Cancelar
