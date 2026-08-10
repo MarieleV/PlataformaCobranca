@@ -44,7 +44,8 @@ const colors = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-slate-200 p-3 rounded-lg shadow-lg">
+      // Sombra suavizada no Tooltip do gráfico
+      <div className="bg-white border border-slate-200 p-3 rounded-lg shadow-lg shadow-slate-200/50">
         <p className="text-xs font-semibold text-slate-500 mb-2">{label}</p>
         <div className="space-y-1">
           {payload.map((p: any) => (
@@ -88,7 +89,8 @@ export default function Dashboard() {
       {/* --- KPIs GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* KPI 1 */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        {/* Sombra suavizada */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
           <div className="flex items-start justify-between mb-4">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Devedores</p>
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
@@ -105,7 +107,8 @@ export default function Dashboard() {
         </div>
 
         {/* KPI 2 */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        {/* Sombra suavizada */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
           <div className="flex items-start justify-between mb-4">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Disparos Hoje</p>
             <div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
@@ -119,7 +122,8 @@ export default function Dashboard() {
         </div>
 
         {/* KPI 3 */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        {/* Sombra suavizada */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
           <div className="flex items-start justify-between mb-4">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Taxa de Entrega</p>
             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
@@ -136,7 +140,8 @@ export default function Dashboard() {
         </div>
 
         {/* KPI 4 */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        {/* Sombra suavizada */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
           <div className="flex items-start justify-between mb-4">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Falhas / Bounces</p>
             <div className="p-2 bg-rose-50 text-rose-600 rounded-lg">
@@ -157,7 +162,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* GRÁFICO (Ocupa 2 colunas no desktop) */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        {/* Sombra suavizada no container do gráfico */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div>
               <h2 className="text-base font-bold text-slate-900">Volume de Disparos</h2>
@@ -220,7 +226,8 @@ export default function Dashboard() {
         </div>
 
         {/* ALERTAS (Ocupa 1 coluna no desktop) */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col h-[380px] lg:h-auto">
+        {/* Sombra suavizada no container de alertas */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 flex flex-col h-[380px] lg:h-auto">
           <h2 className="text-base font-bold text-slate-900 mb-6">Alertas do Sistema</h2>
           <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
             {[
@@ -246,7 +253,8 @@ export default function Dashboard() {
       </div>
 
       {/* --- TABELA DE JOBS RECENTES --- */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+      {/* Sombra suavizada na tabela */}
+      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 overflow-hidden">
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-900">Jobs Recentes</h2>
           <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">Últimas 24h</span>
