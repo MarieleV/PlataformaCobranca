@@ -63,7 +63,7 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           Importar Lote de Devedores
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Faça upload de arquivos CSV ou Excel (.xlsx). O processamento é assíncrono com feedback em tempo real.
+          Faça upload de arquivos CSV ou Excel (.xlsx).
         </p>
       </div>
 
@@ -73,7 +73,8 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
         <div className="lg:col-span-7 space-y-4">
           {phase === "idle" && (
             <div
-              className={`rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer p-10 bg-white border-2 border-dashed shadow-sm min-h-[320px] ${
+              // Sombra suavizada no container de Drag and Drop
+              className={`rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer p-10 bg-white border-2 border-dashed shadow-sm shadow-slate-200/50 min-h-[320px] ${
                 dragging
                   ? "border-blue-600 bg-blue-50/40"
                   : "border-slate-300 hover:border-slate-400"
@@ -83,7 +84,7 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
             >
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 shadow-sm shadow-slate-200/50">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
@@ -108,7 +109,8 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           )}
 
           {(phase === "uploading" || phase === "processing") && (
-            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm min-h-[320px]">
+            // Sombra suavizada no Card de Uploading
+            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm shadow-slate-200/50 min-h-[320px]">
               <div className="flex items-center gap-2 font-mono text-xs font-semibold text-slate-500 mb-2">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -148,8 +150,9 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           )}
 
           {phase === "done" && (
-            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center text-center border border-emerald-200 shadow-sm min-h-[320px]">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm">
+            // Sombra suavizada no Card de Sucesso
+            <div className="rounded-2xl bg-white p-8 flex flex-col items-center justify-center text-center border border-emerald-200 shadow-sm shadow-slate-200/50 min-h-[320px]">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-sm shadow-slate-200/50">
                 <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
@@ -171,7 +174,8 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
                 </button>
                 <button
                   onClick={reset}
-                  className="px-5 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm"
+                  // Sombra suavizada no botão secundário
+                  className="px-5 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm shadow-slate-200/50"
                 >
                   Novo upload
                 </button>
@@ -184,7 +188,8 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
         <div className="lg:col-span-5 space-y-6">
           
           {/* Colunas Obrigatórias */}
-          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm">
+          {/* Sombra suavizada no Card da Sidebar */}
+          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm shadow-slate-200/50">
             <h2 className="font-bold text-slate-900 text-base mb-4">
               Colunas obrigatórias
             </h2>
@@ -208,16 +213,17 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
           </div>
 
           {/* Regras de Validação */}
-          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm">
+          {/* Sombra suavizada no Card da Sidebar */}
+          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm shadow-slate-200/50">
             <h2 className="font-bold text-slate-900 text-base mb-4">
               Regras de validação
             </h2>
             <div className="space-y-2.5">
               {[
-                "CPF/CNPJ inválido → linha rejeitada (RN04)",
-                "Valor negativo → linha rejeitada",
-                "E-mail malformado → aviso, não rejeita",
-                "Linha duplicada → mantém mais recente",
+                "CPF/CNPJ inválido - linha rejeitada",
+                "Valor negativo - linha rejeitada",
+                "E-mail malformado - aviso, não rejeita",
+                "Linha duplicada - mantém mais recente",
                 "Máximo 50.000 registros por arquivo",
               ].map((r, i) => (
                 <div key={i} className="flex items-start gap-2.5">
@@ -230,7 +236,8 @@ export default function ImportarLote({ onValidated }: { onValidated: () => void 
 
           {/* Baixar Planilha Modelo */}
           <button
-            className="w-full py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold font-mono transition-all shadow-sm flex items-center justify-center gap-2"
+            // Sombra suavizada no botão de Baixar
+            className="w-full py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold font-mono transition-all shadow-sm shadow-slate-200/50 flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
