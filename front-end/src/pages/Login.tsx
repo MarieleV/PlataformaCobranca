@@ -1,4 +1,6 @@
 import { useState } from "react"
+// Correção: Usando ../ para voltar para a raiz da src e achar a pasta assets
+import logoTcc from "../assets/logo-tcc.png"
 
 interface LoginProps {
   onLogin: () => void
@@ -35,9 +37,16 @@ export default function Login({ onLogin }: LoginProps) {
         <div>
           {/* Logo e Empresa */}
           <div className="flex items-center gap-4 mb-16">
-            <div className="bg-white text-black rounded-xl w-11 h-11 flex items-center justify-center font-bold text-sm tracking-wider shadow-lg shadow-white/10">
-              CA
+            
+            {/* CAIXA DA LOGO */}
+            <div className="bg-white rounded-xl w-11 h-11 flex items-center justify-center shadow-lg shadow-white/10 overflow-hidden">
+              <img 
+                src={logoTcc} 
+                alt="Logo Cobrança Automatizada" 
+                className="w-full h-full object-contain p-1.5" 
+              />
             </div>
+
             <div>
               <p className="font-bold text-lg leading-tight tracking-tight">Cobrança Automatizada</p>
               <p className="text-xs text-white/60 font-medium tracking-wide">CONSULTH SOLUÇÕES</p>
@@ -46,10 +55,10 @@ export default function Login({ onLogin }: LoginProps) {
 
           {/* Título de Impacto */}
           <h1 className="text-4xl font-bold leading-tight mb-6 tracking-tight">
-            Gestão de cobrança escalável e auditável.
+            Escale sua recuperação de crédito com segurança total.
           </h1>
           <p className="text-white/70 leading-relaxed text-sm font-medium">
-            Automatize o ciclo completo de inadimplência — da ingestão de dados ao disparo multicanal — com rastreabilidade total e zero intervenção manual.
+            Automatize todo o ciclo de cobrança: da integração de dados ao acionamento multicanal. Tenha rastreabilidade ponta a ponta com zero intervenção manual.
           </p>
         </div>
 
