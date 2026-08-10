@@ -109,12 +109,12 @@ export default function Monitoramento() {
             Monitoramento de Sistema
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Log em tempo real — workers, filas e chamadas de APIs externas.
+            Workers, filas e chamadas de APIs externas.
           </p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex gap-1.5 p-1 bg-white border border-slate-200 rounded-lg shadow-sm">
+          <div className="flex gap-1.5 p-1 bg-white border border-slate-200 rounded-lg shadow-sm shadow-slate-200/50">
             {["todos", "INFO", "OK", "WARN", "ERROR", "DEBUG"].map((f) => (
               <button
                 key={f}
@@ -134,7 +134,7 @@ export default function Monitoramento() {
 
           <button
             onClick={() => setRunning((r) => !r)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold font-mono transition-all border shadow-sm ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold font-mono transition-all border shadow-sm shadow-slate-200/50 ${
               running 
                 ? "bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100" 
                 : "bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100"
@@ -149,7 +149,7 @@ export default function Monitoramento() {
 
           <button
             onClick={() => setLogs([])}
-            className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-semibold font-mono hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
+            className="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 text-xs font-semibold font-mono hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm shadow-slate-200/50"
           >
             Limpar
           </button>
@@ -166,7 +166,7 @@ export default function Monitoramento() {
         ].map((s) => (
           <div
             key={s.label}
-            className="px-5 py-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm flex items-center justify-between"
+            className="px-5 py-4 rounded-2xl bg-white border border-slate-200/60 shadow-sm shadow-slate-200/50 flex items-center justify-between"
           >
             <div>
               <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{s.label}</span>
