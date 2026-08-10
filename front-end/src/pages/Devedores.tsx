@@ -84,31 +84,50 @@ export default function Devedores() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nome ou CPF/CNPJ…"
-          className="w-full sm:w-80 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-400"
+          // Adicionado 'shadow-slate-200/50' para suavizar a sombra
+          className="w-full sm:w-80 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm shadow-slate-200/50 placeholder:text-slate-400"
         />
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
-        >
-          <option value="todos">Todos os status</option>
-          <option value="em_cobranca">Em cobrança</option>
-          <option value="negociando">Negociando</option>
-          <option value="quitado">Quitado</option>
-          <option value="sem_contato">Sem contato</option>
-        </select>
+        {/* SELECT: STATUS */}
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            // Adicionado 'shadow-slate-200/50' aqui também
+            className="appearance-none w-full pl-3.5 pr-12 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm shadow-slate-200/50 cursor-pointer"
+          >
+            <option value="todos">Todos os status</option>
+            <option value="em_cobranca">Em cobrança</option>
+            <option value="negociando">Negociando</option>
+            <option value="quitado">Quitado</option>
+            <option value="sem_contato">Sem contato</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+        
 
-        <select
-          value={canalFilter}
-          onChange={(e) => setCanalFilter(e.target.value)}
-          className="px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
-        >
-          <option value="todos">Todos os canais</option>
-          <option value="e-mail">E-mail</option>
-          <option value="sms">SMS</option>
-          <option value="whatsapp">WhatsApp</option>
-        </select>
+        {/* SELECT: CANAL */}
+        <div className="relative">
+          <select
+            value={canalFilter}
+            onChange={(e) => setCanalFilter(e.target.value)}
+            className="appearance-none w-full pl-3.5 pr-12 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm shadow-slate-200/50 cursor-pointer"
+          >
+            <option value="todos">Todos os canais</option>
+            <option value="e-mail">E-mail</option>
+            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* --- TABLE CONTAINER --- */}
