@@ -43,7 +43,9 @@ const perfilLabel: Record<string, string> = {
 }
 
 export default function Usuarios() {
-  const [showModal, setShowModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  // Novo estado para controlar qual usuário está sendo editado
+  const [editingUser, setEditingUser] = useState<Usuario | null>(null)
 
   return (
     <div className="p-6 sm:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
@@ -59,7 +61,7 @@ export default function Usuarios() {
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => setShowInviteModal(true)}
           className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-black hover:bg-slate-800 active:bg-slate-900 text-white text-sm font-bold shadow-xl shadow-black/10 transition-all flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -152,7 +154,9 @@ export default function Usuarios() {
                     </td>
                     <td className="px-7 py-4">
                       <div className="flex items-center gap-2">
+                        {/* Ação de Editar abre o modal e passa o usuário selecionado */}
                         <button
+                          onClick={() => setEditingUser(u)}
                           className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:text-black transition-colors shadow-sm shadow-slate-200/50"
                         >
                           Editar
@@ -175,10 +179,10 @@ export default function Usuarios() {
       </div>
 
       {/* --- INVITE MODAL --- */}
-      {showModal && (
+      {showInviteModal && (
         <div
           className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/40 backdrop-blur-sm p-4 transition-all"
-          onClick={() => setShowModal(false)}
+          onClick={() => setShowInviteModal(false)}
         >
           <div
             className="rounded-3xl bg-white p-7 sm:p-9 border border-slate-200/80 shadow-2xl shadow-slate-200/60 w-full max-w-md"
@@ -228,13 +232,120 @@ export default function Usuarios() {
             <div className="flex gap-3 mt-10">
               <button
                 className="flex-1 py-3.5 rounded-xl bg-black hover:bg-slate-900 active:scale-[0.99] text-white text-sm font-bold shadow-xl shadow-black/10 transition-all"
-                onClick={() => setShowModal(false)}
+                onClick={() => setShowInviteModal(false)}
               >
                 Enviar convite
               </button>
               <button
                 className="px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black text-sm font-bold transition-all shadow-sm shadow-slate-200/50"
-                onClick={() => setShowModal(false)}
+                onClick={() => setShowInviteModal(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- EDIT MODAL --- */}
+      {editingUser && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 bg-slate-900/40 backdrop-blur-sm p-4 transition-all"
+          onClick={() => setEditingUser(null)}
+        >
+          <div
+            className="rounded-3xl bg-white p-7 sm:p-9 border border-slate-200/80 shadow-2xl shadow-slate-200/60 w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
+                Editar Perfil
+              </h3>
+              <p className="text-sm font-medium text-slate-500">
+                Atualizando acessos de <strong className="text-slate-700">{editingUser.nome}</strong>.
+              </p>
+            </div>
+            
+            {/* Usando GRID para não deixar o modal muito alto */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Nome completo</label>
+                <input
+                  defaultValue={editingUser.nome}
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">E-mail corporativo</label>
+                <input
+                  defaultValue={editingUser.email}
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Perfil de acesso</label>
+                <div className="relative">
+                  <select
+                    defaultValue={editingUser.perfil}
+                    className="appearance-none w-full pl-4 pr-12 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all cursor-pointer"
+                  >
+                    <option value="operador">Operador</option>
+                    <option value="gestor">Gestor</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Status da conta</label>
+                <div className="relative">
+                  <select
+                    defaultValue={editingUser.status}
+                    className="appearance-none w-full pl-4 pr-12 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all cursor-pointer"
+                  >
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2 mt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nova Senha</label>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Deixe em branco para manter a atual</span>
+                </div>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3.5 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all placeholder:text-slate-400"
+                />
+              </div>
+
+            </div>
+
+            <div className="flex gap-3 mt-10">
+              <button
+                className="flex-1 py-3.5 rounded-xl bg-black hover:bg-slate-900 active:scale-[0.99] text-white text-sm font-bold shadow-xl shadow-black/10 transition-all"
+                onClick={() => setEditingUser(null)}
+              >
+                Salvar alterações
+              </button>
+              <button
+                className="px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-black text-sm font-bold transition-all shadow-sm shadow-slate-200/50"
+                onClick={() => setEditingUser(null)}
               >
                 Cancelar
               </button>
