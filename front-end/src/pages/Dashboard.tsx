@@ -63,7 +63,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function Dashboard() {
   return (
-    <div className="p-6 sm:p-8 space-y-8 bg-slate-50 min-h-screen font-sans">
+    <div className="p-4 md:p-6 xl:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
       
       {/* --- HEADER --- */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
