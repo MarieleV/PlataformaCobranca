@@ -57,7 +57,7 @@ export default function Devedores() {
   })
 
   return (
-    <div className="p-6 sm:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
+    <div className="p-4 md:p-6 xl:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
       
       {/* --- HEADER --- */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
