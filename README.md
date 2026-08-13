@@ -75,7 +75,7 @@ Upload (Web) → API (FastAPI) → Fila (RabbitMQ) → Workers (Celery)
 ### Back-end
 | Camada | Tecnologia | Papel |
 |---|---|---|
-| API | FastAPI (Python 3.11) | Performance e documentação OpenAPI/Swagger autogerada |
+| API | FastAPI (Python 3.16) | Performance e documentação OpenAPI/Swagger autogerada |
 | Processamento de dados | Pandas | Validação massiva de lotes de importação |
 | Filas & Workers | RabbitMQ + Celery + Redis | Execução assíncrona e gerenciamento de filas |
 | Persistência | PostgreSQL | Banco de dados relacional primário |
