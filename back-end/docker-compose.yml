@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # 1. Banco de Dados Principal
+  db:
+    image: postgres:15-alpine
+    container_name: cobranca_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: cobranca_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Redis (Cache e Session Store)
+  redis:
+    image: redis:7-alpine
+    container_name: cobranca_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 3. RabbitMQ (Message Broker)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: cobranca_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"   # Porta padrão do protocolo AMQP
+      - "15672:15672" # Porta do painel de administração web (Dashboard)
+
+  # 4. FastAPI Backend
+  api:
+    build: .
+    container_name: cobranca_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password123@db:5432/cobranca_db
+      - JWT_SECRET=super-secret-key-change-me
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+
+# Declaração dos volumes para persistência de dados
+volumes:
+  postgres_data:
