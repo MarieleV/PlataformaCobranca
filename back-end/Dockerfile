@@ -1,4 +1,4 @@
-FROM python:3.16-slim
+FROM python:3.14-slim
 
 # Define o diretório de trabalho dentro do container
 WORKDIR /code
