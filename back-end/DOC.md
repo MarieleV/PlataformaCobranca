@@ -21,3 +21,22 @@ Abra o seu terminal de preferência, navegue até a pasta `back-end` e execute o
 
 ```bash
 docker compose up -d --build
+
+---
+
+
+O comando exato para fazer uma "faxina" e limpar as imagens antigas/órfãs do Docker, liberando espaço no seu HD, é:
+
+```bash
+docker image prune -f
+
+```
+
+*(O `-f` no final significa "force", para ele executar a limpeza direto sem ficar te perguntando "Tem certeza?").*
+
+**Dica extra:** Se um dia eu quiser fazer uma limpeza **mais profunda**, apagando não apenas as imagens antigas, mas também containers que estão parados e redes que não estão sendo mais usadas, você pode rodar:
+
+```bash
+docker system prune -f
+
+```
