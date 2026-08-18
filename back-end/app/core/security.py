@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import jwt
-from passlib.context import CryptContext
+import bcrypt
 import os
 
 # Configurações baseadas no RFC
@@ -9,14 +9,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15 # Conforme exigido no RFC
 REFRESH_TOKEN_EXPIRE_DAYS = 7    # Conforme exigido no RFC
 
-# Configuração do Bcrypt com custo 12, conforme RFC
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # O bcrypt moderno exige que as strings sejam convertidas em bytes (encode)
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Gera o salt com custo 12, conforme exigido no RFC
+    salt = bcrypt.gensalt(rounds=12)
+    # Gera o hash e transforma o resultado (bytes) de volta em string para salvar no banco
+    hashed_bytes = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_bytes.decode('utf-8')
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
