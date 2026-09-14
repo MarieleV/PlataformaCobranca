@@ -11,6 +11,10 @@ class CargoEnum(str, enum.Enum):
     gestor = "gestor"
     administrador = "administrador"
 
+class StatusUsuarioEnum(str, enum.Enum):
+    ativo = "ativo"
+    inativo = "inativo"
+
 class StatusLoteEnum(str, enum.Enum):
     pendente = "pendente"
     processando = "processando"
@@ -35,9 +39,13 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    nome = Column(String(255), nullable=False, default="Usuário")
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     cargo = Column(Enum(CargoEnum), nullable=False)
+    status = Column(Enum(StatusUsuarioEnum), nullable=False, default=StatusUsuarioEnum.ativo)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    ultimo_acesso = Column(DateTime, nullable=True)
 
     lotes = relationship("Lote", back_populates="usuario")
     regras = relationship("RegraColecao", back_populates="usuario")
