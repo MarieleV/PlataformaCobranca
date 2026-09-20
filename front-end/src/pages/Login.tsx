@@ -6,13 +6,15 @@ interface LoginProps {
   onLogin: () => void
 }
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+
 export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     
@@ -22,11 +24,24 @@ export default function Login({ onLogin }: LoginProps) {
     }
     
     setLoading(true)
-    // Simulando chamada à API
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Falha na autenticação")
+      }
+
       onLogin()
-    }, 1200)
+    } catch {
+      setError("Não foi possível autenticar. Verifique suas credenciais.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
