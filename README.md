@@ -20,6 +20,8 @@
   <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
   <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
+  <img src="https://img.shields.io/badge/Celery-37814A?style=flat-square&logo=celery&logoColor=white" alt="Celery"/>
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis"/>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/>
 </p>
 
@@ -29,9 +31,9 @@
 
 Empresas B2B que operam com carteiras de cobrança ainda dependem, em grande parte, de planilhas soltas e disparos manuais de e-mail para gerenciar inadimplência. Esse processo é lento, sujeito a erro humano e não escala.
 
-A **Plataforma de Cobrança Automatizada** resolve esse problema com um pipeline auditável e escalável: da importação em lote à validação dos dados, passando pela orquestração de réguas de cobrança e o disparo multicanal (e-mail, SMS e WhatsApp), tudo de forma automática e monitorável em tempo real.
+A **Plataforma de Cobrança Automatizada** propõe um pipeline auditável e escalável: da importação em lote à validação dos dados, passando pela orquestração de réguas de cobrança e o disparo multicanal (e-mail, SMS e WhatsApp).
 
-O projeto foi desenvolvido como Trabalho de Conclusão de Curso em Engenharia de Software, com padrões de arquitetura e qualidade equivalentes aos de um produto SaaS em produção.
+O projeto foi desenvolvido como Trabalho de Conclusão de Curso em Engenharia de Software, adotando práticas de arquitetura, testes e CI/CD próprias de produtos SaaS. O estado atual de cada módulo está na seção [Status do Projeto](#status-do-projeto).
 
 ---
 
@@ -62,6 +64,20 @@ Upload (Web) → API (FastAPI) → Fila (RabbitMQ) → Workers (Celery)
 
 ---
 
+## Status do Projeto
+
+<!-- AJUSTE: os status abaixo são exemplos. Atualize conforme o que realmente funciona hoje. -->
+
+| Módulo | Status |
+|---|---|
+| Importador e validador de lotes | ✅ Implementado |
+| Motor de regras (régua de cobrança) | 🚧 Em desenvolvimento |
+| Disparo multicanal (SendGrid / Twilio / Meta) | 📋 Planejado |
+| Console de monitoramento | 🧪 Protótipo (dados simulados) |
+| Gestão de acesso (RBAC) | 🚧 Em desenvolvimento |
+
+---
+
 ## Stack Tecnológica
 
 ### Front-end
@@ -69,13 +85,13 @@ Upload (Web) → API (FastAPI) → Fila (RabbitMQ) → Workers (Celery)
 |---|---|---|
 | Build & Framework | React 18 + Vite | HMR instantâneo e bundle otimizado |
 | Linguagem | TypeScript (strict) | Tipagem segura de models e respostas da API |
-| Estilo | Tailwind CSS | Design system corporativo (ver seção UI/UX) |
+| Estilo | Tailwind CSS | Design system corporativo (ver seção Design System) |
 | Roteamento & Sessão | SPA com JWT | Controle de sessão e rotas protegidas |
 
 ### Back-end
 | Camada | Tecnologia | Papel |
 |---|---|---|
-| API | FastAPI (Python 3.16) | Performance e documentação OpenAPI/Swagger autogerada |
+| API | FastAPI (Python 3.14) | Performance e documentação OpenAPI/Swagger autogerada |
 | Processamento de dados | Pandas | Validação massiva de lotes de importação |
 | Filas & Workers | RabbitMQ + Celery + Redis | Execução assíncrona e gerenciamento de filas |
 | Persistência | PostgreSQL | Banco de dados relacional primário |
@@ -87,7 +103,7 @@ Upload (Web) → API (FastAPI) → Fila (RabbitMQ) → Workers (Celery)
 
 A interface segue um padrão **SaaS corporativo premium**, com inspiração em ferramentas como Vercel e Stripe.
 
-- **Clean UI & dark mode semântico** — paleta monocromática (`slate-50` para fundos, preto puro em botões primários e painéis de conversão).
+- **Clean UI monocromática** — paleta em tons de slate (`slate-50` para fundos, preto puro em botões primários e painéis de conversão).
 - **Redução de carga cognitiva** — cores vibrantes (azul, verde, roxo, vermelho) aparecem apenas em tons pastéis sutis, reservadas para indicar status e canais (SMS, WhatsApp, e-mail).
 - **Componentização consistente** — bordas arredondadas (`rounded-2xl`/`rounded-3xl`), sombras suaves acopladas ao tom do componente (`shadow-black/10`) e tipografia geométrica (`Inter`).
 
@@ -105,24 +121,43 @@ A interface segue um padrão **SaaS corporativo premium**, com inspiração em f
   - **Templates Dinâmicos:** Mensageria personalizável via interpolação de variáveis (ex: `{nome}`, `{valor}`).
   - **Omnichannel Estratégico:** Vinculação de canais de comunicação específicos para cada etapa da escalada de cobrança.
 
-- 🖥️ **Console de Monitoramento**
-  - **Observabilidade Integrada:** Terminal web simulado para acompanhamento em tempo real.
-  - **Métricas de Infraestrutura:** Status das filas (RabbitMQ) e consumo de memória (Redis).
-  - **Métricas de Integração:** Logs dos workers e monitoramento de latência/retorno das APIs parceiras (SendGrid, Twilio).
+- 🖥️ **Console de Monitoramento** *(protótipo)*
+  - **Visão operacional:** Interface para acompanhar filas, workers e integrações. Atualmente alimentada com dados simulados no front-end.
+  - **Métricas planejadas:** Status das filas (RabbitMQ), consumo de memória (Redis) e latência das APIs parceiras (SendGrid, Twilio).
 
 - 👥 **Gestão de Acesso (RBAC)**
   - **Perfis de Usuário:** Segregação clara entre **Administrador**, **Gestor** e **Operador**.
   - **Segurança:** Proteção de rotas sensíveis e auditoria de ações globais dentro do sistema.
 
+---
+
 ## Qualidade e CI/CD
 
-| Categoria | Ferramenta / Escopo | Meta / Métrica |
-| --- | --- | --- |
-| **CI/CD** | GitHub Actions (lint, build e testes) | Execução obrigatória a cada Pull Request |
-| **Análise Estática** | SonarCloud (Quality Gate na `master`) | Zero bugs críticos, vulnerabilidades ou code smells |
-| **Testes Automatizados (Back-end)** | `pytest` (fluxos críticos, cálculo de régua, parsers, CSV) | Cobertura ≥ **80%** |
-| **Testes Automatizados (Front-end)** | Testes unitários (componentes críticos de renderização) | Cobertura ≥ **25%** |
-| **Disponibilidade Alvo (SLA / Performance)** | Disponibilidade da aplicação e tempo de resposta da API (P95) | SLA de **99%** e API **< 300 ms** |
+<!-- AJUSTE: preencha "Status atual" com números reais (cobertura, Quality Gate) quando tiver. -->
+
+| Categoria | Ferramenta / Escopo | Meta | Status atual |
+|---|---|---|---|
+| **CI/CD** | GitHub Actions (lint, build e testes) | Execução a cada Pull Request | ✅ Configurado |
+| **Análise Estática** | SonarCloud (Quality Gate na `main`) | Zero bugs críticos e vulnerabilidades | 🚧 Em ajuste |
+| **Testes (Back-end)** | `pytest` (fluxos críticos, régua, parsers, CSV) | Cobertura ≥ 80% | _preencher_ |
+| **Testes (Front-end)** | Testes unitários de componentes críticos | Cobertura ≥ 25% | _preencher_ |
+| **SLA / Performance** | Disponibilidade e latência P95 da API | 99% e < 300 ms | 📋 Meta de projeto |
+
+---
+
+## Como Executar
+
+<!-- AJUSTE: confira portas, nome do .env.example e comandos com o seu docker-compose.yml. -->
+
+```bash
+git clone https://github.com/MarieleV/PlataformaCobranca.git
+cd PlataformaCobranca
+cp .env.example .env        # ajuste as variáveis de ambiente
+docker compose up --build
+```
+
+- Front-end: http://localhost:5173
+- API (Swagger): http://localhost:8000/docs
 
 ---
 
