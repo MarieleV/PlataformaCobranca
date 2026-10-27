@@ -35,9 +35,10 @@ jobs:
           pip install pytest pytest-cov httpx
 
       - name: Executar Testes (Pytest)
+        working-directory: ./back-end
         run: |
           echo "Executando testes..."
-          pytest back-end/tests/ --cov=back-end/app --cov-report=xml
+          pytest tests/ --cov=app --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
