@@ -1,16 +1,51 @@
 # app/worker/tasks.py
 import pandas as pd
 import io
+import re
 from app.core.celery_app import celery_app
 from app.core.database import SessionLocal
 from app.models.domain import Lote, Devedor, ErroLote, StatusLoteEnum
 
 def validar_cpf_cnpj(documento: str) -> bool:
-    # Validação provisória por tamanho. 
     if pd.isna(documento) or not documento:
         return False
-    doc_limpo = ''.join(filter(str.isdigit, str(documento)))
-    return len(doc_limpo) in (11, 14)
+        
+    # Remove qualquer caractere que não seja número (pontos, traços, barras)
+    doc_limpo = re.sub(r'[^0-9]', '', str(documento))
+    
+    if len(doc_limpo) == 11:
+        # Rejeita CPFs com todos os números iguais (ex: 11111111111)
+        if len(set(doc_limpo)) == 1:
+            return False
+        
+        # Cálculo do 1º Dígito (Multiplica por pesos decrescentes de 10 a 2)
+        soma = sum(int(doc_limpo[i]) * (10 - i) for i in range(9))
+        d1 = 0 if soma % 11 < 2 else 11 - (soma % 11)
+        
+        # Cálculo do 2º Dígito (Multiplica por pesos decrescentes de 11 a 2)
+        soma = sum(int(doc_limpo[i]) * (11 - i) for i in range(10))
+        d2 = 0 if soma % 11 < 2 else 11 - (soma % 11)
+        
+        return doc_limpo[-2:] == f"{d1}{d2}"
+        
+    elif len(doc_limpo) == 14:
+        # Rejeita CNPJs com todos os números iguais
+        if len(set(doc_limpo)) == 1:
+            return False
+            
+        # Cálculo do 1º Dígito
+        pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        soma = sum(int(doc_limpo[i]) * pesos1[i] for i in range(12))
+        d1 = 0 if soma % 11 < 2 else 11 - (soma % 11)
+        
+        # Cálculo do 2º Dígito
+        pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        soma = sum(int(doc_limpo[i]) * pesos2[i] for i in range(13))
+        d2 = 0 if soma % 11 < 2 else 11 - (soma % 11)
+        
+        return doc_limpo[-2:] == f"{d1}{d2}"
+        
+    return False
 
 @celery_app.task
 def processar_lote_task(lote_id: str, conteudo_csv: str):
