@@ -41,6 +41,7 @@ jobs:
           python -m pytest tests/ --cov=app --cov-report=xml
 
       - name: SonarCloud Scan
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
