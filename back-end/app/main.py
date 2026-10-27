@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
-from app.api import auth
+from app.api import auth, lotes  # <-- ALTERAÇÃO 1: Adicionado o import do 'lotes'
 # É necessário importar o módulo domain para que o SQLAlchemy "enxergue" os modelos e crie as tabelas
 from app.models import domain
 
@@ -29,6 +29,7 @@ app.add_middleware(
 
 # Registro dos Routers (Controllers) na aplicação principal
 app.include_router(auth.router)
+app.include_router(lotes.router)  # <-- ALTERAÇÃO 2: Registro da rota de lotes
 
 # Rota básica de Health Check para monitoramento e validação de uptime
 @app.get("/", tags=["Health Check"])
