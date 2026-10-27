@@ -38,7 +38,7 @@ jobs:
         working-directory: ./back-end
         run: |
           echo "Executando testes..."
-          pytest tests/ --cov=app --cov-report=xml
+          python -m pytest tests/ --cov=app --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
