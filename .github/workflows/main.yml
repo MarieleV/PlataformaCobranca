@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+      - develop
+      - 'feature/**'
+      - 'hotfix/**'
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   test-and-analyze:
@@ -19,22 +23,21 @@ jobs:
         with:
           fetch-depth: 0  # Obrigatório para o SonarCloud analisar o histórico
 
-      - name: Configurar Python 3.14
+      - name: Configurar Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.12'
 
       - name: Instalar Dependências
         run: |
           python -m pip install --upgrade pip
           pip install -r back-end/requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov httpx
 
       - name: Executar Testes (Pytest)
         run: |
-          # Na Fase 2, quando criarmos os testes, este comando vai gerar o relatório de cobertura de 80% exigido no RFC
           echo "Executando testes..."
-          # pytest back-end/app/tests/ --cov=back-end/app --cov-report=xml
+          pytest back-end/tests/ --cov=back-end/app --cov-report=xml
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
