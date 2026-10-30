@@ -9,6 +9,8 @@ import Devedores from "./pages/Devedores"
 import Monitoramento from "./pages/Monitoramento"
 import Usuarios from "./pages/Usuarios"
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+
 const pageTitles: Record<Page, string> = {
   dashboard: "Dashboard",
   importar: "Importar Lote",
@@ -23,13 +25,21 @@ export default function App() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [page, setPage] = useState<Page>("dashboard")
 
+  const handleLogout = async () => {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "DELETE",
+      credentials: "include",
+    }).catch(() => undefined)
+    setLoggedIn(false)
+  }
+
   if (!loggedIn) {
     return <Login onLogin={() => setLoggedIn(true)} />
   }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans select-none">
-      <Sidebar current={page} onNavigate={setPage} onLogout={() => setLoggedIn(false)} />
+      <Sidebar current={page} onNavigate={setPage} onLogout={handleLogout} />
 
       <main className="flex-1 overflow-hidden flex flex-col bg-slate-50">
         

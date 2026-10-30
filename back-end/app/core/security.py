@@ -9,6 +9,9 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15 # Conforme exigido no RFC
 REFRESH_TOKEN_EXPIRE_DAYS = 7    # Conforme exigido no RFC
 
+if SECRET_KEY == "super-secret-key-change-me":
+    raise RuntimeError("JWT_SECRET must be configured with a unique value")
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     # O bcrypt moderno exige que as strings sejam convertidas em bytes (encode)
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))

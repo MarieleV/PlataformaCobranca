@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.models.domain import Usuario
 from app.core.security import verify_password, create_access_token
 from app.api.deps import get_current_user
+import os
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
@@ -32,7 +33,7 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
         value=f"Bearer {access_token}",
         httponly=True,
         max_age=15 * 60, # 15 minutos
-        secure=True,     # Requer HTTPS (ideal para produção)
+        secure=os.getenv("COOKIE_SECURE", "true").lower() == "true",
         samesite="lax"
     )
     

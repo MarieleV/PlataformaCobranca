@@ -11,15 +11,20 @@ def get_token(request: Request):
     if not token:
         # Fallback para o header de autorização padrão
         auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
+        if auth_header:
+            scheme, _, credentials = auth_header.partition(" ")
+            if scheme.lower() == "bearer" and credentials:
+                token = credentials.strip()
     
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Não autenticado")
     
     # Se o token do cookie vier com o prefixo "Bearer "
     if token.startswith("Bearer "):
-        token = token.split(" ")[1]
+        token = token.removeprefix("Bearer ").strip()
+
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Não autenticado")
         
     return token
 
