@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Numeric, Date, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, Numeric, Date, DateTime, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
@@ -35,9 +35,11 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    nome = Column(String(255), nullable=False)
+    hashed_password = Column(String(255), nullable=False)
     cargo = Column(Enum(CargoEnum), nullable=False)
+    is_active = Column(Boolean, default=True)
 
     lotes = relationship("Lote", back_populates="usuario")
     regras = relationship("RegraColecao", back_populates="usuario")

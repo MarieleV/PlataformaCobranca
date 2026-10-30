@@ -17,7 +17,7 @@ class LoginRequest(BaseModel):
 def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.query(Usuario).filter(Usuario.email == request.email).first()
     
-    if not user or not verify_password(request.password, user.password_hash):
+    if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="E-mail ou senha incorretos"
