@@ -41,7 +41,7 @@ def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_
         raise credentials_exception
         
     # Bloqueia usuários inativos
-    if user.status.value == "inativo":
+    if not user.is_active:
         raise HTTPException(status_code=403, detail="Usuário inativo")
         
     return user

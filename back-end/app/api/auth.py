@@ -3,15 +3,36 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
 from app.models.domain import Usuario
-from app.core.security import verify_password, create_access_token
+from app.core.security import verify_password, create_access_token, get_password_hash
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
-# Schema do Pydantic para validação da requisição
+# Schemas do Pydantic para validação das requisições
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class RegistrarRequest(BaseModel):
+    nome: str
+    email: EmailStr
+    password: str
+    cargo: str = "administrador"
+
+@router.post("/registrar", status_code=status.HTTP_201_CREATED)
+def registrar(request: RegistrarRequest, db: Session = Depends(get_db)):
+    if db.query(Usuario).filter(Usuario.email == request.email).first():
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
+        
+    novo_usuario = Usuario(
+        email=request.email,
+        nome=request.nome,
+        hashed_password=get_password_hash(request.password),
+        cargo=request.cargo
+    )
+    db.add(novo_usuario)
+    db.commit()
+    return {"message": "Usuário criado com sucesso!"}
 
 @router.post("/login")
 def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
