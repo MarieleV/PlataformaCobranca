@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
 import bcrypt
 import os
 
 # Configurações baseadas no RFC
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key-change-me")
+SECRET_KEY = os.getenv("JWT_SECRET", "minha_chave_secreta_super_segura_e_longa_tcc_2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15 # Conforme exigido no RFC
 REFRESH_TOKEN_EXPIRE_DAYS = 7    # Conforme exigido no RFC
@@ -22,7 +22,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
