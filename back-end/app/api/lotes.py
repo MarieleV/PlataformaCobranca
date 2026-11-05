@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.domain import Lote, Usuario, StatusLoteEnum, ErroLote
-from app.api.deps import role_required
+# IMPORTANTE: get_current_user adicionado na importação abaixo
+from app.api.deps import role_required, get_current_user
 
 router = APIRouter(prefix="/lotes", tags=["Gestão de Lotes"])
 
@@ -31,7 +32,7 @@ async def upload_lote(
     conteudo_bytes = await file.read()
     conteudo_str = conteudo_bytes.decode('utf-8')
 
-    # Despacha para o Celery (vamos criar esse arquivo no próximo passo)
+    # Despacha para o Celery
     from app.worker.tasks import processar_lote_task
     processar_lote_task.delay(str(novo_lote.id), conteudo_str)
 
@@ -40,10 +41,23 @@ async def upload_lote(
         "lote_id": str(novo_lote.id)
     }
 
+# ADICIONADO: current_user para impedir acesso anônimo
 @router.get("/")
-def listar_lotes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def listar_lotes(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
     return db.query(Lote).order_by(Lote.id.desc()).offset(skip).limit(limit).all()
 
+# ADICIONADO: current_user para impedir acesso anônimo
 @router.get("/{lote_id}/erros")
-def listar_erros_lote(lote_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def listar_erros_lote(
+    lote_id: str, 
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
     return db.query(ErroLote).filter(ErroLote.lote_id == lote_id).offset(skip).limit(limit).all()
