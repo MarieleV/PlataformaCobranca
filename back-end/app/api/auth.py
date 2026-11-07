@@ -3,45 +3,31 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
 from app.models.domain import Usuario
-from app.core.security import verify_password, create_access_token, get_password_hash
+from app.core.security import verify_password, create_access_token
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
-# Schemas do Pydantic para validação das requisições
+# Schema do Pydantic para validação da requisição
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-class RegistrarRequest(BaseModel):
-    nome: str
-    email: EmailStr
-    password: str
-    cargo: str = "administrador"
-
-@router.post("/registrar", status_code=status.HTTP_201_CREATED)
-def registrar(request: RegistrarRequest, db: Session = Depends(get_db)):
-    if db.query(Usuario).filter(Usuario.email == request.email).first():
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
-        
-    novo_usuario = Usuario(
-        email=request.email,
-        nome=request.nome,
-        hashed_password=get_password_hash(request.password),
-        cargo=request.cargo
-    )
-    db.add(novo_usuario)
-    db.commit()
-    return {"message": "Usuário criado com sucesso!"}
 
 @router.post("/login")
 def login(request: LoginRequest, response: Response, db: Session = Depends(get_db)):
     user = db.query(Usuario).filter(Usuario.email == request.email).first()
     
-    if not user or not verify_password(request.password, user.hashed_password):
+    if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="E-mail ou senha incorretos"
+        )
+    
+    # ADICIONADO: Bloqueia o login caso o usuário tenha sido desativado
+    if user.status.value == "inativo":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuário inativo. O acesso foi revogado."
         )
     
     # Gera o JWT com tempo de vida de 15 minutos (conforme RFC)
