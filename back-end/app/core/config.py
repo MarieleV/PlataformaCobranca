@@ -1,0 +1,94 @@
+"""Configuração central da aplicação.
+
+Toda variável de ambiente é lida aqui, em um único lugar. O restante do código
+importa `settings` em vez de chamar `os.getenv` espalhado pelos módulos.
+"""
+import base64
+import hashlib
+
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Usado apenas em desenvolvimento/testes quando JWT_SECRET não é informado.
+_JWT_SECRET_DEV = "dev-only-secret-nao-use-em-producao-0123456789"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    # --- Aplicação ---
+    app_name: str = "API Plataforma de Cobrança Automatizada"
+    app_version: str = "1.1.0"
+    environment: str = "development"  # development | production
+    # Enquanto o Alembic não estiver configurado. Depois, mude para false.
+    auto_create_tables: bool = True
+
+    # --- Infraestrutura ---
+    database_url: str = "postgresql://postgres:password123@db:5432/cobranca_db"
+    redis_url: str = "redis://redis:6379/0"  # sessões / revogação de tokens
+    rabbitmq_url: str = "amqp://guest:guest@rabbitmq:5672//"
+    celery_result_backend: str = "redis://redis:6379/1"  # DB separado do cache
+
+    # --- Segurança ---
+    jwt_secret: str = ""
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
+    encryption_key: str = ""  # chave Fernet (dados sensíveis em repouso)
+
+    # --- Cookies e CORS ---
+    cors_origins: str = (
+        "http://localhost:8443,http://localhost:5173,http://127.0.0.1:8443"
+    )
+    cookie_secure: bool = False  # true em produção (HTTPS)
+    cookie_samesite: str = "lax"  # lax | strict | none
+    refresh_cookie_path: str = "/"  # restrinja à rota de refresh, ex.: /auth
+
+    # --- Régua de cobrança (RN05 e RN07) ---
+    max_tentativas_envio: int = 4  # 1 envio inicial + 3 reenvios
+    intervalo_reenvio_minutos: int = 30
+    janela_inicio_hora: int = 8
+    janela_fim_hora: int = 20
+    fuso_horario: str = "America/Sao_Paulo"
+
+    # --- Provedores de disparo ---
+    sendgrid_api_key: str = ""
+    email_remetente: str = ""
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_sms_from: str = ""
+    twilio_whatsapp_from: str = ""
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment.lower() == "production"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def fernet_key(self) -> bytes:
+        """Chave Fernet. Em dev sem ENCRYPTION_KEY, deriva da JWT_SECRET."""
+        if self.encryption_key:
+            return self.encryption_key.encode()
+        digest = hashlib.sha256(self.jwt_secret.encode()).digest()
+        return base64.urlsafe_b64encode(digest)
+
+    @model_validator(mode="after")
+    def _validar_segredos(self) -> "Settings":
+        if self.is_production:
+            if len(self.jwt_secret) < 32:
+                raise ValueError("JWT_SECRET precisa ter 32+ caracteres em produção.")
+            if not self.encryption_key:
+                raise ValueError("ENCRYPTION_KEY é obrigatória em produção.")
+            if not self.cookie_secure:
+                raise ValueError("COOKIE_SECURE deve ser true em produção.")
+        elif not self.jwt_secret:
+            self.jwt_secret = _JWT_SECRET_DEV
+        return self
+
+
+settings = Settings()
