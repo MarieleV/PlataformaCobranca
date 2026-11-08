@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from kombu import Connection
 from sqlalchemy import text
 
-from app.api import auth, lotes
+from app.api import auth, devedores, lotes
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.redis_client import get_redis
@@ -48,6 +48,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(lotes.router)
+app.include_router(devedores.router)
 
 
 @app.get("/", tags=["Health Check"])
