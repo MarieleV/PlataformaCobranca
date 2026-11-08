@@ -1,32 +1,49 @@
-from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
 from datetime import datetime
 from uuid import UUID
 
-# DTO para exibir as informações de Erros nos Lotes
+from pydantic import BaseModel, ConfigDict, computed_field
+
+from app.models.domain import StatusLoteEnum
+
+
 class ErroLoteResponse(BaseModel):
+    """Uma linha com erro no relatório de validação (RF03)."""
+
     id: UUID
-    linha_planilha: Optional[int]
-    descricao_erro: str
-    criado_em: datetime
+    numero_linha: int
+    campo: str
+    regra_violada: str
+    valor_informado: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
-# DTO principal para exibir a listagem de Lotes
+
 class LoteResponse(BaseModel):
     id: UUID
     nome_arquivo: str
-    status: str
+    status: StatusLoteEnum
     usuario_id: UUID
+    total_registros: int
+    total_importados: int
+    total_rejeitados: int
+    iniciado_em: datetime | None = None
+    finalizado_em: datetime | None = None
     criado_em: datetime
-    
-    # Podemos incluir a lista de erros atrelada ao lote se necessário no futuro
-    # erros: List[ErroLoteResponse] = []
 
-    # Permite que o Pydantic leia diretamente dos objetos SQLAlchemy
     model_config = ConfigDict(from_attributes=True)
-    
-# DTO para a resposta do upload (que você já faz no formato dict no seu lote.py)
+
+    @computed_field
+    @property
+    def progresso_percentual(self) -> int:
+        """Progresso do processamento (RF02): o front consulta este valor."""
+        if self.status in (StatusLoteEnum.concluido, StatusLoteEnum.erro):
+            return 100
+        if self.total_registros <= 0:
+            return 0
+        processados = self.total_importados + self.total_rejeitados
+        return min(100, int(processados * 100 / self.total_registros))
+
+
 class UploadLoteResponse(BaseModel):
     message: str
     lote_id: UUID
