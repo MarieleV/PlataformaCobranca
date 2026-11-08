@@ -14,7 +14,10 @@ RUN pip install -r requirements.txt
 COPY ./app ./app
 
 # Roda como usuário comum (não-root)
-RUN useradd --create-home --uid 1000 appuser && chown -R appuser:appuser /code
+# /code/uploads é um volume compartilhado entre API e worker (arquivos dos lotes)
+RUN mkdir -p /code/uploads \
+    && useradd --create-home --uid 1000 appuser \
+    && chown -R appuser:appuser /code
 USER appuser
 
 EXPOSE 8000
