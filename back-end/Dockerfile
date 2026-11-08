@@ -1,17 +1,23 @@
 FROM python:3.14-slim
 
-# Define o diretório de trabalho dentro do container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
 WORKDIR /code
 
-# Copia o arquivo de dependências e instala
+# Dependências primeiro: a camada fica em cache enquanto o requirements não mudar
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
-# Copia todo o código da aplicação
+# Código da aplicação
 COPY ./app ./app
 
-# Expõe a porta que o FastAPI vai rodar
+# Roda como usuário comum (não-root)
+RUN useradd --create-home --uid 1000 appuser && chown -R appuser:appuser /code
+USER appuser
+
 EXPOSE 8000
 
-# Comando para iniciar o servidor Uvicorn
+# API, worker e beat usam esta mesma imagem; o comando é definido no compose.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
