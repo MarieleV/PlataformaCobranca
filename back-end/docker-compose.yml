@@ -1,4 +1,4 @@
-  x-backend: &backend
+x-backend: &backend
   build: .
   image: cobranca_backend
   restart: unless-stopped
@@ -12,6 +12,7 @@
   # Em produção, remova este bloco "volumes" e o "--reload" da API.
   volumes:
     - ./app:/code/app
+    - uploads_data:/code/uploads # arquivos de lotes: API grava, worker lê
   depends_on:
     db:
       condition: service_healthy
@@ -98,3 +99,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:
