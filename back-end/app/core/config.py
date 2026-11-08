@@ -46,6 +46,21 @@ class Settings(BaseSettings):
     cookie_samesite: str = "lax"  # lax | strict | none
     refresh_cookie_path: str = "/"  # restrinja à rota de refresh, ex.: /auth
 
+    # --- Upload e ingestão de lotes (RF01 e RNF03) ---
+    # Diretório compartilhado entre a API e o worker (volume do Docker)
+    upload_dir: str = "/code/uploads"
+    max_upload_mb: int = 20
+    max_registros_lote: int = 50000
+
+    # --- Proteção do login (força bruta) ---
+    login_max_tentativas: int = 5
+    login_janela_segundos: int = 900  # 15 minutos
+
+    # --- Administrador inicial (seed) ---
+    admin_nome: str = "Administrador"
+    admin_email: str = "admin@consulth.com.br"
+    admin_senha_inicial: str = "admin123"  # troque em qualquer ambiente real
+
     # --- Régua de cobrança (RN05 e RN07) ---
     max_tentativas_envio: int = 4  # 1 envio inicial + 3 reenvios
     intervalo_reenvio_minutos: int = 30
