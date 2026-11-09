@@ -34,7 +34,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_DB: ${POSTGRES_DB:-cobranca_db}
     ports:
-      - "127.0.0.1:5432:5432" # acessível só pela própria máquina
+      - "127.0.0.1:5433:5432" # acessível só pela própria máquina
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
