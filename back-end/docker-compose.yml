@@ -68,10 +68,11 @@ services:
       - "127.0.0.1:5672:5672" # AMQP
       - "127.0.0.1:15672:15672" # painel web
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+       interval: 10s
+       timeout: 10s
+       retries: 10
+       start_period: 90s
 
   # 4. API (FastAPI)
   api:
