@@ -20,6 +20,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 
 def _config(saida: io.StringIO | None = None) -> Config:
     config = Config(str(RAIZ / "alembic.ini"))
+    # Os testes usam SQLite, mas as migrações são do PostgreSQL: gera o SQL dele
+    config.attributes["database_url"] = "postgresql+psycopg2://u:s@localhost/x"
     config.set_main_option("script_location", str(RAIZ / "alembic"))
     if saida is not None:
         config.output_buffer = saida
@@ -57,11 +59,7 @@ def test_migracoes_criam_todos_os_indices_dos_models():
 
 
 def test_migracoes_criam_os_tipos_enumerados():
-    """O SQL offline usa o dialeto do SQLite (sem tipos nomeados): confere no código."""
-    codigo = "".join(
-        arquivo.read_text(encoding="utf-8")
-        for arquivo in (RAIZ / "alembic" / "versions").glob("*.py")
-    )
+    sql = _sql_de_todas_as_migracoes()
 
     tipos = {
         coluna.type.name
@@ -71,4 +69,12 @@ def test_migracoes_criam_os_tipos_enumerados():
     }
     assert len(tipos) == 6
     for tipo in tipos:
-        assert f"name='{tipo}'" in codigo, f"falta o tipo {tipo} na migração"
+        assert f"CREATE TYPE {tipo} AS ENUM" in sql, f"falta o tipo {tipo} na migração"
+
+
+def test_exclusao_de_usuario_preserva_auditoria_e_usuarios_criados():
+    sql = _sql_de_todas_as_migracoes()
+
+    assert "fk_logs_auditoria_usuario" in sql
+    assert "fk_usuarios_criado_por" in sql
+    assert sql.count("ON DELETE SET NULL") >= 2
