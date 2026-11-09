@@ -108,7 +108,12 @@ class Usuario(Base):
     )
     ativo = Column(Boolean, nullable=False, default=True)
     # Quem criou este usuário (rastreabilidade do UC07)
-    criado_por = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
+    # SET NULL: excluir quem criou não pode apagar nem bloquear os criados.
+    criado_por = Column(
+        UUID(as_uuid=True),
+        ForeignKey("usuarios.id", ondelete="SET NULL", name="fk_usuarios_criado_por"),
+        nullable=True,
+    )
     criado_em = _criado_em()
     atualizado_em = Column(
         DateTime(timezone=True),
@@ -304,7 +309,13 @@ class LogAuditoria(Base):
     )
 
     id = _uuid_pk()
-    usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
+    # SET NULL: o registro sobrevive à exclusão do usuário (a própria exclusão
+    # fica auditada, com o id do usuário removido em entidade_id).
+    usuario_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("usuarios.id", ondelete="SET NULL", name="fk_logs_auditoria_usuario"),
+        nullable=True,
+    )
     acao = Column(String(100), nullable=False)
     entidade = Column(String(50))
     entidade_id = Column(UUID(as_uuid=True))

@@ -17,7 +17,10 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 # O ConfigParser trata "%" como interpolação: senhas com "%" precisam ser escapadas
-config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
+# `attributes["database_url"]` permite aos testes gerar o SQL do PostgreSQL
+# mesmo rodando com SQLite.
+URL_DO_BANCO = config.attributes.get("database_url", settings.database_url)
+config.set_main_option("sqlalchemy.url", URL_DO_BANCO.replace("%", "%%"))
 
 target_metadata = Base.metadata
 
@@ -25,7 +28,7 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """Gera o SQL sem conectar ao banco (alembic upgrade head --sql)."""
     context.configure(
-        url=settings.database_url,
+        url=URL_DO_BANCO,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
