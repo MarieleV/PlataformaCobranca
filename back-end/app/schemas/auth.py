@@ -2,6 +2,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
+from app.schemas.usuario import SenhaForte
+
 from app.models.domain import CargoEnum
 
 
@@ -32,3 +34,8 @@ class LoginResponse(BaseModel):
 
 class MensagemResponse(BaseModel):
     message: str
+
+
+class TrocarSenhaRequest(BaseModel):
+    senha_atual: str
+    nova_senha: SenhaForte

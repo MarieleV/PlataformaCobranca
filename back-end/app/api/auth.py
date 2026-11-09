@@ -5,7 +5,7 @@ import redis
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, ip_cliente as _ip_cliente
 from app.core.auditoria import registrar_auditoria
 from app.core.database import get_db
 from app.core.rate_limit import (
@@ -13,7 +13,12 @@ from app.core.rate_limit import (
     registrar_falha_login,
     verificar_limite_login,
 )
-from app.core.redis_client import revogar_token, token_revogado
+from app.core.redis_client import (
+    invalidar_sessoes_do_usuario,
+    revogar_token,
+    sessao_invalidada,
+    token_revogado,
+)
 from app.core.security import (
     ACCESS_COOKIE_NAME,
     ACCESS_TOKEN_TYPE,
@@ -23,6 +28,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    get_password_hash,
     set_auth_cookies,
     verify_password,
     verify_password_dummy,
@@ -30,18 +36,13 @@ from app.core.security import (
 from app.models.domain import Usuario
 from app.schemas.auth import (
     LoginRequest,
+    TrocarSenhaRequest,
     LoginResponse,
     MensagemResponse,
     UsuarioAutenticado,
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
-
-
-def _ip_cliente(request: Request) -> str:
-    # Atrás do Nginx (produção), configure o uvicorn com --proxy-headers
-    # para que este valor seja o IP real do usuário.
-    return request.client.host if request.client else "desconhecido"
 
 
 def _emitir_tokens(response: Response, usuario: Usuario) -> None:
@@ -117,7 +118,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         raise nao_autorizado
 
     try:
-        if token_revogado(payload["jti"]):
+        if token_revogado(payload["jti"]) or sessao_invalidada(usuario_id, payload):
             raise nao_autorizado
         usuario = db.get(Usuario, usuario_id)
         if usuario is None or not usuario.ativo:
@@ -165,3 +166,44 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 def me(current_user: Usuario = Depends(get_current_user)):
     """Dados do usuário logado (o front usa para restaurar a sessão)."""
     return UsuarioAutenticado.de_modelo(current_user)
+
+
+@router.put("/senha", response_model=MensagemResponse)
+def trocar_propria_senha(
+    dados: TrocarSenhaRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """O próprio usuário troca a senha (qualquer perfil).
+
+    As outras sessões abertas (outros navegadores, aparelhos) são encerradas;
+    a atual continua com tokens novos.
+    """
+    if not verify_password(dados.senha_atual, current_user.senha_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta"
+        )
+    if verify_password(dados.nova_senha, current_user.senha_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A nova senha deve ser diferente da atual",
+        )
+
+    try:
+        invalidar_sessoes_do_usuario(current_user.id)
+    except redis.RedisError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Serviço de sessão indisponível",
+        )
+    current_user.senha_hash = get_password_hash(dados.nova_senha)
+    registrar_auditoria(
+        db, current_user.id, "alterar_propria_senha", "usuario", current_user.id,
+        _ip_cliente(request),
+    )
+    db.commit()
+
+    _emitir_tokens(response, current_user)
+    return MensagemResponse(message="Senha alterada com sucesso")
