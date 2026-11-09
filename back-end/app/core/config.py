@@ -6,7 +6,7 @@ importa `settings` em vez de chamar `os.getenv` espalhado pelos módulos.
 import base64
 import hashlib
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Usado apenas em desenvolvimento/testes quando JWT_SECRET não é informado.
@@ -75,6 +75,15 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_sms_from: str = ""
     twilio_whatsapp_from: str = ""
+
+    @field_validator("database_url")
+    @classmethod
+    def _usar_driver_psycopg2(cls, valor: str) -> str:
+        # O SQLAlchemy 2.1 assume o psycopg 3 em "postgresql://", mas o projeto
+        # instala o psycopg2 (requirements.txt). Fixar o driver evita o erro.
+        if valor.startswith("postgresql://"):
+            return valor.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return valor
 
     @property
     def is_production(self) -> bool:
