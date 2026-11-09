@@ -137,3 +137,44 @@ def test_cors_origins_vira_lista_sem_espacos_nem_vazios():
     config = _config(cors_origins=" http://a.com , http://b.com ,, ")
 
     assert config.cors_origins_list == ["http://a.com", "http://b.com"]
+
+
+# --------------------------------------------------------------------------
+# Banco remoto (AWS RDS) exige TLS em produção
+# --------------------------------------------------------------------------
+
+_PRODUCAO = dict(
+    environment="production", jwt_secret="x" * 40, encryption_key="k", cookie_secure=True
+)
+
+
+def test_producao_recusa_banco_remoto_sem_tls():
+    with pytest.raises(ValueError, match="sslmode"):
+        _config(database_url="postgresql://u:s@meu-banco.rds.amazonaws.com:5432/x", **_PRODUCAO)
+
+
+def test_producao_recusa_sslmode_desativado():
+    with pytest.raises(ValueError, match="sslmode"):
+        _config(
+            database_url="postgresql://u:s@meu-banco.rds.amazonaws.com:5432/x?sslmode=disable",
+            **_PRODUCAO,
+        )
+
+
+def test_producao_aceita_banco_remoto_com_tls():
+    config = _config(
+        database_url="postgresql://u:s@meu-banco.rds.amazonaws.com:5432/x?sslmode=require",
+        **_PRODUCAO,
+    )
+
+    assert config.database_url.endswith("?sslmode=require")
+
+
+def test_banco_do_proprio_compose_nao_exige_tls():
+    assert _config(database_url="postgresql://u:s@db:5432/x", **_PRODUCAO).is_production
+
+
+def test_desenvolvimento_nao_exige_tls_no_banco_remoto():
+    config = _config(database_url="postgresql://u:s@meu-banco.rds.amazonaws.com:5432/x")
+
+    assert config.is_production is False

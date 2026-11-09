@@ -14,7 +14,10 @@ def _login(client, email, senha=SENHA_PADRAO):
 
 def _acoes_auditadas(db) -> list[str]:
     db.expire_all()
-    return [a.acao for a in db.scalars(select(LogAuditoria).order_by(LogAuditoria.criado_em))]
+    # Sem ordenar: o criado_em do SQLite tem precisão de segundos, então duas
+    # ações seguidas empatam e a ordem do ORDER BY seria arbitrária. Os testes
+    # que usam este helper comparam as ações sem depender da ordem.
+    return sorted(a.acao for a in db.scalars(select(LogAuditoria)))
 
 
 # --------------------------------------------------------------------------
