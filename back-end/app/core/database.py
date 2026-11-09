@@ -5,14 +5,16 @@ from app.core.config import settings
 
 # pool_pre_ping descarta conexões mortas (ex.: banco reiniciado) antes de usar.
 # Pool pequeno: API + workers somam conexões e o Postgres limita o total (~100).
-engine = create_engine(
-    settings.database_url,
-    echo=False,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-    pool_recycle=1800,
-)
+_opcoes_engine: dict = {"echo": False, "pool_pre_ping": True}
+if not settings.database_url.startswith("sqlite"):
+    # Parâmetros de pool só valem para o Postgres. O SQLite dos testes usa
+    # outro tipo de pool e rejeitaria "max_overflow".
+    _opcoes_engine.update(pool_size=5, max_overflow=10, pool_recycle=1800)
+else:
+    # Permite que o TestClient (outra thread) use a mesma conexão do SQLite.
+    _opcoes_engine["connect_args"] = {"check_same_thread": False}
+
+engine = create_engine(settings.database_url, **_opcoes_engine)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
