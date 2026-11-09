@@ -1,10 +1,12 @@
+# Copie .env.example para .env e preencha os valores antes de subir.
+
 x-backend: &backend
   build: .
   image: cobranca_backend
   restart: unless-stopped
   env_file: .env
   environment:
-    DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cobranca_db}
+    DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cobranca_db}
     REDIS_URL: redis://redis:6379/0
     CELERY_RESULT_BACKEND: redis://redis:6379/1
     RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
