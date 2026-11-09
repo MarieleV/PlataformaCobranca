@@ -123,6 +123,10 @@ class Usuario(Base):
 
 class Lote(Base):
     __tablename__ = "lotes"
+    __table_args__ = (
+        Index("idx_lotes_usuario", "usuario_id"),
+        Index("idx_lotes_criado_em", text("criado_em DESC")),
+    )
 
     id = _uuid_pk()
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
@@ -170,6 +174,7 @@ class Devedor(Base):
     __tablename__ = "devedores"
     __table_args__ = (
         Index("idx_devedores_status_vencimento", "status", "data_vencimento"),
+        Index("idx_devedores_lote", "lote_id"),
     )
 
     id = _uuid_pk()
@@ -205,7 +210,10 @@ class Devedor(Base):
 
 class RegraCobranca(Base):
     __tablename__ = "regras_cobranca"
-    __table_args__ = (CheckConstraint("dias_atraso > 0", name="ck_regra_dias_atraso"),)
+    __table_args__ = (
+        CheckConstraint("dias_atraso > 0", name="ck_regra_dias_atraso"),
+        Index("idx_regras_ativa_dias", "ativa", "dias_atraso"),
+    )
 
     id = _uuid_pk()
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False)
@@ -223,6 +231,10 @@ class RegraCobranca(Base):
 
 class Job(Base):
     __tablename__ = "jobs"
+    __table_args__ = (
+        Index("idx_jobs_regra", "regra_id"),
+        Index("idx_jobs_status_criado", "status", text("criado_em DESC")),
+    )
 
     id = _uuid_pk()
     regra_id = Column(
@@ -251,6 +263,13 @@ class Comunicacao(Base):
     __tablename__ = "comunicacoes"
     __table_args__ = (
         Index("idx_comunicacoes_devedor", "devedor_id", text("criado_em DESC")),
+        Index("idx_comunicacoes_job", "job_id"),
+        # Fila de reenvios (RN07): só as comunicações ainda por tentar
+        Index(
+            "idx_comunicacoes_reenvio",
+            "proxima_tentativa_em",
+            postgresql_where=text("status IN ('pendente', 'falha')"),
+        ),
     )
 
     id = _uuid_pk()
@@ -278,6 +297,11 @@ class LogAuditoria(Base):
     """Log de auditoria de acessos e ações (UC07-A5 / RF11, exclusivo do admin)."""
 
     __tablename__ = "logs_auditoria"
+    __table_args__ = (
+        Index("idx_auditoria_criado_em", text("criado_em DESC")),
+        Index("idx_auditoria_usuario", "usuario_id", text("criado_em DESC")),
+        Index("idx_auditoria_entidade", "entidade", "entidade_id"),
+    )
 
     id = _uuid_pk()
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
