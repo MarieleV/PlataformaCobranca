@@ -77,7 +77,9 @@ services:
   api:
     <<: *backend
     container_name: cobranca_api
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    # Aplica as migrações pendentes antes de subir a API (só a API migra,
+    # para o worker e o beat não disputarem o mesmo ALTER TABLE).
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     healthcheck:
@@ -85,19 +87,25 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 40s
 
   # 5. Worker (Celery): ingestão de lotes e disparos
   worker:
     <<: *backend
     container_name: cobranca_worker
     command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      api:
+        condition: service_healthy
 
   # 6. Scheduler (Celery Beat): jobs recorrentes da régua
   beat:
     <<: *backend
     container_name: cobranca_beat
     command: celery -A app.core.celery_app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

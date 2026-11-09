@@ -12,6 +12,8 @@ RUN pip install -r requirements.txt
 
 # Código da aplicação
 COPY ./app ./app
+COPY alembic.ini .
+COPY ./alembic ./alembic
 
 # Roda como usuário comum (não-root)
 # /code/uploads é um volume compartilhado entre API e worker (arquivos dos lotes)
