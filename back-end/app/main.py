@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Roda na subida do servidor (e não no import), então importar `app.main`
     # nos testes não exige um banco acessível.
-    # Quando o Alembic estiver configurado, defina AUTO_CREATE_TABLES=false.
+    # O esquema vem do Alembic; create_all só roda com AUTO_CREATE_TABLES=true.
     if settings.auto_create_tables:
         Base.metadata.create_all(bind=engine)
     yield

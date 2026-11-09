@@ -7,6 +7,7 @@ import base64
 import hashlib
 
 from pydantic import field_validator, model_validator
+from sqlalchemy.engine import make_url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Usado apenas em desenvolvimento/testes quando JWT_SECRET não é informado.
@@ -22,11 +23,16 @@ class Settings(BaseSettings):
     app_name: str = "API Plataforma de Cobrança Automatizada"
     app_version: str = "1.1.0"
     environment: str = "development"  # development | production
-    # Enquanto o Alembic não estiver configurado. Depois, mude para false.
-    auto_create_tables: bool = True
+    # O esquema do banco é gerenciado pelo Alembic (alembic upgrade head).
+    # Só ligue em protótipos descartáveis: create_all não acompanha mudanças.
+    auto_create_tables: bool = False
 
     # --- Infraestrutura ---
     database_url: str = "postgresql://postgres:password123@db:5432/cobranca_db"
+    # Pool de conexões por processo. No RDS db.t3.micro/t4g.micro o limite é de
+    # ~110 conexões: API + workers (cada processo tem o seu pool) precisam caber.
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
     redis_url: str = "redis://redis:6379/0"  # sessões / revogação de tokens
     rabbitmq_url: str = "amqp://guest:guest@rabbitmq:5672//"
     celery_result_backend: str = "redis://redis:6379/1"  # DB separado do cache
@@ -86,6 +92,14 @@ class Settings(BaseSettings):
         return valor
 
     @property
+    def database_exige_ssl(self) -> bool:
+        """Banco remoto (ex.: RDS) precisa de TLS; o do próprio compose não."""
+        url = make_url(self.database_url)
+        if not url.drivername.startswith("postgresql"):
+            return False
+        return url.host not in (None, "db", "localhost", "127.0.0.1")
+
+    @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
 
@@ -110,6 +124,13 @@ class Settings(BaseSettings):
                 raise ValueError("ENCRYPTION_KEY é obrigatória em produção.")
             if not self.cookie_secure:
                 raise ValueError("COOKIE_SECURE deve ser true em produção.")
+            if self.database_exige_ssl and make_url(self.database_url).query.get(
+                "sslmode"
+            ) not in ("require", "verify-ca", "verify-full"):
+                raise ValueError(
+                    "DATABASE_URL remoto exige TLS em produção: "
+                    "acrescente ?sslmode=require (dados pessoais, LGPD)."
+                )
         elif not self.jwt_secret:
             self.jwt_secret = _JWT_SECRET_DEV
         return self
