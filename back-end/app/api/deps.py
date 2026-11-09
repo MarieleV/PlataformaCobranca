@@ -6,9 +6,15 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.redis_client import token_revogado
+from app.core.redis_client import sessao_invalidada, token_revogado
 from app.core.security import ACCESS_COOKIE_NAME, ACCESS_TOKEN_TYPE, decode_token
 from app.models.domain import Usuario
+
+
+def ip_cliente(request: Request) -> str:
+    # Atrás do Nginx (produção), configure o uvicorn com --proxy-headers
+    # para que este valor seja o IP real do usuário.
+    return request.client.host if request.client else "desconhecido"
 
 
 def get_token(request: Request) -> str:
@@ -42,6 +48,8 @@ def get_current_user(
 
     try:
         if token_revogado(payload["jti"]):  # token invalidado pelo logout
+            raise credenciais_invalidas
+        if sessao_invalidada(usuario_id, payload):  # senha trocada / conta desativada
             raise credenciais_invalidas
     except redis.RedisError:
         # Sem o Redis não dá para garantir que o token não foi revogado

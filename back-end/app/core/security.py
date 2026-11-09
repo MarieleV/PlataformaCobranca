@@ -78,6 +78,9 @@ def _criar_token(data: dict, token_type: str, expires_delta: timedelta) -> str:
         "iat": agora,
         "exp": agora + expires_delta,
         "jti": uuid.uuid4().hex,  # id único: permite revogar no logout
+        # O "iat" padrão tem precisão de segundos; este permite invalidar as
+        # sessões antigas de um usuário sem derrubar as que acabaram de nascer.
+        "emitido_ms": int(agora.timestamp() * 1000),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
