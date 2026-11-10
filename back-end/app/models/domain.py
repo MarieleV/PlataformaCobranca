@@ -218,6 +218,16 @@ class RegraCobranca(Base):
     __table_args__ = (
         CheckConstraint("dias_atraso > 0", name="ck_regra_dias_atraso"),
         Index("idx_regras_ativa_dias", "ativa", "dias_atraso"),
+        # Duas regras ativas para o mesmo canal e prazo mandariam a mesma
+        # mensagem duas vezes (e a RN03 barraria a segunda): só uma por par.
+        Index(
+            "uq_regras_ativas_canal_dias",
+            "canal",
+            "dias_atraso",
+            unique=True,
+            postgresql_where=text("ativa"),
+            sqlite_where=text("ativa"),
+        ),
     )
 
     id = _uuid_pk()
@@ -227,7 +237,8 @@ class RegraCobranca(Base):
     canal = Column(_enum(CanalEnum, "canal_disparo"), nullable=False)
     template_mensagem = Column(Text, nullable=False)
     horario_disparo = Column(Time, nullable=False, default=time(9, 0))
-    ativa = Column(Boolean, nullable=False, default=True)
+    # Nasce desativada: nada é enviado até alguém ativar a regra (RN02)
+    ativa = Column(Boolean, nullable=False, default=False)
     criado_em = _criado_em()
 
     usuario = relationship("Usuario", back_populates="regras")
