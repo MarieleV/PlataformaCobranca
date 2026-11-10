@@ -178,3 +178,36 @@ def test_desenvolvimento_nao_exige_tls_no_banco_remoto():
     config = _config(database_url="postgresql://u:s@meu-banco.rds.amazonaws.com:5432/x")
 
     assert config.is_production is False
+
+
+# --------------------------------------------------------------------------
+# Disparo real exige as chaves dos provedores
+# --------------------------------------------------------------------------
+
+
+def test_envio_simulado_e_o_padrao():
+    assert _config().envio_simulado is True
+
+
+def test_producao_pode_ficar_em_modo_simulado_sem_chaves():
+    assert _config(**_PRODUCAO).is_production
+
+
+def test_producao_com_envio_real_exige_as_chaves():
+    with pytest.raises(ValueError, match="ENVIO_SIMULADO"):
+        _config(envio_simulado=False, **_PRODUCAO)
+
+
+def test_producao_com_envio_real_e_chaves_completas_sobe():
+    config = _config(
+        envio_simulado=False,
+        sendgrid_api_key="SG.x",
+        email_remetente="cobranca@empresa.com",
+        twilio_account_sid="ACx",
+        twilio_auth_token="t",
+        twilio_sms_from="+15550001111",
+        twilio_whatsapp_from="+15550002222",
+        **_PRODUCAO,
+    )
+
+    assert config.envio_simulado is False

@@ -78,3 +78,11 @@ def test_exclusao_de_usuario_preserva_auditoria_e_usuarios_criados():
     assert "fk_logs_auditoria_usuario" in sql
     assert "fk_usuarios_criado_por" in sql
     assert sql.count("ON DELETE SET NULL") >= 2
+
+
+def test_um_job_por_regra_e_por_dia_na_migracao():
+    sql = _sql_de_todas_as_migracoes()
+
+    assert "dia_referencia" in sql
+    assert "uq_jobs_regra_dia" in sql
+    assert "uq_regras_ativas_canal_dias" in sql
