@@ -9,7 +9,7 @@ from app.api.deps import get_current_user, role_required
 from app.core.auditoria import registrar_auditoria
 from app.core.database import get_db
 from app.core.datas import hoje
-from app.models.domain import Comunicacao, Devedor, StatusDevedorEnum, Usuario
+from app.models.domain import CargoEnum, Comunicacao, Devedor, StatusDevedorEnum, Usuario
 from app.schemas.devedor import (
     AlterarStatusRequest,
     ComunicacaoResponse,
@@ -91,21 +91,34 @@ def alterar_status(
     """Atualiza a situação da cobrança (ex.: `negociando`, `quitado`).
 
     `quitado` alimenta a taxa de conversão do dashboard; só `ativo` e
-    `comunicado` continuam recebendo cobrança. A mudança fica no log de auditoria.
+    `comunicado` continuam recebendo cobrança. Regras:
+    * marcar como `quitado` é só do gestor e do administrador (403 para o operador);
+    * um devedor `quitado` não pode ser reaberto (409).
+    A mudança fica no log de auditoria.
     """
     devedor = _buscar_devedor(db, devedor_id)
-    if devedor.status != dados.status:
-        devedor.status = dados.status
-        registrar_auditoria(
-            db,
-            current_user.id,
-            "alterar_status_devedor",
-            "devedor",
-            devedor.id,
-            request.client.host if request.client else None,
+    if devedor.status == dados.status:
+        return DevedorResponse.de_modelo(devedor)
+    if devedor.status == StatusDevedorEnum.quitado:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="Devedor quitado não pode ser reaberto"
         )
-        db.commit()
-        db.refresh(devedor)
+    if dados.status == StatusDevedorEnum.quitado and current_user.cargo == CargoEnum.operador:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="Só gestor ou administrador pode marcar o devedor como quitado",
+        )
+    devedor.status = dados.status
+    registrar_auditoria(
+        db,
+        current_user.id,
+        "alterar_status_devedor",
+        "devedor",
+        devedor.id,
+        request.client.host if request.client else None,
+    )
+    db.commit()
+    db.refresh(devedor)
     return DevedorResponse.de_modelo(devedor)
 
 

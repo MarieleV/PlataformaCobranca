@@ -6,8 +6,9 @@ Definições (valem para a API e para o /metrics, que usam estas mesmas funçõe
 * Comunicação **com falha**: `bounce` ou `falha` sem novo reenvio agendado
   (falha definitiva, RN07/RN08).
 * Comunicação **aguardando**: `pendente` ou `falha` com reenvio agendado — ainda
-  sem desfecho, por isso fora da taxa de entrega.
-* **Disparos** = sucesso + falhas (comunicações com desfecho).
+  sem desfecho. Conta como disparo e entra no denominador da taxa: durante o dia
+  a taxa sobe à medida que os envios se resolvem.
+* **Disparos** = sucesso + falhas + aguardando (toda comunicação gerada).
 * **Taxa de entrega** = sucesso / disparos.
 * **Taxa de conversão** = dos devedores que receberam ao menos uma comunicação
   com sucesso no período, a parcela hoje com status `quitado`.
@@ -52,7 +53,7 @@ class Contagem:
 
     @property
     def disparos(self) -> int:
-        return self.sucesso + self.falhas
+        return self.sucesso + self.falhas + self.aguardando
 
     @property
     def taxa_entrega(self) -> float | None:
