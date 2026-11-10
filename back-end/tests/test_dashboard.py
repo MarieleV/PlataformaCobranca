@@ -65,8 +65,13 @@ def test_contagem_separa_sucesso_falha_e_aguardando(db, cenario, comunicacoes_de
     inicio, fim = servico.limites_do_periodo(hoje(), 1)
     c = servico.contagem_total(db, inicio, fim)
     assert (c.sucesso, c.falhas, c.aguardando) == (2, 1, 1)
-    assert c.disparos == 3  # aguardando ainda não tem desfecho
-    assert c.taxa_entrega == 66.7
+    assert c.disparos == 4  # o que está aguardando também conta
+    assert c.taxa_entrega == 50.0
+
+
+def test_pendentes_entram_no_denominador_da_taxa():
+    assert servico.Contagem(sucesso=1, falhas=0, aguardando=3).taxa_entrega == 25.0
+    assert servico.Contagem().taxa_entrega is None
 
 
 def test_percentual_sem_base_e_none():
@@ -118,7 +123,7 @@ def test_dashboard_com_dados(como, cenario, comunicacoes_de_hoje):
     assert corpo["base"]["total"] == 4
     assert corpo["base"]["por_status"]["quitado"] == 1
     assert corpo["hoje"] == {
-        "disparos": 3, "sucesso": 2, "falhas": 1, "aguardando": 1, "taxa_entrega": 66.7,
+        "disparos": 4, "sucesso": 2, "falhas": 1, "aguardando": 1, "taxa_entrega": 50.0,
     }
     assert corpo["periodo"]["devedores_alcancados"] == 2
     assert corpo["periodo"]["devedores_quitados"] == 1
@@ -130,7 +135,7 @@ def test_dashboard_com_dados(como, cenario, comunicacoes_de_hoje):
     assert sms["disparos"] == 0 and sms["taxa_entrega"] is None
 
     assert corpo["timeline"][-1]["dia"] == hoje().isoformat()
-    assert corpo["timeline"][-1]["disparos"] == 3
+    assert corpo["timeline"][-1]["disparos"] == 4
     assert len(corpo["ultimos_jobs"]) == 1
     assert corpo["ultimos_jobs"][0]["canal"] == "email"
     assert len(corpo["ultimos_lotes"]) == 1
@@ -149,13 +154,47 @@ def test_dashboard_janela_em_dias(como):
 @pytest.mark.parametrize("cargo", list(CargoEnum))
 def test_alterar_status_do_devedor(como, db, criar_devedor, cargo):
     devedor = criar_devedor("Ana")
-    r = como(cargo).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
+    r = como(cargo).patch(f"/devedores/{devedor.id}/status", json={"status": "negociando"})
     assert r.status_code == 200
-    assert r.json()["status"] == "quitado"
+    assert r.json()["status"] == "negociando"
     db.expire_all()
-    assert db.get(Devedor, devedor.id).status == StatusDevedorEnum.quitado
+    assert db.get(Devedor, devedor.id).status == StatusDevedorEnum.negociando
     acoes = [a.acao for a in db.scalars(select(LogAuditoria))]
     assert acoes.count("alterar_status_devedor") == 1
+
+
+@pytest.mark.parametrize("cargo", [CargoEnum.gestor, CargoEnum.administrador])
+def test_gestor_e_administrador_marcam_quitado(como, db, criar_devedor, cargo):
+    devedor = criar_devedor("Ana")
+    r = como(cargo).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
+    assert r.status_code == 200
+    db.expire_all()
+    assert db.get(Devedor, devedor.id).status == StatusDevedorEnum.quitado
+
+
+def test_operador_nao_marca_quitado(como, db, criar_devedor):
+    devedor = criar_devedor("Ana")
+    r = como(CargoEnum.operador).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
+    assert r.status_code == 403
+    db.expire_all()
+    assert db.get(Devedor, devedor.id).status == StatusDevedorEnum.ativo
+    acoes = [a.acao for a in db.scalars(select(LogAuditoria))]
+    assert "alterar_status_devedor" not in acoes
+
+
+@pytest.mark.parametrize("novo", ["ativo", "comunicado", "negociando", "inativo"])
+def test_devedor_quitado_nao_pode_ser_reaberto(como, db, criar_devedor, novo):
+    devedor = criar_devedor("Ana", status=StatusDevedorEnum.quitado)
+    r = como(CargoEnum.administrador).patch(f"/devedores/{devedor.id}/status", json={"status": novo})
+    assert r.status_code == 409
+    db.expire_all()
+    assert db.get(Devedor, devedor.id).status == StatusDevedorEnum.quitado
+
+
+def test_repetir_quitado_em_quitado_e_aceito(como, criar_devedor):
+    devedor = criar_devedor("Ana", status=StatusDevedorEnum.quitado)
+    r = como(CargoEnum.gestor).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
+    assert r.status_code == 200
 
 
 def test_alterar_para_o_mesmo_status_nao_audita(como, db, criar_devedor):
@@ -182,7 +221,7 @@ def test_alterar_status_exige_login(client, criar_devedor):
 
 def test_devedor_quitado_sai_da_regua(db, como, criar_regra, criar_devedor):
     devedor = criar_devedor("Ana")
-    como(CargoEnum.operador).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
+    como(CargoEnum.gestor).patch(f"/devedores/{devedor.id}/status", json={"status": "quitado"})
     regra = criar_regra()
     from app.services.regua import contar_elegiveis
 
@@ -209,7 +248,7 @@ def test_metrics_formato_prometheus(client, cenario, comunicacoes_de_hoje):
     assert _valor(t, 'cobranca_comunicacoes{canal="email",resultado="sucesso"}') == 2
     assert _valor(t, 'cobranca_comunicacoes{canal="email",resultado="falha"}') == 1
     assert _valor(t, 'cobranca_comunicacoes_hoje{canal="email",resultado="aguardando"}') == 1
-    assert _valor(t, 'cobranca_taxa_entrega_percent{canal="todos"}') == 66.7
+    assert _valor(t, 'cobranca_taxa_entrega_percent{canal="todos"}') == 50.0
     assert _valor(t, "cobranca_taxa_conversao_percent") == 50.0
     assert _valor(t, 'cobranca_jobs{status="executando"}') == 1
 

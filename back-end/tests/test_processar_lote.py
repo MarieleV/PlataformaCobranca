@@ -99,7 +99,7 @@ def test_linhas_validas_e_invalidas(db, novo_lote, escrever_csv, processar):
 
     assert lote.status == StatusLoteEnum.concluido
     assert (lote.total_registros, lote.total_importados, lote.total_rejeitados) == (3, 2, 1)
-    assert "2 importados, 1 rejeitados" in mensagem
+    assert "2 importados, 0 atualizados, 1 rejeitados" in mensagem
     assert lote.iniciado_em is not None and lote.finalizado_em is not None
     assert len(_devedores(db, lote.id)) == 2
 
@@ -294,15 +294,76 @@ def test_documento_duplicado_no_proprio_arquivo(db, novo_lote, escrever_csv, pro
     assert "linha 2" in erro.regra_violada  # aponta a primeira ocorrência
 
 
-def test_documento_ja_cadastrado_em_outro_lote(db, novo_lote, escrever_csv, processar):
+def test_documento_ja_cadastrado_atualiza_o_devedor(db, novo_lote, escrever_csv, processar):
     primeiro = novo_lote()
     processar(primeiro, escrever_csv([CABECALHO, LINHA_OK], nome="a.csv"))
 
+    atualizada = "529.982.247-25,Maria S. Souza,nova@exemplo.com,2000.00,01/05/2026,47988887777"
     segundo = novo_lote()
-    _, segundo = processar(segundo, escrever_csv([CABECALHO, LINHA_OK, LINHA_OK_2], nome="b.csv"))
+    _, segundo = processar(
+        segundo, escrever_csv([CABECALHO, atualizada, LINHA_OK_2], nome="b.csv")
+    )
 
-    assert (segundo.total_importados, segundo.total_rejeitados) == (1, 1)
-    assert "já cadastrado" in _erros(db, segundo.id)[0].regra_violada
+    assert (segundo.total_importados, segundo.total_atualizados, segundo.total_rejeitados) == (1, 1, 0)
+    assert _erros(db, segundo.id) == []
+    maria = db.scalars(select(Devedor).where(Devedor.cpf_cnpj == "52998224725")).one()
+    assert maria.nome == "Maria S. Souza"
+    assert maria.email == "nova@exemplo.com"
+    assert maria.telefone == "47988887777"
+    assert descriptografar_decimal(maria.valor_divida_enc) == Decimal("2000.00")
+    assert maria.lote_id == primeiro.id  # continua no lote de origem
+    assert maria.status == StatusDevedorEnum.ativo
+
+
+def test_atualizacao_preserva_status_e_contatos_em_branco(db, novo_lote, escrever_csv, processar):
+    primeiro = novo_lote()
+    processar(primeiro, escrever_csv([CABECALHO, LINHA_OK], nome="a.csv"))
+    maria = db.scalars(select(Devedor)).one()
+    maria.status = StatusDevedorEnum.negociando
+    db.commit()
+
+    sem_telefone = "529.982.247-25,Maria Silva,maria@exemplo.com,999.00,12/04/2026,"
+    _, segundo = processar(novo_lote(), escrever_csv([CABECALHO, sem_telefone], nome="b.csv"))
+
+    assert segundo.total_atualizados == 1
+    db.expire_all()
+    maria = db.scalars(select(Devedor)).one()
+    assert maria.status == StatusDevedorEnum.negociando  # status não muda na reimportação
+    assert maria.telefone == "47999990000"  # contato em branco não apaga o existente
+    assert descriptografar_decimal(maria.valor_divida_enc) == Decimal("999.00")
+
+
+def test_devedor_quitado_nao_e_atualizado(db, novo_lote, escrever_csv, processar):
+    processar(novo_lote(), escrever_csv([CABECALHO, LINHA_OK], nome="a.csv"))
+    maria = db.scalars(select(Devedor)).one()
+    maria.status = StatusDevedorEnum.quitado
+    db.commit()
+
+    outra = "529.982.247-25,Nome Novo,novo@exemplo.com,1.00,12/04/2026,"
+    segundo_lote = novo_lote()
+    _, segundo = processar(segundo_lote, escrever_csv([CABECALHO, outra], nome="b.csv"))
+
+    assert (segundo.total_atualizados, segundo.total_rejeitados) == (0, 1)
+    assert "quitado" in _erros(db, segundo.id)[0].regra_violada
+    db.expire_all()
+    assert db.scalars(select(Devedor)).one().nome == "Maria Silva"
+
+
+def test_reprocessar_lote_com_atualizacao_e_idempotente(db, novo_lote, escrever_csv, processar):
+    processar(novo_lote(), escrever_csv([CABECALHO, LINHA_OK], nome="a.csv"))
+    atualizada = "529.982.247-25,Maria Nova,m@exemplo.com,5.00,12/04/2026,"
+    lote = novo_lote()
+    caminho = escrever_csv([CABECALHO, atualizada, LINHA_OK_2], nome="b.csv")
+    processar(lote, caminho)
+
+    # simula a mensagem reentregue: o lote volta a "pendente" e o arquivo reaparece
+    lote.status = StatusLoteEnum.pendente
+    db.commit()
+    caminho = escrever_csv([CABECALHO, atualizada, LINHA_OK_2], nome="b.csv")
+    _, lote = processar(lote, caminho)
+
+    assert (lote.total_importados, lote.total_atualizados) == (1, 1)
+    assert db.query(Devedor).count() == 2  # sem duplicar
 
 
 def test_mesmo_cpf_com_e_sem_mascara_conta_como_duplicado(
