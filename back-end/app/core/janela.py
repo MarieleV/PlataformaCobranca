@@ -1,12 +1,12 @@
 """Janela de disparo (RN05): dias úteis, das 08h00 às 20h00, horário de Brasília.
 
-Só considera sábado e domingo como dias não úteis; feriados não entram (o
-projeto não mantém calendário de feriados).
+Dia útil = segunda a sexta que não seja feriado (app/core/feriados.py).
 """
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from app.core.config import settings
+from app.core.feriados import eh_feriado
 
 
 def _fuso() -> ZoneInfo:
@@ -14,7 +14,7 @@ def _fuso() -> ZoneInfo:
 
 
 def dia_util(dia: date) -> bool:
-    return dia.weekday() < 5  # segunda a sexta
+    return dia.weekday() < 5 and not eh_feriado(dia)
 
 
 def dentro_da_janela(momento: datetime) -> bool:

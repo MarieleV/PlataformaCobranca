@@ -5,6 +5,7 @@ importa `settings` em vez de chamar `os.getenv` espalhado pelos módulos.
 """
 import base64
 import hashlib
+from datetime import date
 
 from pydantic import field_validator, model_validator
 from sqlalchemy.engine import make_url
@@ -73,6 +74,9 @@ class Settings(BaseSettings):
     janela_inicio_hora: int = 8
     janela_fim_hora: int = 20
     fuso_horario: str = "America/Sao_Paulo"
+    # Feriados sem disparo (RN05). Veja app/core/feriados.py.
+    feriados_facultativos: bool = True  # Carnaval (seg/ter) e Corpus Christi
+    feriados_extras: str = ""  # datas ISO separadas por vírgula (estaduais/municipais)
 
     # --- Dashboard e métricas (RF08 e RNF08) ---
     meta_taxa_entrega: float = 95.0  # % de sucesso no e-mail (RFC: meta > 95%)
@@ -109,6 +113,19 @@ class Settings(BaseSettings):
         if not url.drivername.startswith("postgresql"):
             return False
         return url.host not in (None, "db", "localhost", "127.0.0.1")
+
+    @field_validator("feriados_extras")
+    @classmethod
+    def _validar_feriados_extras(cls, valor: str) -> str:
+        for item in valor.split(","):
+            if item.strip():
+                try:
+                    date.fromisoformat(item.strip())
+                except ValueError:
+                    raise ValueError(
+                        f"FERIADOS_EXTRAS: data inválida '{item.strip()}' (use AAAA-MM-DD)."
+                    )
+        return valor
 
     @property
     def is_production(self) -> bool:
