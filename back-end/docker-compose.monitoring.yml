@@ -1,0 +1,32 @@
+# Monitoramento opcional (RNF08). Suba junto com a stack principal:
+#   docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+# Prometheus: http://localhost:9090  |  Grafana: http://localhost:3000
+# (usuário admin; a senha vem de GRAFANA_ADMIN_PASSWORD, padrão "admin" — troque).
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
