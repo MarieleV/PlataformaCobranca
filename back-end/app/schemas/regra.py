@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import date, datetime, time
 from typing import Annotated
 from uuid import UUID
 
@@ -115,3 +115,7 @@ class PreviewResponse(BaseModel):
     tamanho: int
     limite: int
     variaveis_usadas: list[str]
+
+
+class ExecutarRegraRequest(BaseModel):
+    dia: date | None = Field(None, description="Padrão: hoje (horário de Brasília)")

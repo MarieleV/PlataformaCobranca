@@ -5,8 +5,9 @@
   os devedores elegíveis do dia.
 """
 import uuid
-from datetime import date
+from datetime import date, timedelta
 
+from kombu.exceptions import OperationalError
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -16,6 +17,7 @@ from app.api.deps import get_current_user, ip_cliente, role_required
 from app.core.auditoria import registrar_auditoria
 from app.core.crypto import descriptografar_decimal
 from app.core.database import get_db
+from app.core.datas import hoje
 from app.core.templates import (
     LIMITE_POR_CANAL,
     VARIAVEIS,
@@ -27,8 +29,10 @@ from app.core.templates import (
     variaveis_usadas,
 )
 from app.models.domain import CanalEnum, CargoEnum, Devedor, Job, RegraCobranca, Usuario
+from app.schemas.auth import MensagemResponse
 from app.schemas.devedor import DevedorResponse, PaginaDevedores
 from app.schemas.regra import (
+    ExecutarRegraRequest,
     PreviewRequest,
     PreviewResponse,
     RegraCreate,
@@ -37,6 +41,7 @@ from app.schemas.regra import (
     StatusReguaResponse,
     VariavelResponse,
 )
+from app.worker.disparo_tasks import executar_regua_task
 from app.services.regua import consulta_elegiveis, contar_elegiveis, status_da_regua
 
 router = APIRouter(prefix="/regras", tags=["Régua de cobrança"])
@@ -320,4 +325,56 @@ def devedores_elegiveis(
         skip=skip,
         limit=limit,
         itens=[DevedorResponse.de_modelo(d) for d in devedores],
+    )
+
+
+# --------------------------------------------------------------------------
+# Execução manual (reprocessar um dia perdido ou testar a régua)
+# --------------------------------------------------------------------------
+DIAS_MAXIMOS_PARA_TRAS = 7
+
+
+@router.post("/{regra_id}/executar", response_model=MensagemResponse, status_code=status.HTTP_202_ACCEPTED)
+def executar_regra(
+    regra_id: uuid.UUID,
+    request: Request,
+    dados: ExecutarRegraRequest | None = None,
+    db: Session = Depends(get_db),
+    ator: Usuario = Depends(gestor_ou_admin),
+):
+    """Cria o job da regra para o dia (padrão: hoje), sem esperar o horário agendado.
+
+    Também recupera um dia perdido (ex.: sistema fora do ar). O envio acontece no
+    próximo ciclo (até 5 minutos), sempre dentro da janela da RN05.
+    """
+    regra = _buscar_regra(db, regra_id)
+    if not regra.ativa:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail="Só é possível executar uma regra ativa (RN02)"
+        )
+
+    dia = (dados.dia if dados and dados.dia else hoje())
+    if dia > hoje():
+        raise HTTPException(422, detail="Não é possível executar para uma data futura")
+    if dia < hoje() - timedelta(days=DIAS_MAXIMOS_PARA_TRAS):
+        raise HTTPException(
+            422, detail=f"Só é possível reprocessar até {DIAS_MAXIMOS_PARA_TRAS} dias atrás"
+        )
+    if db.execute(select(Job.id).where(Job.regra_id == regra.id, Job.dia_referencia == dia)).first():
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, detail=f"A regra já foi executada para {dia:%d/%m/%Y}"
+        )
+
+    try:
+        executar_regua_task.delay(str(regra.id), dia.isoformat())
+    except OperationalError:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Fila de processamento indisponível. Tente novamente em instantes.",
+        )
+
+    registrar_auditoria(db, ator.id, "executar_regra", "regra", regra.id, ip_cliente(request))
+    db.commit()
+    return MensagemResponse(
+        message=f"Execução de {dia:%d/%m/%Y} solicitada. Os envios saem no próximo ciclo, dentro da janela de disparo."
     )
