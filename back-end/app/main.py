@@ -1,15 +1,27 @@
 import logging
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from kombu import Connection
 from sqlalchemy import text
 
-from app.api import auditoria, auth, devedores, jobs, lotes, regras, usuarios
+from app.api import (
+    auditoria,
+    auth,
+    dashboard,
+    devedores,
+    jobs,
+    lotes,
+    metricas,
+    regras,
+    usuarios,
+)
 from app.core.config import settings
 from app.core.database import Base, engine
+from app.core.metricas import registrar_requisicao
 from app.core.redis_client import get_redis
 
 # Importar os models é necessário para o SQLAlchemy registrar as tabelas.
@@ -46,6 +58,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def medir_requisicoes(request: Request, call_next):
+    """Alimenta as métricas HTTP (RNF08). O rótulo é o modelo da rota
+    (/devedores/{devedor_id}) e não a URL real, para não explodir a cardinalidade."""
+    inicio = time.perf_counter()
+    codigo = 500
+    try:
+        resposta = await call_next(request)
+        codigo = resposta.status_code
+        return resposta
+    finally:
+        rota = request.scope.get("route")
+        modelo = getattr(rota, "path", None) or "nao_encontrada"
+        if modelo != "/metrics":
+            registrar_requisicao(
+                request.method, modelo, codigo, time.perf_counter() - inicio
+            )
+
+
 app.include_router(auth.router)
 app.include_router(lotes.router)
 app.include_router(devedores.router)
@@ -53,6 +85,8 @@ app.include_router(usuarios.router)
 app.include_router(auditoria.router)
 app.include_router(regras.router)
 app.include_router(jobs.router)
+app.include_router(dashboard.router)
+app.include_router(metricas.router)
 
 
 @app.get("/", tags=["Health Check"])
