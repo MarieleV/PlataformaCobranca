@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, insert, select, update
 
 from app.core.celery_app import celery_app
 from app.core.config import settings
@@ -77,41 +77,54 @@ def _falhar_lote(db, lote: Lote, campo: str, mensagem: str) -> str:
     return f"Lote {lote.id} rejeitado: {mensagem}"
 
 
-def _gravar_bloco(db, lote: Lote, devedores: list[dict], erros: list[dict],
-                  importados: int, rejeitados: int) -> None:
-    if devedores:
-        db.execute(insert(Devedor), devedores)
+def _gravar_bloco(db, lote: Lote, novos: list[dict], atualizacoes: list[dict],
+                  erros: list[dict], importados: int, atualizados: int,
+                  rejeitados: int) -> None:
+    if novos:
+        db.execute(insert(Devedor), novos)
+    if atualizacoes:
+        # UPDATE em massa pela chave primária (cada dict traz o "id" do devedor)
+        db.execute(update(Devedor), atualizacoes)
     if erros:
         db.execute(insert(ErroLote), erros)
     lote.total_importados = importados
+    lote.total_atualizados = atualizados
     lote.total_rejeitados = rejeitados
     db.commit()
 
 
-def _documentos_existentes(db, documentos: set[str]) -> set[str]:
-    existentes: set[str] = set()
+def _devedores_existentes(db, documentos: set[str]) -> dict[str, tuple[uuid.UUID, StatusDevedorEnum]]:
+    """documento -> (id, status) dos devedores que já estão na base."""
+    existentes: dict[str, tuple[uuid.UUID, StatusDevedorEnum]] = {}
     lista = list(documentos)
     for i in range(0, len(lista), 5000):
         bloco = lista[i : i + 5000]
-        existentes.update(
-            db.execute(select(Devedor.cpf_cnpj).where(Devedor.cpf_cnpj.in_(bloco))).scalars()
-        )
+        for linha in db.execute(
+            select(Devedor.cpf_cnpj, Devedor.id, Devedor.status).where(Devedor.cpf_cnpj.in_(bloco))
+        ):
+            existentes[linha.cpf_cnpj] = (linha.id, linha.status)
     return existentes
 
 
-def _erros_da_linha(resultado, existentes: set[str], vistos: dict[str, int]) -> list[ErroValidacao]:
-    """Acrescenta as checagens que dependem de outras linhas e da base."""
+def _erros_da_linha(resultado, existentes: dict, vistos: dict[str, int]) -> list[ErroValidacao]:
+    """Acrescenta as checagens que dependem de outras linhas e da base.
+
+    CPF/CNPJ já na base NÃO é erro: a linha atualiza o devedor. As exceções são
+    o devedor já quitado (não é reaberto) e o documento repetido no mesmo arquivo.
+    """
     erros = list(resultado.erros)
     if resultado.dados is None:
         return erros
     documento = resultado.dados["cpf_cnpj"]
-    if documento in existentes:
-        erros.append(ErroValidacao("cpf_cnpj", "CPF/CNPJ já cadastrado na base", documento))
-    elif documento in vistos:
+    if documento in vistos:
         erros.append(ErroValidacao(
             "cpf_cnpj",
             f"CPF/CNPJ duplicado no arquivo (primeira ocorrência na linha {vistos[documento]})",
             documento,
+        ))
+    elif documento in existentes and existentes[documento][1] == StatusDevedorEnum.quitado:
+        erros.append(ErroValidacao(
+            "cpf_cnpj", "Devedor já quitado: os dados não são atualizados", documento
         ))
     return erros
 
@@ -121,6 +134,7 @@ def _limpar_processamento_parcial(db, lote: Lote) -> None:
     db.execute(delete(ErroLote).where(ErroLote.lote_id == lote.id))
     db.execute(delete(Devedor).where(Devedor.lote_id == lote.id))
     lote.total_importados = 0
+    lote.total_atualizados = 0
     lote.total_rejeitados = 0
 
 
@@ -150,14 +164,15 @@ def _processar(db, lote: Lote, caminho_arquivo: str) -> str:
     db.commit()
 
     registros = df.to_dict(orient="records")
-    existentes = _documentos_existentes(
+    existentes = _devedores_existentes(
         db, {d for d in (normalizar_documento(r["cpf_cnpj"]) for r in registros) if d}
     )
 
     vistos: dict[str, int] = {}
-    devedores: list[dict] = []
+    novos: list[dict] = []
+    atualizacoes: list[dict] = []
     erros: list[dict] = []
-    importados = rejeitados = 0
+    importados = atualizados = rejeitados = 0
 
     for indice, registro in enumerate(registros):
         numero_linha = indice + 2  # +1 do cabeçalho, +1 porque a planilha começa na linha 1
@@ -177,32 +192,48 @@ def _processar(db, lote: Lote, caminho_arquivo: str) -> str:
                 for e in erros_linha
             )
         else:
-            importados += 1
             dados = resultado.dados
             vistos[dados["cpf_cnpj"]] = numero_linha
-            devedores.append({
-                "lote_id": lote.id,
-                "cpf_cnpj": dados["cpf_cnpj"],
+            campos = {
                 "nome": dados["nome"],
                 "email": dados["email"],
                 "telefone": dados["telefone"],
                 "whatsapp": dados["whatsapp"],
                 "valor_divida_enc": criptografar_decimal(dados["valor_divida"]),
                 "data_vencimento": dados["data_vencimento"],
-                "status": StatusDevedorEnum.ativo,
-            })
+            }
+            if dados["cpf_cnpj"] in existentes:
+                # Mantém lote de origem e status. O arquivo é a fonte da verdade
+                # dos dados, mas um contato em branco não apaga o que já existe.
+                atualizados += 1
+                campos = {
+                    c: v for c, v in campos.items()
+                    if v is not None or c not in ("email", "telefone", "whatsapp")
+                }
+                atualizacoes.append({"id": existentes[dados["cpf_cnpj"]][0], **campos})
+            else:
+                importados += 1
+                novos.append({
+                    "lote_id": lote.id,
+                    "cpf_cnpj": dados["cpf_cnpj"],
+                    "status": StatusDevedorEnum.ativo,
+                    **campos,
+                })
 
         if (indice + 1) % TAMANHO_BLOCO == 0:
-            _gravar_bloco(db, lote, devedores, erros, importados, rejeitados)
-            devedores, erros = [], []
+            _gravar_bloco(db, lote, novos, atualizacoes, erros, importados, atualizados, rejeitados)
+            novos, atualizacoes, erros = [], [], []
 
-    _gravar_bloco(db, lote, devedores, erros, importados, rejeitados)
+    _gravar_bloco(db, lote, novos, atualizacoes, erros, importados, atualizados, rejeitados)
 
     # "concluido" mesmo com linhas rejeitadas: o relatório mostra os erros por linha
     lote.status = StatusLoteEnum.concluido
     lote.finalizado_em = _agora()
     db.commit()
-    return f"Lote {lote.id} processado: {importados} importados, {rejeitados} rejeitados."
+    return (
+        f"Lote {lote.id} processado: {importados} importados, "
+        f"{atualizados} atualizados, {rejeitados} rejeitados."
+    )
 
 
 @celery_app.task(name="app.worker.tasks.processar_lote_task")

@@ -145,7 +145,8 @@ class Lote(Base):
     )
     # Contadores: o dashboard não precisa de COUNT(*) pesado
     total_registros = Column(Integer, nullable=False, default=0)
-    total_importados = Column(Integer, nullable=False, default=0)
+    total_importados = Column(Integer, nullable=False, default=0)  # devedores novos
+    total_atualizados = Column(Integer, nullable=False, default=0)  # já existiam: dados atualizados
     total_rejeitados = Column(Integer, nullable=False, default=0)
     iniciado_em = Column(DateTime(timezone=True))
     finalizado_em = Column(DateTime(timezone=True))

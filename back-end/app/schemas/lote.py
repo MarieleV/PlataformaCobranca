@@ -25,6 +25,7 @@ class LoteResponse(BaseModel):
     usuario_id: UUID
     total_registros: int
     total_importados: int
+    total_atualizados: int = 0
     total_rejeitados: int
     iniciado_em: datetime | None = None
     finalizado_em: datetime | None = None
@@ -40,7 +41,9 @@ class LoteResponse(BaseModel):
             return 100
         if self.total_registros <= 0:
             return 0
-        processados = self.total_importados + self.total_rejeitados
+        processados = (
+            self.total_importados + self.total_atualizados + self.total_rejeitados
+        )
         return min(100, int(processados * 100 / self.total_registros))
 
 
