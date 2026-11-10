@@ -75,6 +75,10 @@ class Settings(BaseSettings):
     fuso_horario: str = "America/Sao_Paulo"
 
     # --- Provedores de disparo ---
+    # Modo simulado: não chama SendGrid/Twilio, só finge o envio. É o padrão para
+    # nunca mandar cobrança de verdade por engano. Em produção, ENVIO_SIMULADO=false.
+    envio_simulado: bool = True
+    email_assunto: str = "Comunicado de cobrança"
     sendgrid_api_key: str = ""
     email_remetente: str = ""
     twilio_account_sid: str = ""
@@ -124,6 +128,18 @@ class Settings(BaseSettings):
                 raise ValueError("ENCRYPTION_KEY é obrigatória em produção.")
             if not self.cookie_secure:
                 raise ValueError("COOKIE_SECURE deve ser true em produção.")
+            if not self.envio_simulado and not (
+                self.sendgrid_api_key
+                and self.email_remetente
+                and self.twilio_account_sid
+                and self.twilio_auth_token
+                and self.twilio_sms_from
+                and self.twilio_whatsapp_from
+            ):
+                raise ValueError(
+                    "ENVIO_SIMULADO=false exige SENDGRID_API_KEY, EMAIL_REMETENTE, "
+                    "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_SMS_FROM e TWILIO_WHATSAPP_FROM."
+                )
             if self.database_exige_ssl and make_url(self.database_url).query.get(
                 "sslmode"
             ) not in ("require", "verify-ca", "verify-full"):
