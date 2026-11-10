@@ -127,3 +127,23 @@ def logar(client, criar_usuario):
         return client
 
     return _logar
+
+
+@pytest.fixture
+def como(criar_usuario):
+    """Client próprio (cookies próprios) logado no cargo pedido.
+
+    Ao contrário do `logar`, permite ter vários usuários logados no mesmo teste.
+    """
+
+    def _como(cargo: CargoEnum | str = CargoEnum.operador, **campos) -> TestClient:
+        usuario = criar_usuario(cargo, **campos)
+        cliente = TestClient(app)
+        resposta = cliente.post(
+            "/auth/login", json={"email": usuario.email, "password": SENHA_PADRAO}
+        )
+        assert resposta.status_code == 200, resposta.text
+        cliente.usuario = usuario
+        return cliente
+
+    return _como
