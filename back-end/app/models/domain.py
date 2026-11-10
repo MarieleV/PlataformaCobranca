@@ -21,6 +21,7 @@ from sqlalchemy import (
     String,
     Text,
     Time,
+    UniqueConstraint,
     func,
     text,
 )
@@ -29,6 +30,7 @@ from sqlalchemy.orm import relationship
 from datetime import time
 
 from app.core.database import Base
+from app.core.datas import hoje
 
 
 # --------------------------------------------------------------------------
@@ -248,6 +250,8 @@ class RegraCobranca(Base):
 class Job(Base):
     __tablename__ = "jobs"
     __table_args__ = (
+        # Um job por regra e por dia: a trava contra disparo em duplicidade
+        UniqueConstraint("regra_id", "dia_referencia", name="uq_jobs_regra_dia"),
         Index("idx_jobs_regra", "regra_id"),
         Index("idx_jobs_status_criado", "status", text("criado_em DESC")),
     )
@@ -256,6 +260,8 @@ class Job(Base):
     regra_id = Column(
         UUID(as_uuid=True), ForeignKey("regras_cobranca.id"), nullable=False
     )
+    # Dia (em Brasília) a que o job se refere: define quem era elegível
+    dia_referencia = Column(Date, nullable=False, default=hoje)
     # Nulo = job da régua geral (não vinculado a um lote específico)
     lote_id = Column(UUID(as_uuid=True), ForeignKey("lotes.id"), nullable=True)
     status = Column(
