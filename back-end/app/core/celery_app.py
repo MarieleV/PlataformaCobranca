@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import settings
 
@@ -6,7 +7,7 @@ celery_app = Celery(
     "cobranca_worker",
     broker=settings.rabbitmq_url,
     backend=settings.celery_result_backend,
-    include=["app.worker.tasks"],  # módulo onde ficam as tasks
+    include=["app.worker.tasks", "app.worker.disparo_tasks"],  # módulos das tasks
 )
 
 celery_app.conf.update(
@@ -31,10 +32,13 @@ celery_app.conf.update(
     broker_connection_retry_on_startup=True,
 )
 
-# Agendamento recorrente (Celery Beat). Será preenchido no M4, por exemplo:
-# celery_app.conf.beat_schedule = {
-#     "executar-regua": {
-#         "task": "app.worker.tasks.executar_regua",
-#         "schedule": crontab(minute="*/15", hour="8-19", day_of_week="1-5"),
-#     },
-# }
+# Agendamento recorrente (Celery Beat). O horário é o de Brasília (timezone acima).
+# Roda a cada 5 minutos, de segunda a sexta, das 08h às 19h55 (RN05): dentro do
+# ciclo, cada regra dispara a partir do próprio horário_disparo e os reenvios
+# vencidos são retomados.
+celery_app.conf.beat_schedule = {
+    "ciclo-de-disparo": {
+        "task": "app.worker.disparo_tasks.ciclo_de_disparo",
+        "schedule": crontab(minute="*/5", hour="8-19", day_of_week="1-5"),
+    },
+}
