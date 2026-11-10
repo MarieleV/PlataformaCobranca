@@ -74,6 +74,13 @@ class Settings(BaseSettings):
     janela_fim_hora: int = 20
     fuso_horario: str = "America/Sao_Paulo"
 
+    # --- Dashboard e métricas (RF08 e RNF08) ---
+    meta_taxa_entrega: float = 95.0  # % de sucesso no e-mail (RFC: meta > 95%)
+    # Se definido, o /metrics exige "Authorization: Bearer <token>" (o Prometheus
+    # envia isso na configuração `authorization`). Vazio = aberto: nesse caso
+    # bloqueie a rota no Nginx para a internet.
+    metrics_token: str = ""
+
     # --- Provedores de disparo ---
     # Modo simulado: não chama SendGrid/Twilio, só finge o envio. É o padrão para
     # nunca mandar cobrança de verdade por engano. Em produção, ENVIO_SIMULADO=false.
