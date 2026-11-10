@@ -47,6 +47,10 @@ class DevedorResponse(BaseModel):
         )
 
 
+class AlterarStatusRequest(BaseModel):
+    status: StatusDevedorEnum
+
+
 class PaginaDevedores(BaseModel):
     total: int
     skip: int

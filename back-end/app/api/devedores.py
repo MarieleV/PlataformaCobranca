@@ -10,7 +10,12 @@ from app.core.auditoria import registrar_auditoria
 from app.core.database import get_db
 from app.core.datas import hoje
 from app.models.domain import Comunicacao, Devedor, StatusDevedorEnum, Usuario
-from app.schemas.devedor import ComunicacaoResponse, DevedorResponse, PaginaDevedores
+from app.schemas.devedor import (
+    AlterarStatusRequest,
+    ComunicacaoResponse,
+    DevedorResponse,
+    PaginaDevedores,
+)
 from app.worker.validadores import somente_digitos
 
 router = APIRouter(prefix="/devedores", tags=["Devedores"])
@@ -73,6 +78,35 @@ def detalhar_devedor(
     current_user: Usuario = Depends(get_current_user),
 ):
     return DevedorResponse.de_modelo(_buscar_devedor(db, devedor_id))
+
+
+@router.patch("/{devedor_id}/status", response_model=DevedorResponse)
+def alterar_status(
+    devedor_id: uuid.UUID,
+    dados: AlterarStatusRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Atualiza a situação da cobrança (ex.: `negociando`, `quitado`).
+
+    `quitado` alimenta a taxa de conversão do dashboard; só `ativo` e
+    `comunicado` continuam recebendo cobrança. A mudança fica no log de auditoria.
+    """
+    devedor = _buscar_devedor(db, devedor_id)
+    if devedor.status != dados.status:
+        devedor.status = dados.status
+        registrar_auditoria(
+            db,
+            current_user.id,
+            "alterar_status_devedor",
+            "devedor",
+            devedor.id,
+            request.client.host if request.client else None,
+        )
+        db.commit()
+        db.refresh(devedor)
+    return DevedorResponse.de_modelo(devedor)
 
 
 @router.get("/{devedor_id}/comunicacoes", response_model=list[ComunicacaoResponse])
