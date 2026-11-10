@@ -1,25 +1,18 @@
 """Consulta ao log de auditoria (UC07-A5 / RF11): exclusivo do administrador."""
 import uuid
-from datetime import date, datetime, time, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import role_required
-from app.core.config import settings
 from app.core.database import get_db
+from app.core.datas import inicio_do_dia_utc
 from app.models.domain import CargoEnum, LogAuditoria, Usuario
 from app.schemas.auditoria import LogAuditoriaResponse, PaginaAuditoria
 
 router = APIRouter(prefix="/auditoria", tags=["Auditoria"])
-
-
-def _meia_noite_utc(dia: date) -> datetime:
-    """00h00 de Brasília do dia informado, em UTC (como o banco grava)."""
-    local = datetime.combine(dia, time.min, tzinfo=ZoneInfo(settings.fuso_horario))
-    return local.astimezone(timezone.utc)
 
 
 @router.get("/", response_model=PaginaAuditoria)
@@ -42,9 +35,9 @@ def consultar_auditoria(
     if entidade:
         filtros.append(LogAuditoria.entidade == entidade)
     if de:
-        filtros.append(LogAuditoria.criado_em >= _meia_noite_utc(de))
+        filtros.append(LogAuditoria.criado_em >= inicio_do_dia_utc(de))
     if ate:
-        filtros.append(LogAuditoria.criado_em < _meia_noite_utc(ate + timedelta(days=1)))
+        filtros.append(LogAuditoria.criado_em < inicio_do_dia_utc(ate + timedelta(days=1)))
 
     total = db.execute(
         select(func.count()).select_from(LogAuditoria).where(*filtros)
