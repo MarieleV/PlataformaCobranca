@@ -37,8 +37,10 @@ async def lifespan(app: FastAPI):
     # O esquema vem do Alembic; create_all só roda com AUTO_CREATE_TABLES=true.
     if settings.auto_create_tables:
         Base.metadata.create_all(bind=engine)
-    yield
-    engine.dispose()
+    try:
+        yield
+    finally:
+        engine.dispose()
 
 
 app = FastAPI(
