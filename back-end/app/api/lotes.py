@@ -76,7 +76,9 @@ def upload_lote(
     pasta = Path(settings.upload_dir)
     pasta.mkdir(parents=True, exist_ok=True)
     caminho = pasta / f"{lote_id}{sufixo}"
-    caminho.write_bytes(conteudo)
+    # Só o conteúdo vem do usuário; o caminho é montado com o id e um sufixo fixo
+    with caminho.open("wb") as destino:
+        destino.write(conteudo)
 
     try:
         lote = Lote(
