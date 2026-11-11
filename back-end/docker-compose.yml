@@ -1,55 +1,113 @@
+# Copie .env.example para .env e preencha os valores antes de subir.
+
+x-backend: &backend
+  build: .
+  image: cobranca_backend
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-cobranca_db}
+    REDIS_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
+  # Desenvolvimento: reflete alterações do código sem rebuild.
+  # Em produção, remova este bloco "volumes" e o "--reload" da API.
+  volumes:
+    - ./app:/code/app
+    - uploads_data:/code/uploads # arquivos de lotes: API grava, worker lê
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+
 services:
   # 1. Banco de Dados Principal
   db:
     image: postgres:15-alpine
     container_name: cobranca_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: cobranca_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-cobranca_db}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432" # acessível só pela própria máquina
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  # 2. Redis (Cache e Session Store)
+  # 2. Redis (cache, sessões e resultados do Celery)
   redis:
     image: redis:7-alpine
     container_name: cobranca_redis
-    restart: always
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
-  # 3. RabbitMQ (Message Broker)
+  # 3. RabbitMQ (message broker)
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: cobranca_rabbitmq
-    restart: always
+    restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
     ports:
-      - "5672:5672"   # Porta padrão do protocolo AMQP
-      - "15672:15672" # Porta do painel de administração web (Dashboard)
+      - "127.0.0.1:5672:5672" # AMQP
+      - "127.0.0.1:15672:15672" # painel web
+    healthcheck:
+       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+       interval: 10s
+       timeout: 10s
+       retries: 10
+       start_period: 90s
 
-  # 4. FastAPI Backend
+  # 4. API (FastAPI)
   api:
-    build: .
+    <<: *backend
     container_name: cobranca_api
-    restart: always
+    # Aplica as migrações pendentes antes de subir a API (só a API migra,
+    # para o worker e o beat não disputarem o mesmo ALTER TABLE).
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:password123@db:5432/cobranca_db
-      - JWT_SECRET=super-secret-key-change-me
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
-    depends_on:
-      - db
-      - redis
-      - rabbitmq
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
-# Declaração dos volumes para persistência de dados
+  # 5. Worker (Celery): ingestão de lotes e disparos
+  worker:
+    <<: *backend
+    container_name: cobranca_worker
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=4
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # 6. Scheduler (Celery Beat): jobs recorrentes da régua
+  beat:
+    <<: *backend
+    container_name: cobranca_beat
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   postgres_data:
+  uploads_data:

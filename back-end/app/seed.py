@@ -1,39 +1,50 @@
-from app.core.database import SessionLocal
-from app.models.domain import Usuario, CargoEnum
-from app.core.security import get_password_hash
+import sys
 
-def criar_admin_inicial():
-    # Abre a sessão com o banco de dados
+from app.core.config import settings
+from app.core.database import SessionLocal
+from app.core.security import get_password_hash
+from app.models.domain import CargoEnum, Usuario
+
+SENHA_PADRAO_DEV = "admin123"
+
+
+def criar_admin_inicial() -> None:
+    # Em produção, nunca criar o admin com a senha padrão de desenvolvimento
+    if settings.is_production and settings.admin_senha_inicial == SENHA_PADRAO_DEV:
+        print("ERRO: defina ADMIN_SENHA_INICIAL no .env antes de rodar o seed em produção.")
+        sys.exit(1)
+
     db = SessionLocal()
-    
     try:
-        # Verifica se o admin já existe para não duplicar
-        admin_existente = db.query(Usuario).filter(Usuario.email == "admin@consulth.com.br").first()
-        
-        if admin_existente:
+        email = settings.admin_email.lower()
+        if db.query(Usuario).filter(Usuario.email == email).first():
             print("O usuário Administrador já existe no banco de dados!")
             return
 
-        # Cria o novo usuário
-        novo_admin = Usuario(
-            email="admin@consulth.com.br",
-            password_hash=get_password_hash("admin123"), # Senha criptografada com bcrypt
-            cargo=CargoEnum.administrador # Perfil com permissão total
+        db.add(
+            Usuario(
+                nome=settings.admin_nome,
+                email=email,
+                senha_hash=get_password_hash(settings.admin_senha_inicial),
+                cargo=CargoEnum.administrador,
+                ativo=True,
+            )
         )
-        
-        # Salva no banco
-        db.add(novo_admin)
         db.commit()
-        
+
         print("Administrador criado com sucesso!")
-        print("E-mail: admin@consulth.com.br")
-        print("Senha: admin123")
-        
+        print(f"E-mail: {email}")
+        if settings.admin_senha_inicial == SENHA_PADRAO_DEV:
+            print(f"Senha: {SENHA_PADRAO_DEV} (padrão de desenvolvimento, troque depois)")
+        else:
+            print("Senha: a definida em ADMIN_SENHA_INICIAL")
+
     except Exception as e:
         print(f"Erro ao criar administrador: {e}")
         db.rollback()
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     print("Iniciando a carga de dados (Seed)...")

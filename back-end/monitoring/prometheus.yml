@@ -1,0 +1,14 @@
+# Prometheus (RNF08): coleta o /metrics da API a cada 30 s.
+# Se definir METRICS_TOKEN no .env, descomente o bloco `authorization`
+# e coloque o mesmo valor em `credentials`.
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  - job_name: cobranca-api
+    metrics_path: /metrics
+    # authorization:
+    #   type: Bearer
+    #   credentials: COLOQUE_O_METRICS_TOKEN_AQUI
+    static_configs:
+      - targets: ["api:8000"]

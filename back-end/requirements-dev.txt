@@ -1,0 +1,10 @@
+-r requirements.txt
+
+# Testes
+pytest
+pytest-cov
+fakeredis
+httpx
+
+# Geração de planilhas .xls nos testes de ingestão (somente leitura em produção)
+xlwt
