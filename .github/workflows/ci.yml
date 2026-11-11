@@ -1,0 +1,121 @@
+# CI/CD da Plataforma de Cobrança Automatizada (RNF06 e RNF07)
+#
+#  testes + SonarCloud ─┐
+#  migrações (Postgres) ─┼─> deploy (só na main, e só se tudo acima passar)
+#  build do Docker ─────┘
+#
+# RNF06: cobertura mínima de 80% (o pytest falha abaixo disso).
+# RNF07: se um teste falhar ou o Quality Gate do SonarCloud reprovar, o job
+#        fica vermelho e o deploy não roda.
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancela execuções antigas da mesma branch quando chega um push novo
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.14" # a mesma do Dockerfile
+
+jobs:
+  testes-e-qualidade:
+    name: Testes e SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # o SonarCloud precisa do histórico completo
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: back-end/requirements*.txt
+
+      - name: Instalar dependências
+        working-directory: back-end
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Rodar testes (cobertura mínima de 80%)
+        working-directory: back-end
+        run: pytest --cov=app --cov-report=xml --cov-report=term --cov-fail-under=80
+
+      - name: Análise do SonarCloud e Quality Gate
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          # espera o resultado do Quality Gate; se reprovar, este passo falha
+          args: -Dsonar.qualitygate.wait=true
+
+  migracoes:
+    name: Migrações no PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cobranca_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cobranca_ci
+      JWT_SECRET: chave-apenas-para-o-ci-com-mais-de-32-caracteres
+    defaults:
+      run:
+        working-directory: back-end
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: back-end/requirements*.txt
+      - run: pip install -r requirements.txt
+      - name: Aplicar todas as migrações
+        run: alembic upgrade head
+      - name: Os modelos e as migrações estão em sincronia?
+        run: alembic check
+      - name: Desfazer e refazer a última migração
+        run: |
+          alembic downgrade -1
+          alembic upgrade head
+
+  build-docker:
+    name: Build da imagem Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Construir a imagem da API
+        run: docker build --tag cobranca-api:ci back-end
+
+  deploy:
+    name: Deploy
+    # RNF07: só roda se os três jobs acima passaram, e apenas na main
+    needs: [testes-e-qualidade, migracoes, build-docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: producao # permite exigir aprovação manual nas configurações do GitHub
+    steps:
+      - name: Deploy (a implementar na etapa da AWS)
+        run: |
+          echo "Testes, Quality Gate e migrações passaram."
+          echo "Aqui entra o deploy na AWS (ex.: SSH no EC2 + docker compose pull/up)."
