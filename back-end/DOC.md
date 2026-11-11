@@ -37,29 +37,6 @@ O back-end é construído com **Python 3.14**, **FastAPI** e orquestrado via **D
 
 ---
 
-## 📌 Roadmap e Status do Projeto (Baseado na RFC v1.1)
-
-Abaixo está o acompanhamento das entregas do back-end conforme o planejamento do projeto:
-
-### ✅ Concluído (Feito)
-- [x] **M1: Setup Base:** Estrutura inicial com FastAPI, Docker, PostgreSQL, Redis e RabbitMQ.
-- [x] **M1: Modelagem de Dados:** Tabelas padronizadas em `snake_case` com SQLAlchemy (Usuários, Lotes, Erros, Devedores, Regras, Jobs e Comunicações).
-- [x] **M3: Autenticação Segura:** Login/Logout via JWT com proteção contra XSS utilizando cookies `HttpOnly`.
-- [x] **M3: Controle de Acesso (RBAC):** Proteção de rotas baseada nos papéis de Administrador, Gestor e Operador.
-- [x] **M2/M3: DTOs Pydantic:** Padronização de entrada e saída (schemas) para Lotes e Usuários.
-- [x] **M5: Qualidade de Código (TDD):** Implementação da suíte de testes automatizados offline com Pytest e Mocks (TestClient) para a camada de segurança.
-- [x] **Seed Inicial:** Script para criação do Administrador padrão na primeira execução do banco.
-
-### ⏳ Pendente (A Fazer)
-- [ ] **M2: Ingestão e Validação (Worker):** Processamento de arquivos `.csv`, `.xlsx` e `.xls` usando `pandas`, com relatório de erros por linha.
-- [ ] **M3: Régua de Cobrança:** CRUD para configurar regras baseadas em dias de atraso, canal, horário e template de mensagem.
-- [ ] **M4: Processamento Assíncrono (Celery):** Integração do `Celery` consumindo o `RabbitMQ` para disparo das comunicações.
-- [ ] **M4: Disparo Multicanal e Reenvios:** Integração com APIs externas (SendGrid, Twilio, WhatsApp) e lógica de até 4 tentativas de envio.
-- [ ] **M4: Agendamento Recorrente (Celery Beat):** Orquestração dos jobs automáticos respeitando dias úteis e horário comercial (08h às 20h).
-- [ ] **M5: Observabilidade e CI/CD:** Métricas expostas via Prometheus/Grafana e Quality Gate configurado via SonarCloud e GitHub Actions.
-
----
-
 ## ⚠️ Pré-requisitos
 
 - **Docker Desktop** aberto, com a Engine rodando.
@@ -213,6 +190,7 @@ docker image prune -f
 ```
 
 ---
+
 ## 🏗️ Arquitetura Rodando nas Portas Locais
 
 * **FastAPI (Back-end):** `localhost:8000`
