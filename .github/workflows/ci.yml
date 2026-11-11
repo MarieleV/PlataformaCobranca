@@ -11,7 +11,7 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feature/**", "hotfix/**"]
   pull_request:
     branches: [main, develop]
 
@@ -51,7 +51,10 @@ jobs:
         working-directory: back-end
         run: pytest --cov=app --cov-report=xml --cov-report=term --cov-fail-under=80
 
+      # Em branches de feature só rodam os testes: o plano gratuito do SonarCloud
+      # analisa a branch principal e pull requests.
       - name: Análise do SonarCloud e Quality Gate
+        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
