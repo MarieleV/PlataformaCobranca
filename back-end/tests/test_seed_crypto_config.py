@@ -73,7 +73,9 @@ def test_decimal_mantem_a_precisao():
 
 
 def test_mesmo_valor_gera_cifras_diferentes():
-    assert criptografar_decimal(Decimal("10")) != criptografar_decimal(Decimal("10"))
+    primeira = criptografar_decimal(Decimal("10"))
+    segunda = criptografar_decimal(Decimal("10"))
+    assert primeira != segunda
 
 
 def test_dado_adulterado_e_rejeitado():

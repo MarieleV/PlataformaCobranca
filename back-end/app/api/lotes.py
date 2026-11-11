@@ -20,7 +20,22 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/lotes", tags=["Gestão de Lotes"])
 
-EXTENSOES_PERMITIDAS = {".csv", ".xlsx", ".xls"}  # RF01
+
+
+def _sufixo_do_arquivo(nome: str) -> str | None:
+    """Sufixo permitido do arquivo enviado, ou None se o formato não for aceito.
+
+    Devolve sempre uma constante do código, nunca o texto vindo do usuário: assim
+    nada do nome enviado chega ao caminho gravado em disco (path traversal).
+    """
+    extensao = Path(nome).suffix.lower()
+    if extensao == ".csv":
+        return ".csv"
+    if extensao == ".xlsx":
+        return ".xlsx"
+    if extensao == ".xls":
+        return ".xls"
+    return None
 
 
 def _buscar_lote(db: Session, lote_id: uuid.UUID) -> Lote:
@@ -37,8 +52,8 @@ def upload_lote(
     db: Session = Depends(get_db),
 ):
     nome_original = file.filename or ""
-    extensao = Path(nome_original).suffix.lower()
-    if extensao not in EXTENSOES_PERMITIDAS:
+    sufixo = _sufixo_do_arquivo(nome_original)
+    if sufixo is None:
         # RFC (fluxo alternativo): formato inválido retorna 422 sem enfileirar
         raise HTTPException(
             status_code=422,
@@ -60,7 +75,7 @@ def upload_lote(
     lote_id = uuid.uuid4()
     pasta = Path(settings.upload_dir)
     pasta.mkdir(parents=True, exist_ok=True)
-    caminho = pasta / f"{lote_id}{extensao}"
+    caminho = pasta / f"{lote_id}{sufixo}"
     caminho.write_bytes(conteudo)
 
     try:

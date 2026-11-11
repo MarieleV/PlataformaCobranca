@@ -34,7 +34,9 @@ def test_hash_usa_custo_12_do_rfc():
 
 
 def test_hashes_da_mesma_senha_sao_diferentes_por_causa_do_salt():
-    assert get_password_hash("mesma-senha") != get_password_hash("mesma-senha")
+    primeiro = get_password_hash("mesma-senha")
+    segundo = get_password_hash("mesma-senha")
+    assert primeiro != segundo
 
 
 def test_senha_acima_de_72_bytes_nao_gera_erro():
