@@ -69,7 +69,7 @@ function AreaLogada() {
 
         {/* --- PAGE CONTENT --- */}
         <div className="flex-1 overflow-hidden bg-slate-50">
-          {page === "dashboard" && <Dashboard />}
+          {page === "dashboard" && <Dashboard onNavigate={setPage} />}
           {page === "importar" && (
             <ImportarLote onValidated={() => setPage("validacao")} />
           )}
