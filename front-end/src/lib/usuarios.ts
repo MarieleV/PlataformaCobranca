@@ -1,3 +1,5 @@
+import type { Perfil } from "./tipos"
+
 // Regras de usuários do lado do front. Espelham back-end/app/schemas/usuario.py
 // (SenhaForte: 8–128 caracteres, ao menos uma letra e um número; nome 2–150).
 
@@ -66,4 +68,11 @@ export const NOME_ENTIDADE: Record<string, string> = {
   usuario: "Usuário",
   regra: "Regra",
   devedor: "Devedor",
+}
+
+/** O que cada perfil pode fazer (texto da tela de usuários). */
+export const DESCRICAO_PERFIL: Record<Perfil, string> = {
+  administrador: "Acesso total: usuários de todos os perfis, auditoria, exclusão de devedores (LGPD) e todas as telas.",
+  gestor: "Régua de cobrança, marcar devedor como quitado e gestão de operadores, além das telas de consulta.",
+  operador: "Importação de lotes e consulta de devedores, régua, dashboard e monitoramento.",
 }

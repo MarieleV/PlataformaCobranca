@@ -1,13 +1,14 @@
 import { useState } from "react"
 import { useAuth } from "../auth/AuthContext"
 import { NOME_PERFIL, PERFIS_POR_ACAO } from "../auth/permissoes"
-import { ConfirmarAcaoUsuario, DESCRICAO_PERFIL, FormUsuario, RedefinirSenha } from "../components/ModaisUsuario"
+import { ConfirmarAcaoUsuario, FormUsuario, RedefinirSenha } from "../components/ModaisUsuario"
 import { AvisoErro, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { useDebounce } from "../hooks/useDebounce"
 import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
 import type { Pagina, Perfil, UsuarioGerenciado } from "../lib/tipos"
+import { DESCRICAO_PERFIL } from "../lib/usuarios"
 
 const POR_PAGINA = 50
 const BUSCA_MINIMA = 2

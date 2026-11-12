@@ -4,8 +4,10 @@
 import { useState } from "react"
 import { useApi } from "../hooks/useApi"
 import * as fmt from "../lib/formatos"
+import { jobEmAndamento } from "../lib/jobs"
 import type { ComunicacaoDoJob, Job, Pagina, StatusComunicacao } from "../lib/tipos"
-import { AvisoErro, Badge, Spinner, useFecharComEsc } from "./ui"
+import { useFecharComEsc } from "../hooks/useFecharComEsc"
+import { AvisoErro, Badge, Spinner } from "./ui"
 
 const POR_PAGINA = 50
 const ATUALIZAR_MS = 15_000
@@ -18,10 +20,6 @@ const FILTROS: { valor: StatusComunicacao | ""; texto: string }[] = [
   { valor: "falha", texto: "Falhas" },
   { valor: "bounce", texto: "Bounces" },
 ]
-
-export function jobEmAndamento(job: Job): boolean {
-  return job.status === "agendado" || job.status === "executando"
-}
 
 interface DetalheJobProps {
   jobId: string

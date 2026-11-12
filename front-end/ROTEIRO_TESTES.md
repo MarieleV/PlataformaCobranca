@@ -154,5 +154,17 @@ Auditoria (só administrador):
 - [ ] Falha de login com e-mail inexistente aparece como "Sem usuário vinculado".
 - [ ] Filtros de usuário, ação, entidade e período (De/Até); "Limpar filtros"; paginação com mais de 50 registros.
 
+## 8. Qualidade e CI
+
+Local (PowerShell, em `front-end`):
+- [ ] `npm ci` instala sem erros.
+- [ ] `npm run verificar` passa: lint sem avisos, tipos, testes com cobertura ≥ 80% e build.
+- [ ] `npm run test:coverage` gera o relatório; abrir `coverage/index.html` no navegador.
+
+GitHub:
+- [ ] No push da branch, o job **"Front-end (lint, tipos, testes e build)"** aparece na aba Actions e fica verde.
+- [ ] Ruleset "Proteção da Main" com o check novo como obrigatório (Settings > Rules > Rulesets).
+- [ ] No PR `develop` → `main`, os quatro checks obrigatórios aparecem e o merge só libera com todos verdes.
+
 Mensagens de validação (todas as telas):
 - [ ] Erros de validação escritos no back-end aparecem em português e por extenso (ex.: "O horário deve estar entre 08:00 e 20:00...") em vez de "Dados inválidos".

@@ -17,8 +17,8 @@ import {
   Badge,
   Modal,
   Spinner,
-  useFecharComEsc,
 } from "./ui"
+import { useFecharComEsc } from "../hooks/useFecharComEsc"
 
 const STATUS: StatusDevedor[] = ["ativo", "comunicado", "negociando", "quitado", "inativo"]
 const PASSO_HISTORICO = 50
@@ -136,7 +136,7 @@ function Dados({ devedor, onAbrirLote }: { devedor: Devedor; onAbrirLote?: (id: 
         </Campo>
         <Campo rotulo="Vencimento">
           {fmt.data(devedor.data_vencimento)}{" "}
-          <span className={`font-mono text-xs font-bold ${corAtraso(devedor.dias_atraso)}`}>D+{devedor.dias_atraso}</span>
+          <span className={`font-mono text-xs font-bold ${fmt.corAtraso(devedor.dias_atraso)}`}>D+{devedor.dias_atraso}</span>
         </Campo>
         <Campo rotulo="E-mail">{devedor.email ?? "—"}</Campo>
         <Campo rotulo="Telefone (SMS)">{fmt.telefone(devedor.telefone)}</Campo>
@@ -153,10 +153,6 @@ function Dados({ devedor, onAbrirLote }: { devedor: Devedor; onAbrirLote?: (id: 
       )}
     </Secao>
   )
-}
-
-export function corAtraso(dias: number): string {
-  return dias >= 60 ? "text-rose-600" : dias >= 30 ? "text-amber-600" : "text-slate-700"
 }
 
 function AlterarStatus({ devedor, onModal, onAlterado }: {

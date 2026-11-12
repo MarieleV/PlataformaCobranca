@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { gerarSenha } from "../lib/usuarios"
-import { inputClasse } from "./ui"
+import { inputClasse } from "./estilos"
 
 /** Input de senha com "mostrar" e, opcionalmente, "gerar senha" (que já deixa visível para copiar). */
 export default function CampoSenha({ valor, onChange, erro, autoComplete = "new-password", permitirGerar = false, autoFocus = false, rotuloAria }: {

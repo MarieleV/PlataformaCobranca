@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { AvisoErro, ICONE_DOWNLOAD, Spinner } from "../components/ui"
+import { AvisoErro, IconeDownload, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
@@ -195,7 +195,7 @@ export default function ImportarLote({ onVerRelatorio }: ImportarLoteProps) {
             onClick={baixarPlanilhaModelo}
             className="w-full py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold font-mono transition-all shadow-sm shadow-slate-200/50 flex items-center justify-center gap-2"
           >
-            <span className="text-slate-500">{ICONE_DOWNLOAD}</span>
+            <span className="text-slate-500"><IconeDownload /></span>
             Baixar planilha modelo (.csv)
           </button>
 

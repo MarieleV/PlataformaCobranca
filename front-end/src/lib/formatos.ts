@@ -44,6 +44,11 @@ export function telefone(digitos: string | null): string {
   return digitos
 }
 
+/** Cor do atraso (Tailwind): D+60 vermelho, D+30 âmbar, menos que isso neutro. */
+export function corAtraso(dias: number): string {
+  return dias >= 60 ? "text-rose-600" : dias >= 30 ? "text-amber-600" : "text-slate-700"
+}
+
 /** 2847 -> "2.847" */
 export function numero(valor: number): string {
   return fmtNumero.format(valor)

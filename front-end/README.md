@@ -21,9 +21,28 @@ npm run dev                   # http://localhost:8443
 | Script | O que faz |
 |---|---|
 | `npm run dev` | Servidor de desenvolvimento na porta 8443 (hot reload) |
-| `npm run typecheck` | Checagem de tipos do TypeScript |
+| `npm run lint` | ESLint (TypeScript + hooks do React); falha com qualquer aviso |
+| `npm run typecheck` | Checagem de tipos do TypeScript (inclui os testes) |
+| `npm test` | Testes unitários (Vitest), uma vez |
+| `npm run test:watch` | Testes em modo observação, enquanto programa |
+| `npm run test:coverage` | Testes com cobertura (mínimo de 80%); relatório HTML em `coverage/` |
+| `npm run verificar` | Tudo o que o CI roda: lint, tipos, testes com cobertura e build |
 | `npm run build` | Build de produção em `dist/` |
 | `npm run preview` | Serve o build de produção localmente |
+
+## Testes e CI
+
+- Testes em `src/**/*.test.ts(x)` (Vitest + jsdom + Testing Library). Cobrem a lógica: cliente HTTP
+  (`api.ts`: refresh em 401, refresh único para chamadas simultâneas, mensagens de erro), `AuthContext`,
+  `useApi` (polling e `pararQuando`), formatadores, janela de disparo e validações. As telas são
+  validadas pelo `ROTEIRO_TESTES.md`.
+- Ao mockar o `apiFetch`, crie um `vi.fn()` novo por teste (no `beforeEach`) em vez de `mockReset()`:
+  no Vitest 5 o reset faz promises rejeitadas pelo mock virarem "unhandled rejection".
+- O job **"Front-end (lint, tipos, testes e build)"** do `.github/workflows/ci.yml` roda `npm ci` e os
+  mesmos scripts do `verificar`, com Node 22.
+- `npm audit` acusa vulnerabilidades *moderate* no `minimatch` usado pelo ESLint: só ferramenta de
+  desenvolvimento (não vai para o bundle) e o conserto exige `--force` com versões incompatíveis.
+  `npm audit --omit=dev` deve ficar zerado.
 
 ## Integração com a API
 
@@ -43,15 +62,19 @@ npm run dev                   # http://localhost:8443
 ```
 src/
 ├── main.tsx              # monta o App dentro do AuthProvider
-├── App.tsx               # verifica a sessão, mostra Login ou a área logada
+├── App.tsx               # verifica a sessão, mostra Login ou a área logada (navegação por estado)
 ├── auth/
-│   ├── AuthContext.tsx   # useAuth(): usuario, login, logout, pode(perfis)
-│   └── permissoes.ts     # páginas x perfis (espelha o RBAC do back-end)
+│   ├── AuthContext.tsx   # useAuth(): usuario, login, logout, recarregarUsuario, pode(perfis)
+│   └── permissoes.ts     # páginas e ações x perfis (espelha o RBAC do back-end)
 ├── lib/
-│   ├── api.ts            # cliente HTTP (cookies, refresh, erros)
-│   └── tipos.ts          # tipos da API
-├── components/           # Sidebar e componentes reutilizáveis
-└── pages/                # uma tela por arquivo
+│   ├── api.ts            # cliente HTTP (cookies, refresh, erros, download, /health)
+│   ├── tipos.ts          # tipos da API
+│   ├── formatos.ts       # números, R$, CPF/CNPJ, datas em Brasília, rótulos de status
+│   └── lotes.ts, regua.ts, janela.ts, jobs.ts, usuarios.ts  # regras de cada domínio
+├── hooks/                # useApi (GET + polling), useSaude, useDebounce, useFecharComEsc
+├── components/           # Sidebar, ui.tsx (Badge, Painel, Modal...), painéis e modais
+├── pages/                # uma tela por arquivo
+└── test/setup.ts         # configuração do Vitest
 ```
 
 ## Convenções

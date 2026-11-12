@@ -10,17 +10,12 @@ import { useAuth } from "../auth/AuthContext"
 import { NOME_PERFIL, PERFIS_POR_ACAO } from "../auth/permissoes"
 import { ApiError, apiFetch } from "../lib/api"
 import type { MensagemResponse, Perfil, UsuarioEntrada, UsuarioGerenciado } from "../lib/tipos"
-import { validarEmail, validarNome, validarSenha } from "../lib/usuarios"
+import { DESCRICAO_PERFIL, validarEmail, validarNome, validarSenha } from "../lib/usuarios"
 import CampoSenha from "./CampoSenha"
-import { AvisoErro, BOTAO_PERIGO, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, inputClasse } from "./ui"
+import { AvisoErro, BOTAO_PERIGO, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal } from "./ui"
+import { inputClasse } from "./estilos"
 
 const PERFIS: Perfil[] = ["operador", "gestor", "administrador"]
-
-export const DESCRICAO_PERFIL: Record<Perfil, string> = {
-  administrador: "Acesso total: usuários de todos os perfis, auditoria, exclusão de devedores (LGPD) e todas as telas.",
-  gestor: "Régua de cobrança, marcar devedor como quitado e gestão de operadores, além das telas de consulta.",
-  operador: "Importação de lotes e consulta de devedores, régua, dashboard e monitoramento.",
-}
 
 function mensagem(e: unknown, padrao: string): string {
   return e instanceof ApiError ? e.message : padrao

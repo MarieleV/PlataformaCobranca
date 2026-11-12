@@ -8,7 +8,8 @@ import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
 import { JANELA, LIMITE_POR_CANAL, trechosDoTemplate, validarRegra } from "../lib/regua"
 import type { Canal, PreviewTemplate, Regra, RegraEntrada, VariavelTemplate } from "../lib/tipos"
-import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner, inputClasse } from "./ui"
+import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner } from "./ui"
+import { inputClasse } from "./estilos"
 
 const CANAIS: Canal[] = ["email", "sms", "whatsapp"]
 
