@@ -5,12 +5,14 @@ Contexto do projeto para o Claude Code. Leia este arquivo inteiro antes de mexer
 ## O projeto
 TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobrança automatizada: importa lotes de devedores (csv/xlsx/xls), aplica uma **régua de cobrança** (regras por dias de atraso, canal e horário) e dispara mensagens por **e-mail (SendGrid), SMS e WhatsApp (Twilio)**, com reenvios, dashboard e métricas. Documento de requisitos: `docs/RFC` (RFC v1.1; os códigos RF/RN/RNF citados abaixo vêm dele).
 
-Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (a integrar). **O back-end está concluído e mergeado na `main`; a etapa atual é o front-end.**
+Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React, integração em andamento). **O back-end está concluído e mergeado na `main`; a etapa atual é o front-end.**
 
 ## Como trabalhar com a Mariele
 - Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (caminhos como `C:\Users\silva\Repositórios GitHub\tcc-cobranca\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
 - Para cada etapa ela espera: **nome de branch** (git-flow: `feature/...`, `hotfix/...`), **árvore de pastas/arquivos** com `← NOVO` / `← SUBSTITUI`, **commits no padrão Conventional Commits** e instruções claras de teste.
 - Commits: use `git add` por nome de arquivo (nada de `git add .` sem olhar o `git status`). Mesmo que você, Claude me ajude, peço que não cite nos commits Co-Authored-By ou Claude-Session.
+  - Quem faz os commits é a Mariele: entregue os comandos, não commite por ela.
+  - Cuidado com `git mv`/`git rm`: eles já deixam a mudança *staged* e ela entra no próximo commit, seja qual for. E um `git add` com um caminho que não existe mais falha **inteiro** (nenhum arquivo da linha é adicionado). Monte os comandos de commit considerando isso.
 - Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL` e `Build da imagem Docker`. Não use bypass.
 - Se algo for ambíguo e caro de refazer, pergunte antes. Se for barato de refazer, decida, diga a decisão e siga.
 
@@ -20,6 +22,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (a integr
 ## Back-end em uma página
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
 - Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123`.
+- Máquina com pouca RAM: o RabbitMQ pode demorar a ficar *healthy* (alarme `system_memory_high_watermark` nos logs) e o `up` falhar com "dependency rabbitmq failed to start", deixando api/worker/beat em "Created". Não é defeito: rode `docker compose up -d` de novo (sem `--build`) e, se precisar, pare o monitoramento (`docker stop back-end-grafana-1 back-end-prometheus-1`).
 - Testes do back-end: no venv (`venv\Scripts\Activate.ps1`), `pytest` em `back-end/` (783 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
 - Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Ótimo para demonstrar o front.
 
@@ -55,7 +58,7 @@ Confirme os perfis exatos de cada rota em `back-end/app/api/*.py` (`role_require
 - O valor da dívida vem descriptografado no `DevedorResponse`. CPF/CNPJ é dado pessoal (LGPD): não registre em logs do front.
 
 ## Front-end (em andamento)
-React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443. Detalhes em `front-end/README.md`. O protótipo de UX do RFC descreve: KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, linha do tempo de 7 dias, últimos lotes e atalhos.
+React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443. Detalhes em `front-end/README.md`. Requer Node.js 22 LTS. Rodar: `cd front-end; npm install; npm run dev`. Antes de entregar uma etapa, valide com `npm run typecheck` e `npm run build` (o aviso de chunk > 500 kB é do Recharts e é conhecido; code-splitting fica para o fim). O protótipo de UX do RFC descreve: KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, linha do tempo de 7 dias, últimos lotes e atalhos.
 
 Decisões já tomadas com a Mariele:
 - **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`.
@@ -65,7 +68,16 @@ Decisões já tomadas com a Mariele:
 - O layout atual **não é o final** e não há Figma atualizado: pode melhorar a UI, mantendo a identidade (preto/branco/slate).
 - Origem do front: só `http://localhost:8443` por enquanto.
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` → 2 `front-dashboard` → 3 `front-lotes` (upload + polling + relatório de validação) → 4 `front-devedores` → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Já entregue (etapa 1, `feature/front-auth-login`, mergeada na `develop`):
+- `src/lib/api.ts`: `apiFetch<T>()` com `credentials: "include"`, um refresh compartilhado em 401 (evita dois refreshes concorrentes com a rotação do back-end), `ApiError` com `status` (0 = API inacessível) e mensagem pronta para a tela (usa o `detail` do back-end; 422 do Pydantic vem em inglês e deve ser traduzido na tela).
+- `src/auth/AuthContext.tsx`: restaura a sessão com `GET /auth/me` ao abrir (F5 mantém o login), `login`, `logout`, `pode(perfis)` e aviso de "sessão expirada".
+- `src/auth/permissoes.ts`: tipo `Page`, `PERFIS_POR_PAGINA` (operador não vê "Usuários") e `NOME_PERFIL`. Ao criar telas, use `pode([...])` também para esconder **ações** restritas (excluir devedor, marcar quitado, editar régua).
+- `App.tsx` desmonta a área logada no logout (o próximo login começa no Dashboard); Sidebar mostra nome/perfil reais.
+- Login: "Esqueceu a senha?" virou "Fale com o administrador" (não há recuperação por e-mail; quem redefine é gestor/admin).
+- `package.json` renomeado para `cobranca-front-end`, script `typecheck`; Vite atualizado para 8.3.x (`npm audit` zerado); `doc.md` do Figma Make virou `front-end/README.md`; `.vscode/` no `.gitignore`.
+- As demais telas **ainda usam mocks** (arrays fixos no topo de cada arquivo em `src/pages/`); cada etapa troca os mocks pela API.
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` (**próxima**) → 3 `front-lotes` (upload + polling + relatório de validação) → 4 `front-devedores` → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.
