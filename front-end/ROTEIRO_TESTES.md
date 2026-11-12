@@ -72,3 +72,34 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 - [ ] **Operador**: não vê "Quitado" nas opções e não vê a zona de exclusão. **Gestor**: vê "Quitado", mas não a exclusão.
 - [ ] **Admin**: "Excluir devedor" só habilita digitando EXCLUIR; após excluir, o painel fecha e aparece o aviso verde.
 - [ ] Esc fecha o modal e depois o painel.
+
+## 5. Régua de cobrança
+
+Visualização (todos os perfis):
+- [ ] Selo de status: "Régua ativa · N de M regras ativas" (verde) ou "Régua inativa..." (âmbar) quando nenhuma regra está ativa.
+- [ ] Cards com canal, D+N, horário e início do template; filtro Todos / E-mail / SMS / WhatsApp.
+- [ ] Clicar num card mostra o detalhe (template com as variáveis destacadas) e os **Elegíveis hoje** com o total e a explicação do critério.
+- [ ] Com a massa de demonstração, a regra "Lembrete 3 dias (e-mail)" mostra os devedores com 3 dias de atraso que ainda não receberam com sucesso hoje (ex.: o bounce e a falha).
+- [ ] **Operador**: não vê "Nova regra", o switch vira o texto Ativa/Inativa e não há botões Editar/Executar/Excluir; aparece a nota de que só gestor/admin gerenciam.
+
+Criar e editar (gestor/admin):
+- [ ] "Nova regra" abre o editor com um template inicial; a pré-visualização mostra a mensagem com dados de exemplo (Maria, R$ 1.234,56...).
+- [ ] Clicar numa variável insere no ponto do cursor.
+- [ ] Contador de caracteres por canal (SMS 480, WhatsApp 1024, e-mail 5000); no SMS acima de 160 mostra o número de partes.
+- [ ] Variável inexistente (ex.: `{link}`) aparece como erro no campo e na pré-visualização.
+- [ ] Ao clicar em "Criar regra" com nome de 1 letra, D+0 ou horário 07:00/20:00, aparecem os erros por campo e nada é enviado.
+- [ ] Regra criada aparece **inativa** com o aviso verde "criada (inativa)".
+- [ ] Editar só o nome salva e mantém o resto; editar uma regra ativa mostra o aviso "as alterações valem a partir do próximo ciclo".
+
+Ativar, executar e excluir (gestor/admin):
+- [ ] Ativar pelo switch: aviso "ativada: entra no próximo ciclo" e o selo de status atualiza.
+- [ ] Criar outra regra de **e-mail D+3** e tentar ativar: erro "Já existe uma regra ativa para email com 3 dias de atraso ('Lembrete 3 dias (e-mail)'). Desative-a antes."
+- [ ] Desativar e ativar de volta.
+- [ ] "Executar agora" fica desabilitado em regra inativa.
+- [ ] Executar a regra demo **hoje** de novo: "A regra já foi executada para DD/MM/AAAA".
+- [ ] O seletor de data só aceita de hoje até 7 dias atrás; executar um dia anterior válido mostra "Execução de ... solicitada" e o job aparece no Dashboard/Monitoramento.
+- [ ] Excluir uma regra nova (sem disparos): some da lista.
+- [ ] Excluir a regra demo (já disparou): mensagem de histórico e o botão vira "Desativar regra".
+
+Mensagens de validação (todas as telas):
+- [ ] Erros de validação escritos no back-end aparecem em português e por extenso (ex.: "O horário deve estar entre 08:00 e 20:00...") em vez de "Dados inválidos".
