@@ -77,7 +77,14 @@ Já entregue (etapa 1, `feature/front-auth-login`, mergeada na `develop`):
 - `package.json` renomeado para `cobranca-front-end`, script `typecheck`; Vite atualizado para 8.3.x (`npm audit` zerado); `doc.md` do Figma Make virou `front-end/README.md`; `.vscode/` no `.gitignore`.
 - As demais telas **ainda usam mocks** (arrays fixos no topo de cada arquivo em `src/pages/`); cada etapa troca os mocks pela API.
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` (**próxima**) → 3 `front-lotes` (upload + polling + relatório de validação) → 4 `front-devedores` → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Etapa 2 (`feature/front-dashboard`) — peças reutilizáveis para as próximas telas:
+- `src/hooks/useApi.ts`: `useApi<T>(path, { intervaloMs })` → `{dados, erro, carregando, atualizadoEm, recarregar}`. Filtros vão na query string do `path` (mudou o path, recarrega); recargas por intervalo não apagam os dados (sem "piscar").
+- `src/lib/formatos.ts`: `numero`, `percentual` (null → "—"), `dataHora` (Brasília), `data`/`diaCurto` (datas `YYYY-MM-DD` sem `new Date`, para não mudar de dia com o fuso), `NOME_CANAL`, `COR_CANAL` e rótulos/cores de status (`STATUS_LOTE`, `STATUS_JOB`, `STATUS_DEVEDOR`).
+- `src/lib/tipos.ts`: enums, `Lote`, `Job`, `Dashboard`, `Saude`. `consultarSaude()` em `api.ts` lê o `/health` mesmo com 503.
+- A `timeline` do dashboard é **por dia, sem quebra por canal** (o gráfico mostra sucesso/falhas/aguardando); o painel "Alertas" do protótipo não tinha endpoint e virou "Distribuição por canal" + conversão.
+- Massa de demonstração: um CSV com `cpf_cnpj,nome,email,valor_divida,data_vencimento,telefone` (CPFs válidos, data `DD/MM/AAAA`, valor com ponto) + regra ativa + `POST /regras/{id}/executar`. No Git Bash do Windows, mande JSON com acento via arquivo (`--data-binary @arquivo.json`), senão a API responde "error parsing the body".
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` (**próxima**: upload + polling + relatório de validação) → 4 `front-devedores` → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.
