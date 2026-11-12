@@ -1,10 +1,11 @@
 # CI/CD da Plataforma de Cobrança Automatizada (RNF06 e RNF07)
 #
 #  testes + SonarCloud ─┐
-#  migrações (Postgres) ─┼─> deploy (só na main, e só se tudo acima passar)
-#  build do Docker ─────┘
+#  migrações (Postgres) ─┤
+#  build do Docker ─────┼─> deploy (só na main, e só se tudo acima passar)
+#  front-end ───────────┘
 #
-# RNF06: cobertura mínima de 80% (o pytest falha abaixo disso).
+# RNF06: cobertura mínima de 80% (o pytest e o Vitest falham abaixo disso).
 # RNF07: se um teste falhar ou o Quality Gate do SonarCloud reprovar, o job
 #        fica vermelho e o deploy não roda.
 name: CI
@@ -25,6 +26,7 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.14" # a mesma do Dockerfile
+  NODE_VERSION: "22" # LTS indicada no front-end/README.md
 
 jobs:
   testes-e-qualidade:
@@ -110,10 +112,34 @@ jobs:
       - name: Construir a imagem da API
         run: docker build --tag cobranca-api:ci back-end
 
+  front-end:
+    name: Front-end (lint, tipos, testes e build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front-end
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: front-end/package-lock.json
+      - name: Instalar dependências (versões exatas do package-lock)
+        run: npm ci
+      - name: Lint (ESLint, sem avisos)
+        run: npm run lint
+      - name: Checagem de tipos (TypeScript)
+        run: npm run typecheck
+      - name: Testes (cobertura mínima de 80%)
+        run: npm run test:coverage
+      - name: Build de produção
+        run: npm run build
+
   deploy:
     name: Deploy
-    # RNF07: só roda se os três jobs acima passaram, e apenas na main
-    needs: [testes-e-qualidade, migracoes, build-docker]
+    # RNF07: só roda se os quatro jobs acima passaram, e apenas na main
+    needs: [testes-e-qualidade, migracoes, build-docker, front-end]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: producao # permite exigir aprovação manual nas configurações do GitHub
