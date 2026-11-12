@@ -170,6 +170,22 @@ export interface Job {
   progresso_percentual: number
 }
 
+/** Comunicação de um job (ComunicacaoDoJobResponse), já com o nome do devedor. */
+export interface ComunicacaoDoJob {
+  id: string
+  devedor_id: string
+  devedor_nome: string
+  canal: Canal
+  status: StatusComunicacao
+  tentativas: number
+  /** Preenchido quando há reenvio agendado (falha temporária, RN07). */
+  proxima_tentativa_em: DataHoraISO | null
+  codigo_erro: string | null
+  mensagem_erro: string | null
+  enviado_em: DataHoraISO | null
+  criado_em: DataHoraISO
+}
+
 // --- Dashboard (back-end/app/schemas/dashboard.py) -------------------------
 
 /** Contagem de comunicações. Taxas em % (1 casa) ou null quando não há base. */
