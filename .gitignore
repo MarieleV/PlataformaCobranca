@@ -27,3 +27,5 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+# === EDITOR ===
+.vscode/

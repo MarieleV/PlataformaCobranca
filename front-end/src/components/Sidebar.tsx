@@ -1,19 +1,19 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import logoTcc from "../assets/logo-tcc.png"
-
-export type Page =
-  | "dashboard"
-  | "importar"
-  | "validacao"
-  | "regua"
-  | "devedores"
-  | "monitoramento"
-  | "usuarios"
+import { useAuth } from "../auth/AuthContext"
+import { NOME_PERFIL, PERFIS_POR_PAGINA, type Page } from "../auth/permissoes"
 
 interface SidebarProps {
   current: Page
   onNavigate: (p: Page) => void
-  onLogout: () => void
+}
+
+// "Mariele Vieira" -> "MV"; "Admin" -> "AD"
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean)
+  if (partes.length === 0) return "?"
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
 }
 
 const navItems: { id: Page; label: string; icon: (isActive: boolean) => ReactNode }[] = [
@@ -68,7 +68,16 @@ const navItems: { id: Page; label: string; icon: (isActive: boolean) => ReactNod
   },
 ]
 
-export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps) {
+export default function Sidebar({ current, onNavigate }: SidebarProps) {
+  const { usuario, logout, pode } = useAuth()
+  const [saindo, setSaindo] = useState(false)
+  const itensVisiveis = navItems.filter((item) => pode(PERFIS_POR_PAGINA[item.id]))
+
+  const handleLogout = async () => {
+    setSaindo(true)
+    await logout() // desmonta a área logada; não precisa voltar o estado
+  }
+
   return (
     // Largura dinâmica: 208px em telas menores, 256px no desktop médio, 288px (original) no monitor grande
     <aside className="w-52 lg:w-64 xl:w-72 bg-white border-r border-slate-200/80 flex flex-col h-full flex-shrink-0 font-sans select-none z-20 relative">
@@ -98,7 +107,7 @@ export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps)
           Menu Principal
         </p>
         
-        {navItems.map((item) => {
+        {itensVisiveis.map((item) => {
           const active = current === item.id
           return (
             <button
@@ -122,26 +131,27 @@ export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps)
       <div className="p-3 lg:p-5 border-t border-slate-100 bg-slate-50/50">
         <div className="flex items-center gap-2.5 lg:gap-3.5 mb-3 lg:mb-4 px-1 lg:px-2">
           <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-200 text-black font-bold text-xs lg:text-sm flex items-center justify-center flex-shrink-0 shadow-sm">
-            MV
+            {iniciais(usuario?.nome ?? "")}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs lg:text-sm font-bold text-slate-900 truncate">
-              Mariele Vieira
+            <p className="text-xs lg:text-sm font-bold text-slate-900 truncate" title={usuario?.email}>
+              {usuario?.nome}
             </p>
             <p className="text-[9px] lg:text-[11px] font-medium text-slate-500 tracking-wide uppercase truncate">
-              Gestor Financeiro
+              {usuario ? NOME_PERFIL[usuario.perfil] : ""}
             </p>
           </div>
         </div>
 
         <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-2 lg:gap-2.5 px-3 lg:px-3.5 py-2 lg:py-2.5 rounded-xl text-xs lg:text-[13px] font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all"
+          onClick={handleLogout}
+          disabled={saindo}
+          className="w-full flex items-center gap-2 lg:gap-2.5 px-3 lg:px-3.5 py-2 lg:py-2.5 rounded-xl text-xs lg:text-[13px] font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-60 disabled:cursor-wait"
         >
           <svg className="w-[16px] h-[16px] lg:w-[18px] lg:h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Encerrar sessão
+          {saindo ? "Encerrando..." : "Encerrar sessão"}
         </button>
       </div>
     </aside>
