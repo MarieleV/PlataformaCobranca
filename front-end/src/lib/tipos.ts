@@ -49,6 +49,21 @@ export interface Lote {
   progresso_percentual: number
 }
 
+/** Uma linha com erro no relatório de validação (ErroLoteResponse). Todo erro rejeita a linha. */
+export interface ErroLote {
+  id: string
+  /** Linha na planilha (1 = cabeçalho; erros estruturais do arquivo também usam 1). */
+  numero_linha: number
+  campo: string
+  regra_violada: string
+  valor_informado: string | null
+}
+
+export interface UploadLoteResponse {
+  message: string
+  lote_id: string
+}
+
 // --- Jobs (back-end/app/schemas/job.py) ------------------------------------
 
 export interface Job {
