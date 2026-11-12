@@ -42,7 +42,7 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 - [ ] Período 7/15/30 dias muda o gráfico e as datas.
 - [ ] Gráfico empilhado (sucesso/falhas/aguardando); sem disparos, mostra "Nenhum disparo...".
 - [ ] Distribuição por canal e conversão.
-- [ ] Tabelas de últimos lotes e jobs; clicar num lote abre o Relatório daquele lote.
+- [ ] Tabelas de últimos lotes e jobs; clicar num lote abre o Relatório daquele lote; clicar num job abre o painel do job no Monitoramento.
 - [ ] Atalhos "Importar lote" e "Monitoramento".
 - [ ] Atualiza sozinho a cada minuto ("Atualizado às...").
 - [ ] `docker stop cobranca_redis`: selo vermelho "Instável: Redis" em até 1 min (depois `docker start cobranca_redis`).
@@ -100,6 +100,27 @@ Ativar, executar e excluir (gestor/admin):
 - [ ] O seletor de data só aceita de hoje até 7 dias atrás; executar um dia anterior válido mostra "Execução de ... solicitada" e o job aparece no Dashboard/Monitoramento.
 - [ ] Excluir uma regra nova (sem disparos): some da lista.
 - [ ] Excluir a regra demo (já disparou): mensagem de histórico e o botão vira "Desativar regra".
+
+## 6. Monitoramento
+
+Serviços e janela:
+- [ ] Quatro cards: Banco de dados, Redis, RabbitMQ (Operacional) e Janela de disparo.
+- [ ] Janela **Aberta** em dia útil das 8h às 19h55, com "Próximo ciclo às HH:MM" (múltiplo de 5 min); fora disso **Fechada** com "Abre hoje/amanhã/seg. às 08:00".
+- [ ] `docker stop cobranca_redis`: em até 30 s o card do Redis fica vermelho "Fora do ar" (depois `docker start cobranca_redis`).
+- [ ] Com a API parada, os cards de serviço mostram "API sem resposta".
+
+Jobs:
+- [ ] Lista com total, regra, canal, dia de referência, status, barra de progresso (verde = sucesso, vermelho = falha), sucesso/falhas/pendentes e início.
+- [ ] Filtros por status e por regra; "Atualizar"; paginação com mais de 20 jobs.
+- [ ] Com job em andamento, aparece "Há jobs em andamento · atualiza sozinho a cada 15 s" e os números mudam sem recarregar.
+- [ ] Sem jobs: "Nenhum job executado ainda...".
+
+Painel do job (clique numa linha):
+- [ ] Números (alvos, sucesso, falhas, pendentes), progresso, início e fim ("em andamento" enquanto executa).
+- [ ] Comunicações com filtro Todas / Pendentes / Enviadas / Falhas / Bounces e o total de cada.
+- [ ] No job da massa demo: 7 enviadas, o bounce do Hugo Alves com `[SIMULADO_BOUNCE]`, e a Iara Costa como "Falha · vai reenviar" com "reenvio às ..." e "N de 4" tentativas (após a 4ª, vira "Falha definitiva").
+- [ ] Quando todas se resolvem, o job vira **Concluído** (ou **Falhou**, se nenhuma deu certo) e o painel para de atualizar.
+- [ ] Esc ou clique fora fecha o painel.
 
 Mensagens de validação (todas as telas):
 - [ ] Erros de validação escritos no back-end aparecem em português e por extenso (ex.: "O horário deve estar entre 08:00 e 20:00...") em vez de "Dados inválidos".

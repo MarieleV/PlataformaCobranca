@@ -109,7 +109,14 @@ Etapa 5 (`feature/front-regua`):
 - Fatos da API: `horario_disparo` é "a partir de" (o beat roda a cada 5 min, seg–sex, 8h–19h55); regra com jobs não pode ser excluída (409, oferecer desativar); `executar` exige regra ativa, dia entre hoje−7 e hoje e devolve 409 se o job do dia já existe; não há métricas por regra (o protótipo mostrava "devedores" e "taxa" nos cards — saíram).
 - Dentro de `<label>` não coloque grupos de botões (clicar no rótulo aciona o primeiro botão): `CampoForm` tem `grupo`.
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` (**próxima**: jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Etapa 6 (`feature/front-monitoramento`):
+- O "console de logs" do protótipo era fictício (não há endpoint de logs): virou cards de saúde (`/health`), janela de disparo e a lista de jobs com o painel `src/components/DetalheJob.tsx` (comunicações por status, tentativas "N de 4", próximo reenvio, erro). `jobEmAndamento(job)` exportado.
+- `src/hooks/useSaude.ts`: polling do `/health` (`saude` undefined = verificando, null = API sem resposta), `NOME_DEPENDENCIA` (nomes longos), `dependenciasFora`. O selo do Dashboard usa o hook.
+- `src/lib/janela.ts`: `estadoJanela()` — aberta/fechada, próximo ciclo (múltiplos de 5 min, último às 19:55) e próxima abertura; não conhece feriados (a tela avisa).
+- `App.tsx` guarda o job aberto (`abrirJob(id)`): as linhas de "Últimos jobs" do Dashboard abrem o painel no Monitoramento.
+- Fatos da API: job fica `executando` enquanto houver reenvio pendente; termina `concluido` ou `falhou` (alvos > 0 e nenhum sucesso). `max_tentativas_envio` = 4 (1 + 3 reenvios), intervalo 30 min (`config.py`).
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` ✅ → 7 `front-usuarios` (**próxima**: + auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.
