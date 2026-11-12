@@ -70,17 +70,24 @@ export function useFecharComEsc(onFechar: () => void, ativo = true) {
 }
 
 /** Modal centralizado (confirmações). Fecha no Esc e no clique fora, exceto enquanto `ocupado`. */
-export function Modal({ titulo, children, onFechar, ocupado = false }: {
+export function Modal({ titulo, children, onFechar, ocupado = false, largo = false }: {
   titulo: string
   children: ReactNode
   onFechar: () => void
   ocupado?: boolean
+  /** Formulários maiores (ex.: editor de regra). */
+  largo?: boolean
 }) {
   useFecharComEsc(onFechar, !ocupado)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" onClick={ocupado ? undefined : onFechar} />
-      <div role="dialog" aria-modal="true" aria-label={titulo} className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={titulo}
+        className={`relative w-full ${largo ? "max-w-4xl" : "max-w-md"} max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6`}
+      >
         <h2 className="text-lg font-bold text-slate-900 mb-3">{titulo}</h2>
         {children}
       </div>

@@ -40,12 +40,24 @@ function mensagemPadrao(status: number): string {
 
 // O FastAPI devolve { detail: string } nos erros de negócio e
 // { detail: [{ msg, loc, ... }] } nos erros de validação (422).
+// Nos 422, as validações escritas no back-end vêm em português com o prefixo
+// "Value error, " (ex.: "Value error, O template excede o limite..."): essas são
+// aproveitadas. As genéricas do Pydantic vêm em inglês e caem na mensagem padrão.
+const PREFIXO_VALIDACAO = "Value error, "
+
 async function extrairMensagem(resposta: Response): Promise<string> {
   try {
     const corpo: unknown = await resposta.json()
     if (corpo && typeof corpo === "object" && "detail" in corpo) {
       const { detail } = corpo as { detail: unknown }
       if (typeof detail === "string" && detail) return detail
+      if (Array.isArray(detail)) {
+        const nossas = detail
+          .map((item) => (item && typeof item === "object" && "msg" in item ? String(item.msg) : ""))
+          .filter((msg) => msg.startsWith(PREFIXO_VALIDACAO))
+          .map((msg) => msg.slice(PREFIXO_VALIDACAO.length))
+        if (nossas.length > 0) return [...new Set(nossas)].join(" ")
+      }
     }
   } catch {
     // corpo vazio ou não-JSON: usa a mensagem padrão

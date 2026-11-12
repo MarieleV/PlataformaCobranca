@@ -105,6 +105,52 @@ export interface Comunicacao {
   criado_em: DataHoraISO
 }
 
+// --- Régua (back-end/app/schemas/regra.py) ---------------------------------
+
+export interface Regra {
+  id: string
+  usuario_id: string
+  nome: string
+  dias_atraso: number
+  canal: Canal
+  template_mensagem: string
+  /** "HH:MM:SS" (horário de Brasília) */
+  horario_disparo: string
+  ativa: boolean
+  criado_em: DataHoraISO
+}
+
+/** Corpo do POST /regras/ (nasce inativa) e, parcial, do PATCH /regras/{id}. */
+export interface RegraEntrada {
+  nome: string
+  dias_atraso: number
+  canal: Canal
+  template_mensagem: string
+  /** "HH:MM" */
+  horario_disparo: string
+}
+
+export interface StatusRegua {
+  regua_ativa: boolean
+  regras_ativas: number
+  total_regras: number
+  mensagem: string
+}
+
+export interface VariavelTemplate {
+  nome: string
+  placeholder: string
+  descricao: string
+  exemplo: string
+}
+
+export interface PreviewTemplate {
+  mensagem: string
+  tamanho: number
+  limite: number
+  variaveis_usadas: string[]
+}
+
 // --- Jobs (back-end/app/schemas/job.py) ------------------------------------
 
 export interface Job {

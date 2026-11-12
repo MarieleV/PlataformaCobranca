@@ -29,6 +29,8 @@ export const PERFIS_POR_ACAO = {
   quitarDevedor: ["administrador", "gestor"],
   /** DELETE /devedores/{id} (LGPD) */
   excluirDevedor: ["administrador"],
+  /** Criar, editar, ativar/desativar, excluir e executar regras da régua */
+  gerenciarRegua: ["administrador", "gestor"],
 } as const satisfies Record<string, readonly Perfil[]>
 
 export const NOME_PERFIL: Record<Perfil, string> = {
