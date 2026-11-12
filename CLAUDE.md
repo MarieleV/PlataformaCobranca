@@ -116,7 +116,14 @@ Etapa 6 (`feature/front-monitoramento`):
 - `App.tsx` guarda o job aberto (`abrirJob(id)`): as linhas de "Últimos jobs" do Dashboard abrem o painel no Monitoramento.
 - Fatos da API: job fica `executando` enquanto houver reenvio pendente; termina `concluido` ou `falhou` (alvos > 0 e nenhum sucesso). `max_tentativas_envio` = 4 (1 + 3 reenvios), intervalo 30 min (`config.py`).
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` ✅ → 7 `front-usuarios` (**próxima**: + auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Etapa 7 (`feature/front-usuarios`):
+- Telas: `pages/Usuarios.tsx` (lista + `components/ModaisUsuario.tsx`: `FormUsuario`, `RedefinirSenha`, `ConfirmarAcaoUsuario`, `DESCRICAO_PERFIL`), `pages/Auditoria.tsx` (nova página `auditoria`, só admin, no menu) e `components/MinhaConta.tsx` (troca da própria senha, aberta pelo nome no rodapé da Sidebar). `components/CampoSenha.tsx` (mostrar/gerar).
+- `CampoForm` e `inputClasse` agora ficam em `ui.tsx` (o `EditorRegra` passou a importá-los). `AuthContext` ganhou `recarregarUsuario()` (usado quando o admin edita o próprio nome/e-mail).
+- `src/lib/usuarios.ts`: `validarSenha` (8–128, letra e número), `validarNome`, `validarEmail`, `gerarSenha` (crypto, sempre válida), `NOME_ACAO` e `NOME_ENTIDADE` (rótulos da auditoria — ao criar uma nova ação de auditoria no back-end, acrescente aqui).
+- `permissoes.ts`: página `auditoria` e ação `administrarUsuarios` (admin).
+- Fatos da API: **não há convite por e-mail** (cria com senha inicial) nem "último acesso"; gestor só lista/gerencia operadores e não altera perfil (403); ninguém altera o próprio perfil, desativa/exclui a si mesmo ou redefine a própria senha por `/usuarios` (400 — use `PUT /auth/senha`); desativar e redefinir senha encerram as sessões do alvo; excluir usuário com lotes/regras → 409; a auditoria tem `usuario_id` null tanto em login com e-mail inexistente quanto em usuário excluído (FK `SET NULL`).
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` ✅ → 7 `front-usuarios` ✅ → 8 `front-ci` (**próxima**) (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.

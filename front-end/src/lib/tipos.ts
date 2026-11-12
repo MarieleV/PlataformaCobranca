@@ -21,6 +21,42 @@ export interface MensagemResponse {
   message: string
 }
 
+// --- Usuários (back-end/app/schemas/usuario.py) ----------------------------
+
+/** UsuarioResponse (gestão de usuários). Diferente de `Usuario`, que é o logado. */
+export interface UsuarioGerenciado {
+  id: string
+  nome: string
+  email: string
+  perfil: Perfil
+  ativo: boolean
+  criado_por: string | null
+  criado_em: string
+  atualizado_em: string
+}
+
+export interface UsuarioEntrada {
+  nome: string
+  email: string
+  senha: string
+  perfil: Perfil
+}
+
+// --- Auditoria (back-end/app/schemas/auditoria.py) -------------------------
+
+export interface LogAuditoria {
+  id: string
+  /** null em login com e-mail inexistente ou usuário já excluído */
+  usuario_id: string | null
+  usuario_nome: string | null
+  usuario_email: string | null
+  acao: string
+  entidade: string | null
+  entidade_id: string | null
+  ip: string | null
+  criado_em: string
+}
+
 // --- Enums (back-end/app/models/domain.py) ---------------------------------
 
 export type Canal = "email" | "sms" | "whatsapp"

@@ -10,6 +10,7 @@ import ReguaCobranca from "./pages/ReguaCobranca"
 import Devedores from "./pages/Devedores"
 import Monitoramento from "./pages/Monitoramento"
 import Usuarios from "./pages/Usuarios"
+import Auditoria from "./pages/Auditoria"
 
 const pageTitles: Record<Page, string> = {
   dashboard: "Dashboard",
@@ -19,6 +20,7 @@ const pageTitles: Record<Page, string> = {
   devedores: "Devedores",
   monitoramento: "Monitoramento",
   usuarios: "Usuários",
+  auditoria: "Auditoria",
 }
 
 export default function App() {
@@ -96,6 +98,7 @@ function AreaLogada() {
           {page === "devedores" && <Devedores onAbrirLote={abrirRelatorio} />}
           {page === "monitoramento" && <Monitoramento jobId={jobAberto} onAbrirJob={setJobAberto} />}
           {page === "usuarios" && <Usuarios />}
+          {page === "auditoria" && <Auditoria />}
         </div>
       </main>
     </div>

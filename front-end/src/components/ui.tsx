@@ -95,6 +95,35 @@ export function Modal({ titulo, children, onFechar, ocupado = false, largo = fal
   )
 }
 
+const INPUT = "w-full px-3 py-2.5 rounded-xl border bg-white text-sm text-slate-900 outline-none focus:ring-4 transition-all"
+
+/** Classes de input/select/textarea, com borda vermelha quando há erro. */
+export const inputClasse = (erro?: string | null) =>
+  `${INPUT} ${erro ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10" : "border-slate-200 focus:border-black focus:ring-black/5"}`
+
+/** Rótulo + campo + erro (ou dica). */
+export function CampoForm({ rotulo, erro, dica, grupo = false, children }: {
+  rotulo: string
+  erro?: string | null
+  dica?: string
+  /** true quando o conteúdo é um grupo de botões (não pode ficar dentro de <label>: o clique no rótulo acionaria o 1º botão). */
+  grupo?: boolean
+  children: ReactNode
+}) {
+  const Tag = grupo ? "div" : "label"
+  return (
+    <Tag className="block">
+      <span className="block text-xs font-bold text-slate-700 mb-1.5">{rotulo}</span>
+      {children}
+      {erro ? (
+        <span className="block text-xs font-medium text-rose-600 mt-1">{erro}</span>
+      ) : dica ? (
+        <span className="block text-[11px] text-slate-400 mt-1">{dica}</span>
+      ) : null}
+    </Tag>
+  )
+}
+
 export const BOTAO_PRIMARIO =
   "px-4 py-2.5 rounded-xl bg-black hover:bg-slate-900 text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 export const BOTAO_SECUNDARIO =

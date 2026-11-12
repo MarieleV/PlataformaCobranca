@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import logoTcc from "../assets/logo-tcc.png"
 import { useAuth } from "../auth/AuthContext"
 import { NOME_PERFIL, PERFIS_POR_PAGINA, type Page } from "../auth/permissoes"
+import MinhaConta from "./MinhaConta"
 
 interface SidebarProps {
   current: Page
@@ -66,11 +67,19 @@ const navItems: { id: Page; label: string; icon: (isActive: boolean) => ReactNod
       <svg className={`w-[16px] h-[16px] lg:w-[18px] lg:h-[18px] transition-colors ${active ? "text-black" : "text-slate-400 group-hover:text-slate-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
     ),
   },
+  {
+    id: "auditoria",
+    label: "Auditoria",
+    icon: (active) => (
+      <svg className={`w-[16px] h-[16px] lg:w-[18px] lg:h-[18px] transition-colors ${active ? "text-black" : "text-slate-400 group-hover:text-slate-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+    ),
+  },
 ]
 
 export default function Sidebar({ current, onNavigate }: SidebarProps) {
   const { usuario, logout, pode } = useAuth()
   const [saindo, setSaindo] = useState(false)
+  const [minhaConta, setMinhaConta] = useState(false)
   const itensVisiveis = navItems.filter((item) => pode(PERFIS_POR_PAGINA[item.id]))
 
   const handleLogout = async () => {
@@ -129,19 +138,24 @@ export default function Sidebar({ current, onNavigate }: SidebarProps) {
       {/* --- USER FOOTER --- */}
       {/* Ajustamos o container do perfil e o botão de logout */}
       <div className="p-3 lg:p-5 border-t border-slate-100 bg-slate-50/50">
-        <div className="flex items-center gap-2.5 lg:gap-3.5 mb-3 lg:mb-4 px-1 lg:px-2">
+        <button
+          onClick={() => setMinhaConta(true)}
+          title="Minha conta: dados e troca de senha"
+          className="w-full text-left flex items-center gap-2.5 lg:gap-3.5 mb-3 lg:mb-4 px-1 lg:px-2 py-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+        >
           <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-200 text-black font-bold text-xs lg:text-sm flex items-center justify-center flex-shrink-0 shadow-sm">
             {iniciais(usuario?.nome ?? "")}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs lg:text-sm font-bold text-slate-900 truncate" title={usuario?.email}>
+            <p className="text-xs lg:text-sm font-bold text-slate-900 truncate">
               {usuario?.nome}
             </p>
             <p className="text-[9px] lg:text-[11px] font-medium text-slate-500 tracking-wide uppercase truncate">
-              {usuario ? NOME_PERFIL[usuario.perfil] : ""}
+              {usuario ? NOME_PERFIL[usuario.perfil] : ""} · Minha conta
             </p>
           </div>
-        </div>
+        </button>
+        {minhaConta && <MinhaConta onFechar={() => setMinhaConta(false)} />}
 
         <button
           onClick={handleLogout}

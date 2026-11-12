@@ -12,6 +12,8 @@ interface AuthContextValue {
   sessaoExpirada: boolean
   login: (email: string, senha: string) => Promise<void>
   logout: () => Promise<void>
+  /** Relê GET /auth/me (ex.: depois de o usuário editar o próprio nome ou e-mail). */
+  recarregarUsuario: () => Promise<void>
   /** RBAC na interface. A regra que vale é a do back-end; isto só esconde o que não se pode usar. */
   pode: (perfis: readonly Perfil[]) => boolean
 }
@@ -75,14 +77,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const recarregarUsuario = useCallback(async () => {
+    try {
+      setUsuario(await apiFetch<Usuario>("/auth/me"))
+    } catch {
+      // Sem sessão: o apiFetch já avisou o contexto (aoExpirarSessao)
+    }
+  }, [])
+
   const pode = useCallback(
     (perfis: readonly Perfil[]) => usuario !== null && perfis.includes(usuario.perfil),
     [usuario],
   )
 
   const valor = useMemo(
-    () => ({ usuario, carregando, sessaoExpirada, login, logout, pode }),
-    [usuario, carregando, sessaoExpirada, login, logout, pode],
+    () => ({ usuario, carregando, sessaoExpirada, login, logout, recarregarUsuario, pode }),
+    [usuario, carregando, sessaoExpirada, login, logout, recarregarUsuario, pode],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
