@@ -43,6 +43,13 @@ function AreaLogada() {
     setLoteRelatorio(loteId)
     setPage("validacao")
   }
+  // Job aberto no painel do Monitoramento (null = nenhum)
+  const [jobAberto, setJobAberto] = useState<string | null>(null)
+
+  const abrirJob = (jobId: string) => {
+    setJobAberto(jobId)
+    setPage("monitoramento")
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans select-none">
@@ -76,7 +83,7 @@ function AreaLogada() {
 
         {/* --- PAGE CONTENT --- */}
         <div className="flex-1 overflow-hidden bg-slate-50">
-          {page === "dashboard" && <Dashboard onNavigate={setPage} onAbrirLote={abrirRelatorio} />}
+          {page === "dashboard" && <Dashboard onNavigate={setPage} onAbrirLote={abrirRelatorio} onAbrirJob={abrirJob} />}
           {page === "importar" && <ImportarLote onVerRelatorio={abrirRelatorio} />}
           {page === "validacao" && (
             <RelatorioValidacao
@@ -87,7 +94,7 @@ function AreaLogada() {
           )}
           {page === "regua" && <ReguaCobranca />}
           {page === "devedores" && <Devedores onAbrirLote={abrirRelatorio} />}
-          {page === "monitoramento" && <Monitoramento />}
+          {page === "monitoramento" && <Monitoramento jobId={jobAberto} onAbrirJob={setJobAberto} />}
           {page === "usuarios" && <Usuarios />}
         </div>
       </main>

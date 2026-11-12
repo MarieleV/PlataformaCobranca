@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import {
   Bar,
   BarChart,
@@ -11,7 +11,7 @@ import {
 import type { Page } from "../auth/permissoes"
 import { AvisoErro, Badge, Painel } from "../components/ui"
 import { useApi } from "../hooks/useApi"
-import { consultarSaude } from "../lib/api"
+import { dependenciasFora, useSaude } from "../hooks/useSaude"
 import * as fmt from "../lib/formatos"
 import type { Dashboard as DadosDashboard, Job, Saude } from "../lib/tipos"
 
@@ -25,6 +25,7 @@ const CORES = {
   aguardando: "#cbd5e1", // slate-300
 }
 
+// Nomes curtos para o selo do cabeçalho (o Monitoramento usa os longos de useSaude)
 const NOME_DEPENDENCIA: Record<keyof Saude["dependencias"], string> = {
   postgres: "Banco de dados",
   redis: "Redis",
@@ -35,9 +36,11 @@ interface DashboardProps {
   onNavigate?: (p: Page) => void
   /** Abre o relatório de validação de um lote. */
   onAbrirLote?: (loteId: string) => void
+  /** Abre um job no Monitoramento. */
+  onAbrirJob?: (jobId: string) => void
 }
 
-export default function Dashboard({ onNavigate, onAbrirLote }: DashboardProps) {
+export default function Dashboard({ onNavigate, onAbrirLote, onAbrirJob }: DashboardProps) {
   const [dias, setDias] = useState<number>(7)
   const { dados, erro, carregando, atualizadoEm, recarregar } = useApi<DadosDashboard>(
     `/dashboard/?dias=${dias}`,
@@ -87,7 +90,7 @@ export default function Dashboard({ onNavigate, onAbrirLote }: DashboardProps) {
           </div>
 
           <TabelaLotes dados={dados} onNavigate={onNavigate} onAbrirLote={onAbrirLote} />
-          <TabelaJobs dados={dados} onNavigate={onNavigate} />
+          <TabelaJobs dados={dados} onNavigate={onNavigate} onAbrirJob={onAbrirJob} />
 
           {atualizadoEm && (
             <p className="text-center text-[11px] font-mono text-slate-400">
@@ -126,28 +129,10 @@ function SeletorPeriodo({ valor, onChange }: { valor: number; onChange: (d: numb
 
 /** Selo com o GET /health: verde se Postgres, Redis e RabbitMQ respondem. */
 function StatusSistema() {
-  const [saude, setSaude] = useState<Saude | null | undefined>(undefined) // undefined = consultando
-
-  useEffect(() => {
-    let controle = new AbortController()
-    const consultar = () => {
-      controle.abort()
-      controle = new AbortController()
-      consultarSaude(controle.signal).then(setSaude).catch(() => {})
-    }
-    consultar()
-    const id = window.setInterval(consultar, ATUALIZAR_A_CADA_MS)
-    return () => {
-      window.clearInterval(id)
-      controle.abort()
-    }
-  }, [])
-
+  const { saude } = useSaude(ATUALIZAR_A_CADA_MS)
   if (saude === undefined) return null
 
-  const fora = saude
-    ? (Object.keys(saude.dependencias) as (keyof Saude["dependencias"])[]).filter((d) => !saude.dependencias[d])
-    : []
+  const fora = dependenciasFora(saude)
   const ok = saude !== null && fora.length === 0
   const texto = saude === null
     ? "API indisponível"
@@ -483,11 +468,16 @@ function taxaDoJob(job: Job): number | null {
   return job.total_alvos > 0 ? Math.round((job.total_sucesso / job.total_alvos) * 1000) / 10 : null
 }
 
-function TabelaJobs({ dados, onNavigate }: { dados: DadosDashboard; onNavigate?: (p: Page) => void }) {
+function TabelaJobs({ dados, onNavigate, onAbrirJob }: {
+  dados: DadosDashboard
+  onNavigate?: (p: Page) => void
+  onAbrirJob?: (jobId: string) => void
+}) {
   const jobs = dados.ultimos_jobs
   return (
     <Painel
       titulo="Últimos jobs da régua"
+      subtitulo={onAbrirJob && jobs.length > 0 ? "Clique em um job para ver as comunicações" : undefined}
       acao={onNavigate && <BotaoAtalho texto="Monitoramento" onClick={() => onNavigate("monitoramento")} />}
     >
       <Tabela
@@ -498,7 +488,11 @@ function TabelaJobs({ dados, onNavigate }: { dados: DadosDashboard; onNavigate?:
           const status = fmt.STATUS_JOB[job.status]
           const taxa = taxaDoJob(job)
           return (
-            <tr key={job.id} className="hover:bg-slate-50/80 transition-colors">
+            <tr
+              key={job.id}
+              onClick={onAbrirJob && (() => onAbrirJob(job.id))}
+              className={`hover:bg-slate-50/80 transition-colors ${onAbrirJob ? "cursor-pointer" : ""}`}
+            >
               <td className={`${TD} font-medium text-slate-800 max-w-[260px] truncate`} title={job.regra_nome}>
                 {job.regra_nome}
               </td>
