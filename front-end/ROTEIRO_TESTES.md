@@ -11,7 +11,7 @@ cd ..\front-end; npm install; npm run dev  # http://localhost:8443 (use localhos
 ```
 
 - Login de desenvolvimento: `admin@consulth.com.br` / `admin123`.
-- Para testar perfis, crie um **gestor** e um **operador** (tela Usuários, etapa 7, ou em `http://localhost:8000/docs`).
+- Para testar perfis, crie um **gestor** e um **operador** pela tela **Usuários** (seção 7) e use uma janela anônima para logar com eles sem derrubar a sessão do admin.
 - Envio simulado: e-mail começando com `bounce` = bounce; `falha...` = falha temporária (reenvio a cada 30 min); telefone terminando em `0000` = bounce, em `9999` = falha.
 - Os disparos automáticos só acontecem **seg–sex, 8h–19h** (Brasília). Fora disso, os jobs ficam aguardando.
 
@@ -121,6 +121,38 @@ Painel do job (clique numa linha):
 - [ ] No job da massa demo: 7 enviadas, o bounce do Hugo Alves com `[SIMULADO_BOUNCE]`, e a Iara Costa como "Falha · vai reenviar" com "reenvio às ..." e "N de 4" tentativas (após a 4ª, vira "Falha definitiva").
 - [ ] Quando todas se resolvem, o job vira **Concluído** (ou **Falhou**, se nenhuma deu certo) e o painel para de atualizar.
 - [ ] Esc ou clique fora fecha o painel.
+
+## 7. Usuários, Minha conta e Auditoria
+
+Administrador:
+- [ ] Cards com a descrição dos 3 perfis; lista com nome, e-mail, perfil, situação e criado em; a própria linha mostra "você" e só tem "Editar".
+- [ ] Busca por nome ou e-mail (mín. 2 caracteres), filtros de perfil e situação.
+- [ ] "Novo usuário": "Gerar senha" preenche e mostra uma senha válida; senha `abcdefgh` mostra "ao menos uma letra e um número"; e-mail já usado mostra "E-mail já cadastrado".
+- [ ] Criar um **gestor** e um **operador**: aviso verde e aparecem na lista.
+- [ ] Editar nome/e-mail de outro usuário e trocar o perfil (aviso de que vale na próxima ação dele).
+- [ ] Editar a si mesmo: o perfil aparece travado ("você não pode alterar o próprio perfil"); mudar o nome atualiza a sidebar.
+- [ ] Redefinir senha de outro usuário: aviso de sessões encerradas; ele precisa logar de novo com a nova senha.
+- [ ] Desativar: confirmação; o usuário desativado não consegue logar ("Usuário inativo..."), e a linha fica esmaecida com "Reativar".
+- [ ] Excluir um usuário sem lotes/regras: some da lista. Excluir alguém que já importou lote ou criou regra: mensagem de vínculos e botão "Desativar em vez disso".
+
+Gestor (logado como o gestor criado):
+- [ ] Vê só operadores, sem cards de perfis e sem filtro de perfil; o botão é "Novo operador" e o formulário não tem seleção de perfil.
+- [ ] Edita, redefine senha, desativa e reativa operadores; não há botão "Excluir".
+- [ ] Não vê "Auditoria" no menu.
+
+Operador:
+- [ ] Não vê "Usuários" nem "Auditoria" no menu.
+
+Minha conta (qualquer perfil — clique no nome no rodapé do menu):
+- [ ] Mostra nome, e-mail e perfil.
+- [ ] Senha atual errada: "Senha atual incorreta"; nova igual à atual: aviso; confirmação diferente: "As senhas não conferem".
+- [ ] Troca com sucesso: mensagem de que as outras sessões foram encerradas e esta continua (F5 mantém o login); outra janela logada com o mesmo usuário cai para o login.
+
+Auditoria (só administrador):
+- [ ] Lista com data/hora, usuário, ação (ações sensíveis em vermelho), entidade, registro e IP; mais recentes primeiro.
+- [ ] As ações feitas nos testes acima aparecem (criou usuário, redefiniu senha, desativou, alterou status de devedor, ativou regra...).
+- [ ] Falha de login com e-mail inexistente aparece como "Sem usuário vinculado".
+- [ ] Filtros de usuário, ação, entidade e período (De/Até); "Limpar filtros"; paginação com mais de 50 registros.
 
 Mensagens de validação (todas as telas):
 - [ ] Erros de validação escritos no back-end aparecem em português e por extenso (ex.: "O horário deve estar entre 08:00 e 20:00...") em vez de "Dados inválidos".
