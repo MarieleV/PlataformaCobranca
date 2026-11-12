@@ -23,6 +23,14 @@ export const PERFIS_POR_PAGINA: Record<Page, readonly Perfil[]> = {
   usuarios: ["administrador", "gestor"],
 }
 
+// Ações restritas dentro das telas (espelham as checagens do back-end).
+export const PERFIS_POR_ACAO = {
+  /** PATCH /devedores/{id}/status com "quitado" */
+  quitarDevedor: ["administrador", "gestor"],
+  /** DELETE /devedores/{id} (LGPD) */
+  excluirDevedor: ["administrador"],
+} as const satisfies Record<string, readonly Perfil[]>
+
 export const NOME_PERFIL: Record<Perfil, string> = {
   administrador: "Administrador",
   gestor: "Gestor",

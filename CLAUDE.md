@@ -15,6 +15,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React, i
   - Cuidado com `git mv`/`git rm`: eles já deixam a mudança *staged* e ela entra no próximo commit, seja qual for. E um `git add` com um caminho que não existe mais falha **inteiro** (nenhum arquivo da linha é adicionado). Monte os comandos de commit considerando isso.
 - Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL` e `Build da imagem Docker`. Não use bypass.
 - Se algo for ambíguo e caro de refazer, pergunte antes. Se for barato de refazer, decida, diga a decisão e siga.
+- **Testes do front:** a Mariele só vai testar no navegador depois de concluir **toda** a integração (ela commita e mergeia cada etapa antes disso). Então, a cada etapa, valide você mesmo: `npm run typecheck`, `npm run build`, chamadas reais à API com os mesmos parâmetros que a tela monta (via `curl` com cookie de sessão) e formatadores com `node --experimental-strip-types`. Ações destrutivas (quitar, excluir) não devem ser testadas na massa dela sem pedir. Ao entregar, acrescente a seção da etapa em `front-end/ROTEIRO_TESTES.md` (roteiro consolidado do teste final).
 
 ## CI/CD (já funcionando)
 `.github/workflows/ci.yml`: testes (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches). Se o front-end ganhar testes/lint, **acrescente jobs ao `ci.yml`** e inclua os nomes novos nos checks obrigatórios do Ruleset. O Deploy é um passo de aviso (AWS ainda não feita).
@@ -92,7 +93,15 @@ Etapa 3 (`feature/front-lotes`):
 - Navegação: `App.tsx` guarda o lote aberto no Relatório (`abrirRelatorio(id)`), usado pelo upload, pelo seletor e pelas linhas de lotes do Dashboard.
 - Armadilha de diagnóstico: no Windows, `curl ... | python -m json.tool` lê a saída como cp1252 e mostra acentos "corrompidos" (`invÃ¡lido`). Não é bug da API — confira com `psql`/`convert_to` antes de suspeitar do back-end.
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` (**próxima**) → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Etapa 4 (`feature/front-devedores`):
+- `src/components/DetalheDevedor.tsx`: painel lateral (dados, troca de status, histórico de comunicações, exclusão LGPD com confirmação digitando "EXCLUIR"). `corAtraso(dias)` exportado.
+- `ui.tsx` ganhou `Modal`, `useFecharComEsc` e as classes `BOTAO_PRIMARIO`/`BOTAO_SECUNDARIO`/`BOTAO_PERIGO`. `src/hooks/useDebounce.ts` para buscas.
+- `permissoes.ts`: `PERFIS_POR_ACAO` (`quitarDevedor`, `excluirDevedor`) — acrescente ali as ações restritas das próximas telas e use com `pode(...)`.
+- `formatos.ts`: `moeda` (o `valor_divida` vem como **texto**, ex. `"1500.00"`), `documento`, `documentoMascarado` (listas mostram CPF/CNPJ mascarado; o detalhe mostra completo), `telefone`, `STATUS_COMUNICACAO`; `STATUS_DEVEDOR` tem `descricao`.
+- A API de devedores **não filtra por canal nem devolve "último contato"**, e não há exportação: o filtro de canal e o "Exportar CSV" do protótipo saíram (exportar CPF/CNPJ em arquivo solto seria ruim pela LGPD). A coluna "Contatos" mostra quais canais o devedor pode receber.
+- Cuidado em comentários JSDoc: `***/` (ex.: CNPJ mascarado) fecha o comentário e quebra o build.
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` (**próxima**) → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.

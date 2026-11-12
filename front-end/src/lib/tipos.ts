@@ -27,6 +27,7 @@ export type Canal = "email" | "sms" | "whatsapp"
 export type StatusLote = "pendente" | "processando" | "concluido" | "erro"
 export type StatusJob = "agendado" | "executando" | "concluido" | "falhou"
 export type StatusDevedor = "ativo" | "comunicado" | "negociando" | "quitado" | "inativo"
+export type StatusComunicacao = "pendente" | "enviado" | "entregue" | "falha" | "bounce"
 
 // Datas: "YYYY-MM-DD" (date) e ISO 8601 com fuso (datetime).
 type DataISO = string
@@ -62,6 +63,46 @@ export interface ErroLote {
 export interface UploadLoteResponse {
   message: string
   lote_id: string
+}
+
+// --- Devedores (back-end/app/schemas/devedor.py) ---------------------------
+// LGPD: cpf_cnpj, e-mail e telefones são dados pessoais. Não registre em console.
+
+export interface Devedor {
+  id: string
+  lote_id: string
+  /** Só dígitos (11 = CPF, 14 = CNPJ). */
+  cpf_cnpj: string
+  nome: string
+  email: string | null
+  telefone: string | null
+  whatsapp: string | null
+  /** Decimal serializado como texto, ex.: "1500.00". */
+  valor_divida: string
+  data_vencimento: DataISO
+  dias_atraso: number
+  status: StatusDevedor
+  criado_em: DataHoraISO
+}
+
+export interface Pagina<T> {
+  total: number
+  skip: number
+  limit: number
+  itens: T[]
+}
+
+/** Histórico de comunicações do devedor (ComunicacaoResponse). */
+export interface Comunicacao {
+  id: string
+  job_id: string
+  canal: Canal
+  status: StatusComunicacao
+  tentativas: number
+  enviado_em: DataHoraISO | null
+  codigo_erro: string | null
+  mensagem_erro: string | null
+  criado_em: DataHoraISO
 }
 
 // --- Jobs (back-end/app/schemas/job.py) ------------------------------------

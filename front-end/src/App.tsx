@@ -86,7 +86,7 @@ function AreaLogada() {
             />
           )}
           {page === "regua" && <ReguaCobranca />}
-          {page === "devedores" && <Devedores />}
+          {page === "devedores" && <Devedores onAbrirLote={abrirRelatorio} />}
           {page === "monitoramento" && <Monitoramento />}
           {page === "usuarios" && <Usuarios />}
         </div>

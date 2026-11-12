@@ -1,6 +1,6 @@
 // Formatação para a tela (pt-BR, horário de Brasília) e rótulos dos enums da API.
 
-import type { Canal, StatusDevedor, StatusJob, StatusLote } from "./tipos"
+import type { Canal, StatusComunicacao, StatusDevedor, StatusJob, StatusLote } from "./tipos"
 
 const FUSO = "America/Sao_Paulo"
 
@@ -13,6 +13,36 @@ const fmtHora = new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO, hour: "2-digi
 const fmtDataLonga = new Intl.DateTimeFormat("pt-BR", {
   timeZone: FUSO, weekday: "long", day: "numeric", month: "long", year: "numeric",
 })
+
+const fmtMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+
+/** "1500.00" ou 1500 -> "R$ 1.500,00" */
+export function moeda(valor: string | number): string {
+  const n = typeof valor === "number" ? valor : Number(valor)
+  return Number.isFinite(n) ? fmtMoeda.format(n) : "—"
+}
+
+/** "10433218100" -> "104.332.181-00"; CNPJ -> "11.222.333/0001-81" */
+export function documento(digitos: string): string {
+  if (digitos.length === 11) return digitos.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+  if (digitos.length === 14) return digitos.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")
+  return digitos
+}
+
+// Versão mascarada para listas (LGPD): CPF "104.***.***-00"; CNPJ "11.222.***" + "/0001-81"
+export function documentoMascarado(digitos: string): string {
+  if (digitos.length === 11) return `${digitos.slice(0, 3)}.***.***-${digitos.slice(9)}`
+  if (digitos.length === 14) return `${digitos.slice(0, 2)}.${digitos.slice(2, 5)}.***/${digitos.slice(8, 12)}-${digitos.slice(12)}`
+  return "***"
+}
+
+/** "47999990001" -> "(47) 99999-0001" */
+export function telefone(digitos: string | null): string {
+  if (!digitos) return "—"
+  if (digitos.length === 11) return digitos.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
+  if (digitos.length === 10) return digitos.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3")
+  return digitos
+}
 
 /** 2847 -> "2.847" */
 export function numero(valor: number): string {
@@ -95,10 +125,18 @@ export const STATUS_JOB: Record<StatusJob, Rotulo> = {
   falhou: { texto: "Falhou", classe: VERMELHO },
 }
 
-export const STATUS_DEVEDOR: Record<StatusDevedor, Rotulo> = {
-  ativo: { texto: "Ativo", classe: AZUL },
-  comunicado: { texto: "Comunicado", classe: CINZA },
-  negociando: { texto: "Negociando", classe: AMARELO },
-  quitado: { texto: "Quitado", classe: VERDE },
-  inativo: { texto: "Inativo", classe: CINZA },
+export const STATUS_DEVEDOR: Record<StatusDevedor, Rotulo & { descricao: string }> = {
+  ativo: { texto: "Ativo", classe: AZUL, descricao: "Em cobrança: a régua envia mensagens." },
+  comunicado: { texto: "Comunicado", classe: "bg-violet-50 text-violet-700 border-violet-200", descricao: "Já recebeu comunicação; continua na régua." },
+  negociando: { texto: "Negociando", classe: AMARELO, descricao: "Em negociação; a régua para de enviar mensagens." },
+  quitado: { texto: "Quitado", classe: VERDE, descricao: "Dívida paga. Definitivo: não pode ser reaberto." },
+  inativo: { texto: "Inativo", classe: CINZA, descricao: "Fora da cobrança; a régua não envia mensagens." },
+}
+
+export const STATUS_COMUNICACAO: Record<StatusComunicacao, Rotulo> = {
+  pendente: { texto: "Pendente", classe: CINZA },
+  enviado: { texto: "Enviado", classe: VERDE },
+  entregue: { texto: "Entregue", classe: VERDE },
+  falha: { texto: "Falha", classe: AMARELO },
+  bounce: { texto: "Bounce", classe: VERMELHO },
 }

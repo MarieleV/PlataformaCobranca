@@ -1,6 +1,6 @@
 // Componentes visuais pequenos, compartilhados entre as telas.
 
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
 
 export function Badge({ texto, classe }: { texto: string; classe: string }) {
   return (
@@ -56,6 +56,44 @@ export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
   )
 }
+
+/** Fecha com Esc. Use para painéis e modais. */
+export function useFecharComEsc(onFechar: () => void, ativo = true) {
+  useEffect(() => {
+    if (!ativo) return
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onFechar()
+    }
+    window.addEventListener("keydown", tecla)
+    return () => window.removeEventListener("keydown", tecla)
+  }, [onFechar, ativo])
+}
+
+/** Modal centralizado (confirmações). Fecha no Esc e no clique fora, exceto enquanto `ocupado`. */
+export function Modal({ titulo, children, onFechar, ocupado = false }: {
+  titulo: string
+  children: ReactNode
+  onFechar: () => void
+  ocupado?: boolean
+}) {
+  useFecharComEsc(onFechar, !ocupado)
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" onClick={ocupado ? undefined : onFechar} />
+      <div role="dialog" aria-modal="true" aria-label={titulo} className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
+        <h2 className="text-lg font-bold text-slate-900 mb-3">{titulo}</h2>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export const BOTAO_PRIMARIO =
+  "px-4 py-2.5 rounded-xl bg-black hover:bg-slate-900 text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+export const BOTAO_SECUNDARIO =
+  "px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+export const BOTAO_PERIGO =
+  "px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 
 export const ICONE_DOWNLOAD = (
   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
