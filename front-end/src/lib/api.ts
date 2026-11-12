@@ -7,6 +7,8 @@
 //
 // LGPD: não registre corpos de requisição/resposta em console ou logs.
 
+import type { Saude } from "./tipos"
+
 const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:8000").replace(/\/+$/, "")
 
 export class ApiError extends Error {
@@ -141,6 +143,21 @@ export async function apiFetch<T>(path: string, opcoes: OpcoesRequisicao = {}): 
 
   if (resposta.status === 204) return undefined as T
   return (await resposta.json()) as T
+}
+
+/**
+ * GET /health (público). Responde 503 quando alguma dependência caiu, mas com o
+ * detalhe no corpo — por isso não passa pelo apiFetch, que descartaria o corpo.
+ * Devolve null se a API nem respondeu.
+ */
+export async function consultarSaude(signal?: AbortSignal): Promise<Saude | null> {
+  try {
+    const resposta = await fetch(`${API_URL}/health`, { signal })
+    return (await resposta.json()) as Saude
+  } catch (erro) {
+    if (erro instanceof DOMException && erro.name === "AbortError") throw erro
+    return null
+  }
 }
 
 export { API_URL }
