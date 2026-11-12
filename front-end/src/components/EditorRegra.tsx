@@ -1,14 +1,14 @@
 // Formulário de criação/edição de regra da régua, com variáveis clicáveis e
 // pré-visualização ao vivo (POST /regras/preview). A regra nasce inativa (RN02).
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useApi } from "../hooks/useApi"
 import { useDebounce } from "../hooks/useDebounce"
 import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
 import { JANELA, LIMITE_POR_CANAL, trechosDoTemplate, validarRegra } from "../lib/regua"
 import type { Canal, PreviewTemplate, Regra, RegraEntrada, VariavelTemplate } from "../lib/tipos"
-import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, Modal, Spinner } from "./ui"
+import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner, inputClasse } from "./ui"
 
 const CANAIS: Canal[] = ["email", "sms", "whatsapp"]
 
@@ -21,11 +21,6 @@ interface EditorRegraProps {
   onFechar: () => void
   onSalvo: (regra: Regra) => void
 }
-
-const INPUT =
-  "w-full px-3 py-2.5 rounded-xl border bg-white text-sm text-slate-900 outline-none focus:ring-4 transition-all"
-const inputClasse = (erro?: string) =>
-  `${INPUT} ${erro ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10" : "border-slate-200 focus:border-black focus:ring-black/5"}`
 
 export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraProps) {
   const [form, setForm] = useState<RegraEntrada>(() => ({
@@ -221,28 +216,6 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
         </button>
       </div>
     </Modal>
-  )
-}
-
-function CampoForm({ rotulo, erro, dica, grupo = false, children }: {
-  rotulo: string
-  erro?: string
-  dica?: string
-  /** true quando o conteúdo é um grupo de botões (não pode ficar dentro de <label>). */
-  grupo?: boolean
-  children: ReactNode
-}) {
-  const Tag = grupo ? "div" : "label"
-  return (
-    <Tag className="block">
-      <span className="block text-xs font-bold text-slate-700 mb-1.5">{rotulo}</span>
-      {children}
-      {erro ? (
-        <span className="block text-xs font-medium text-rose-600 mt-1">{erro}</span>
-      ) : dica ? (
-        <span className="block text-[11px] text-slate-400 mt-1">{dica}</span>
-      ) : null}
-    </Tag>
   )
 }
 

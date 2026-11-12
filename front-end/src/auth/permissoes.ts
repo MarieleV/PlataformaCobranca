@@ -8,6 +8,7 @@ export type Page =
   | "devedores"
   | "monitoramento"
   | "usuarios"
+  | "auditoria"
 
 const TODOS: readonly Perfil[] = ["administrador", "gestor", "operador"]
 
@@ -20,7 +21,8 @@ export const PERFIS_POR_PAGINA: Record<Page, readonly Perfil[]> = {
   regua: TODOS, // listar/consultar: todos; criar/editar: gestor e administrador
   devedores: TODOS,
   monitoramento: TODOS,
-  usuarios: ["administrador", "gestor"],
+  usuarios: ["administrador", "gestor"], // gestor só vê e gerencia operadores
+  auditoria: ["administrador"],
 }
 
 // Ações restritas dentro das telas (espelham as checagens do back-end).
@@ -31,6 +33,8 @@ export const PERFIS_POR_ACAO = {
   excluirDevedor: ["administrador"],
   /** Criar, editar, ativar/desativar, excluir e executar regras da régua */
   gerenciarRegua: ["administrador", "gestor"],
+  /** Criar/editar gestores e administradores, alterar perfil e excluir usuários */
+  administrarUsuarios: ["administrador"],
 } as const satisfies Record<string, readonly Perfil[]>
 
 export const NOME_PERFIL: Record<Perfil, string> = {
