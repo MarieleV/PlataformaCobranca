@@ -1,32 +1,43 @@
 import { useState } from "react"
-// Correção: Usando ../ para voltar para a raiz da src e achar a pasta assets
 import logoTcc from "../assets/logo-tcc.png"
+import { useAuth } from "../auth/AuthContext"
+import { ApiError } from "../lib/api"
 
-interface LoginProps {
-  onLogin: () => void
+// Mensagem de erro do login para a tela. 401, 403 e 429 já vêm em português
+// do back-end; o 422 (validação do Pydantic) vem em inglês e é traduzido aqui.
+function mensagemDeErro(erro: unknown): string {
+  if (erro instanceof ApiError) {
+    if (erro.status === 422) return "Informe um e-mail válido."
+    return erro.message
+  }
+  return "Erro inesperado. Tente novamente."
 }
 
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
+  const { login, sessaoExpirada } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    
-    if (!email || !password) {
+
+    if (!email.trim() || !password) {
       setError("Por favor, preencha todos os campos para continuar.")
       return
     }
-    
+
     setLoading(true)
-    // Simulando chamada à API
-    setTimeout(() => {
+    try {
+      await login(email.trim(), password)
+      // Sucesso: o AuthContext troca o usuário e o App sai desta tela.
+    } catch (erro) {
+      setError(mensagemDeErro(erro))
+      setPassword("")
       setLoading(false)
-      onLogin()
-    }, 1200)
+    }
   }
 
   return (
@@ -96,8 +107,17 @@ export default function Login({ onLogin }: LoginProps) {
             </p>
           </div>
 
+          {/* Aviso de sessão expirada */}
+          {sessaoExpirada && !error && (
+            <div className="mb-5 p-3 bg-amber-50 border border-amber-100 rounded-xl" role="status">
+              <p className="text-xs font-bold text-amber-700 text-center">
+                Sua sessão expirou. Entre novamente para continuar.
+              </p>
+            </div>
+          )}
+
           {/* Formulário */}
-          <form onSubmit={handleSubmit} className="space-y-5 bg-white p-8 rounded-3xl shadow-sm border border-slate-200/60">
+          <form onSubmit={handleSubmit} noValidate className="space-y-5 bg-white p-8 rounded-3xl shadow-sm border border-slate-200/60">
             
             {/* Input E-mail */}
             <div className="space-y-2">
@@ -107,6 +127,8 @@ export default function Login({ onLogin }: LoginProps) {
               <input
                 id="email"
                 type="email"
+                autoComplete="username"
+                autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="analista@empresa.com.br"
@@ -120,13 +142,15 @@ export default function Login({ onLogin }: LoginProps) {
                 <label htmlFor="password" className="text-sm font-bold text-slate-900">
                   Senha
                 </label>
-                <a href="#" className="text-xs font-bold text-slate-500 hover:text-black transition-colors">
-                  Esqueceu a senha?
-                </a>
+                {/* Não há recuperação por e-mail: quem redefine é o gestor/administrador. */}
+                <span className="text-xs font-medium text-slate-400">
+                  Esqueceu? Fale com o administrador.
+                </span>
               </div>
               <input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -136,7 +160,7 @@ export default function Login({ onLogin }: LoginProps) {
 
             {/* Mensagem de Erro */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl" role="alert">
                 <p className="text-xs font-bold text-red-600 text-center">{error}</p>
               </div>
             )}
@@ -170,7 +194,7 @@ export default function Login({ onLogin }: LoginProps) {
               Ambiente seguro e criptografado
             </p>
             <p className="text-[11px] font-mono text-slate-300">
-              Sessão expira em 15 minutos de inatividade
+              Sessão renovada automaticamente enquanto você usa a plataforma
             </p>
           </div>
         </div>
