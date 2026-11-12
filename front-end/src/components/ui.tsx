@@ -1,6 +1,7 @@
 // Componentes visuais pequenos, compartilhados entre as telas.
 
-import { useEffect, type ReactNode } from "react"
+import type { ReactNode } from "react"
+import { useFecharComEsc } from "../hooks/useFecharComEsc"
 
 export function Badge({ texto, classe }: { texto: string; classe: string }) {
   return (
@@ -57,18 +58,6 @@ export function Spinner({ className = "h-4 w-4" }: { className?: string }) {
   )
 }
 
-/** Fecha com Esc. Use para painéis e modais. */
-export function useFecharComEsc(onFechar: () => void, ativo = true) {
-  useEffect(() => {
-    if (!ativo) return
-    const tecla = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onFechar()
-    }
-    window.addEventListener("keydown", tecla)
-    return () => window.removeEventListener("keydown", tecla)
-  }, [onFechar, ativo])
-}
-
 /** Modal centralizado (confirmações). Fecha no Esc e no clique fora, exceto enquanto `ocupado`. */
 export function Modal({ titulo, children, onFechar, ocupado = false, largo = false }: {
   titulo: string
@@ -94,12 +83,6 @@ export function Modal({ titulo, children, onFechar, ocupado = false, largo = fal
     </div>
   )
 }
-
-const INPUT = "w-full px-3 py-2.5 rounded-xl border bg-white text-sm text-slate-900 outline-none focus:ring-4 transition-all"
-
-/** Classes de input/select/textarea, com borda vermelha quando há erro. */
-export const inputClasse = (erro?: string | null) =>
-  `${INPUT} ${erro ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10" : "border-slate-200 focus:border-black focus:ring-black/5"}`
 
 /** Rótulo + campo + erro (ou dica). */
 export function CampoForm({ rotulo, erro, dica, grupo = false, children }: {
@@ -131,8 +114,10 @@ export const BOTAO_SECUNDARIO =
 export const BOTAO_PERIGO =
   "px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 
-export const ICONE_DOWNLOAD = (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-)
+export function IconeDownload() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  )
+}

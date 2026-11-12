@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import DetalheJob, { jobEmAndamento } from "../components/DetalheJob"
+import DetalheJob from "../components/DetalheJob"
+import { jobEmAndamento } from "../lib/jobs"
 import { AvisoErro, Badge, Painel, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { NOME_DEPENDENCIA, useSaude } from "../hooks/useSaude"

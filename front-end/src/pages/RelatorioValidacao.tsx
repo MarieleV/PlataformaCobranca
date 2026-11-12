@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AvisoErro, Badge, ICONE_DOWNLOAD, Painel, Spinner } from "../components/ui"
+import { AvisoErro, Badge, IconeDownload, Painel, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { ApiError, apiBaixarArquivo } from "../lib/api"
 import * as fmt from "../lib/formatos"
@@ -264,7 +264,7 @@ function TabelaErros({ lote }: { lote: Lote }) {
             disabled={baixando || (semErros && !campo)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {baixando ? <Spinner className="h-4 w-4" /> : <span className="text-slate-500">{ICONE_DOWNLOAD}</span>}
+            {baixando ? <Spinner className="h-4 w-4" /> : <span className="text-slate-500"><IconeDownload /></span>}
             Exportar CSV de erros
           </button>
         </div>

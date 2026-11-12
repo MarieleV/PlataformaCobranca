@@ -1,5 +1,5 @@
 import { useState } from "react"
-import DetalheDevedor, { corAtraso } from "../components/DetalheDevedor"
+import DetalheDevedor from "../components/DetalheDevedor"
 import { AvisoErro, Badge, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { useDebounce } from "../hooks/useDebounce"
@@ -164,7 +164,7 @@ export default function Devedores({ onAbrirLote }: DevedoresProps) {
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-slate-500">{fmt.data(d.data_vencimento)}</td>
                     <td className="px-6 py-4">
-                      <span className={`font-mono text-xs font-bold ${corAtraso(d.dias_atraso)}`}>
+                      <span className={`font-mono text-xs font-bold ${fmt.corAtraso(d.dias_atraso)}`}>
                         {d.dias_atraso > 0 ? `D+${d.dias_atraso}` : "A vencer"}
                       </span>
                     </td>

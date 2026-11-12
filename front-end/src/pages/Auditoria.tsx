@@ -1,7 +1,8 @@
 // Log de auditoria (UC07-A5 / RF11): exclusivo do administrador.
 
 import { useState } from "react"
-import { AvisoErro, Painel, Spinner, inputClasse } from "../components/ui"
+import { inputClasse } from "../components/estilos"
+import { AvisoErro, Painel, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import * as fmt from "../lib/formatos"
 import type { LogAuditoria, Pagina, UsuarioGerenciado } from "../lib/tipos"

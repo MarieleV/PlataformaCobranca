@@ -98,6 +98,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
 }
 
+// O hook fica junto do provider (padrão do React para contexto); o aviso do
+// react-refresh só afeta o hot reload deste arquivo.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error("useAuth deve ser usado dentro de <AuthProvider>")
