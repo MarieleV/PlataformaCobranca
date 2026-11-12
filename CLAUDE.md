@@ -54,8 +54,18 @@ Confirme os perfis exatos de cada rota em `back-end/app/api/*.py` (`role_require
 - **Dashboard (RF08):** taxa de entrega = sucesso ÷ todas as comunicações geradas no período; taxa de conversão = devedores alcançados que hoje estão quitados; meta de entrega 95% (`meta_taxa_entrega`). Taxas podem vir `null` quando não há base — trate na tela. Não há valores em R$ (o valor da dívida é criptografado).
 - O valor da dívida vem descriptografado no `DevedorResponse`. CPF/CNPJ é dado pessoal (LGPD): não registre em logs do front.
 
-## Front-end (a fazer)
-Estado atual: pasta `front-end/` existe, mas a integração com a API ainda não foi feita. **Primeiro passo:** ler `front-end/` (stack, rotas, mocks, estilos) e propor um plano antes de codar. O protótipo de UX do RFC descreve: KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, linha do tempo de 7 dias, últimos lotes e atalhos. Perguntas a confirmar com a Mariele ao começar: framework/bibliotecas do front, se há design (Figma) a seguir, e onde o front será servido (`CORS_ORIGINS` precisa incluir a origem real).
+## Front-end (em andamento)
+React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443. Detalhes em `front-end/README.md`. O protótipo de UX do RFC descreve: KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, linha do tempo de 7 dias, últimos lotes e atalhos.
+
+Decisões já tomadas com a Mariele:
+- **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`.
+- Todo acesso à API passa por `apiFetch` (`src/lib/api.ts`); sessão em `useAuth()` (`src/auth/AuthContext.tsx`); páginas × perfis em `src/auth/permissoes.ts`.
+- `fetch` nativo (sem axios); tipos da API escritos à mão em `src/lib/tipos.ts`, conferidos no `/openapi.json`.
+- Navegação por `useState` (sem `react-router` por enquanto; pode entrar depois).
+- O layout atual **não é o final** e não há Figma atualizado: pode melhorar a UI, mantendo a identidade (preto/branco/slate).
+- Origem do front: só `http://localhost:8443` por enquanto.
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` → 2 `front-dashboard` → 3 `front-lotes` (upload + polling + relatório de validação) → 4 `front-devedores` → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.

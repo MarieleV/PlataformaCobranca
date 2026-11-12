@@ -1,39 +1,61 @@
-# figma-make-app
+# Front-end — Plataforma de Cobrança Automatizada
 
-Projeto React + Vite + Tailwind CSS em execução no Figma Make.
+React 19 + Vite 8 + TypeScript + Tailwind CSS v4 (+ Recharts para gráficos).
+O layout nasceu no Figma Make e ainda está em evolução.
 
-## Servidor de Desenvolvimento
+## Pré-requisitos
 
-Um servidor de desenvolvimento Vite **já está em execução** na porta `$PORT` (padrão 8443). Você não precisa iniciá-lo manualmente.
+- Node.js 22 LTS (inclui o npm).
+- Back-end no ar (`docker compose up -d --build` na pasta `back-end`) e o seed aplicado
+  (`docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123`).
 
-- URL de pré-visualização: O usuário pode acessar o aplicativo em execução através do painel de pré-visualização
-- Hot reload: Alterações nos arquivos de código-fonte são refletidas imediatamente
+## Como rodar (PowerShell)
 
-## Estrutura do Projeto
+```powershell
+cd front-end
+Copy-Item .env.example .env   # só na primeira vez
+npm install                   # só na primeira vez / quando o package.json mudar
+npm run dev                   # http://localhost:8443
+```
 
-Esta é a estrutura canônica do projeto. Comece pelos arquivos relevantes para a tarefa listados abaixo. Siga os imports ou inspecione outros arquivos apenas quando necessário, quando um caminho documentado estiver faltando ou quando o repositório contradizer este guia.
+| Script | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento na porta 8443 (hot reload) |
+| `npm run typecheck` | Checagem de tipos do TypeScript |
+| `npm run build` | Build de produção em `dist/` |
+| `npm run preview` | Serve o build de produção localmente |
 
-- `src/main.tsx` - Ponto de entrada do React; importa `src/index.css` e monta `src/App.tsx` no elemento `#root`
-- `src/App.tsx` - Componente principal da aplicação e ponto de partida habitual para o trabalho de interface (UI)
-- `src/index.css` - Ponto de entrada de CSS global e importação do Tailwind CSS v4
-- `index.html` - Shell HTML do Vite contendo o elemento `#root` e carregando `src/main.tsx`
-- `package.json` - Dependências do projeto e scripts do Vite para build, desenvolvimento, pré-visualização e formatação
-- `vite.config.ts` - Configuração do Vite com plugins para React, Tailwind CSS v4 e Figma Make, além do alias `@` para `src`
-- `.mise.toml` - Versões da toolchain para Node.js e pnpm
+## Integração com a API
 
-## Dependências
+- A URL da API vem de `VITE_API_URL` (`.env`); padrão `http://localhost:8000`.
+- Autenticação por **cookies httpOnly** gravados pelo back-end: o JavaScript não vê o token.
+  Todas as chamadas passam por `apiFetch` (`src/lib/api.ts`), que envia `credentials: "include"`,
+  renova a sessão uma vez em caso de 401 (`POST /auth/refresh`) e devolve `ApiError` com
+  mensagem pronta para a tela.
+- **Use sempre `localhost`** (no navegador e no `VITE_API_URL`). Misturar `localhost` com
+  `127.0.0.1` faz o navegador tratar como sites diferentes e não enviar os cookies.
+- A origem do front precisa estar em `CORS_ORIGINS` no `.env` do back-end
+  (`http://localhost:8443` já está no padrão).
+- Formatos de request/response: `http://localhost:8000/docs` ou `/openapi.json`.
 
-- Runtime: React 19 e React DOM 19
-- Estilização: Tailwind CSS v4 com o plugin `@tailwindcss/vite`
-- Ferramentas de build: Vite 8, TypeScript 5.7 e `@vitejs/plugin-react`
-- Formatação: oxfmt
+## Estrutura
 
-## Estilização
+```
+src/
+├── main.tsx              # monta o App dentro do AuthProvider
+├── App.tsx               # verifica a sessão, mostra Login ou a área logada
+├── auth/
+│   ├── AuthContext.tsx   # useAuth(): usuario, login, logout, pode(perfis)
+│   └── permissoes.ts     # páginas x perfis (espelha o RBAC do back-end)
+├── lib/
+│   ├── api.ts            # cliente HTTP (cookies, refresh, erros)
+│   └── tipos.ts          # tipos da API
+├── components/           # Sidebar e componentes reutilizáveis
+└── pages/                # uma tela por arquivo
+```
 
-Este projeto utiliza **Tailwind CSS v4** através do plugin `@tailwindcss/vite` configurado em `vite.config.ts`. O arquivo `src/index.css` importa o Tailwind com `@import 'tailwindcss';`. Utilize classes utilitárias do Tailwind diretamente no JSX e coloque CSS global ou personalizações de tema do Tailwind v4 em `src/index.css`. Esta estrutura inicial não requer arquivo de configuração do Tailwind ou do PostCSS. O arquivo `src/main.tsx` importa `src/index.css`; portanto, a configuração global de fontes deve ficar em `src/index.css`. Coloque as diretivas `@import` do CSS no início e, em seguida, adicione as regras `@font-face` e as definições padrão de `font-family`.
+## Convenções
 
-## Qualidade do código
-
-- Use aspas duplas para strings que contenham apóstrofos (`"We're here to help"`) ou faça o escape deles em strings com aspas simples. Um apóstrofo sem escape em uma string delimitada por aspas simples causa falha no build.
-- Certifique-se de que as tags JSX estejam fechadas e as chaves estejam balanceadas.
-- Exporte os componentes como *default exports*.
+- Estilo com classes do Tailwind direto no JSX; CSS global em `src/index.css`.
+- Componentes exportados como `default`.
+- **LGPD:** não registre CPF/CNPJ nem corpos de requisição no console.
