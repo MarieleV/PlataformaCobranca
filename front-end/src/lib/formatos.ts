@@ -69,6 +69,24 @@ export function dataLonga(data: Date): string {
   return fmtDataLonga.format(data)
 }
 
+const fmtISO = new Intl.DateTimeFormat("en-CA", { timeZone: FUSO, year: "numeric", month: "2-digit", day: "2-digit" })
+
+/** Data de hoje em Brasília, "YYYY-MM-DD" (a mesma referência do back-end). */
+export function hojeISO(): string {
+  return fmtISO.format(new Date())
+}
+
+/** "2026-11-12", -7 -> "2026-11-05" (aritmética em UTC, sem efeito de fuso). */
+export function somarDias(isoData: string, dias: number): string {
+  const [ano, mes, dia] = isoData.split("-").map(Number)
+  return new Date(Date.UTC(ano, mes - 1, dia + dias)).toISOString().slice(0, 10)
+}
+
+/** "09:00:00" -> "09:00" */
+export function horario(valor: string): string {
+  return valor.slice(0, 5)
+}
+
 // "YYYY-MM-DD" é uma data sem hora: não passa por new Date() para não mudar de dia com o fuso.
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 

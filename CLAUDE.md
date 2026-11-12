@@ -101,7 +101,15 @@ Etapa 4 (`feature/front-devedores`):
 - A API de devedores **não filtra por canal nem devolve "último contato"**, e não há exportação: o filtro de canal e o "Exportar CSV" do protótipo saíram (exportar CPF/CNPJ em arquivo solto seria ruim pela LGPD). A coluna "Contatos" mostra quais canais o devedor pode receber.
 - Cuidado em comentários JSDoc: `***/` (ex.: CNPJ mascarado) fecha o comentário e quebra o build.
 
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` (**próxima**) → 5 `front-regua` → 6 `front-monitoramento` (jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
+Etapa 5 (`feature/front-regua`):
+- `api.ts` agora aproveita os 422 de validação do Pydantic escritos no back-end: as mensagens com prefixo `"Value error, "` (em português) viram o texto do `ApiError`; as genéricas do Pydantic (em inglês) continuam caindo na mensagem padrão.
+- `src/lib/regua.ts`: limites por canal, janela 08:00–20:00, `DIAS_PARA_TRAS` (7), `validarRegra`, `variaveisUsadas`, `trechosDoTemplate` (espelham `templates.py`/`schemas/regra.py`).
+- `src/components/EditorRegra.tsx`: criar/editar em `Modal largo`, variáveis clicáveis (inserem no cursor), contador por canal e pré-visualização ao vivo (`POST /regras/preview`, debounce). Edição manda **PATCH só com os campos alterados** (a API recusa PATCH vazio). Exporta `TemplateDestacado`.
+- `formatos.ts`: `hojeISO()` (data de Brasília), `somarDias`, `horario` (`"09:00:00"` → `"09:00"`). `permissoes.ts`: `gerenciarRegua`.
+- Fatos da API: `horario_disparo` é "a partir de" (o beat roda a cada 5 min, seg–sex, 8h–19h55); regra com jobs não pode ser excluída (409, oferecer desativar); `executar` exige regra ativa, dia entre hoje−7 e hoje e devolve 409 se o job do dia já existe; não há métricas por regra (o protótipo mostrava "devedores" e "taxa" nos cards — saíram).
+- Dentro de `<label>` não coloque grupos de botões (clicar no rótulo aciona o primeiro botão): `CampoForm` tem `grupo`.
+
+Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` (**próxima**: jobs) → 7 `front-usuarios` (+ auditoria e troca de senha) → 8 `front-ci` (ESLint, `tsc`, Vitest, job no `ci.yml` e no Ruleset). O SonarCloud só analisa `back-end/app`.
 
 ## Pendências do projeto (fora do front)
 - Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.
