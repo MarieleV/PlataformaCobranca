@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ApiError, apiFetch } from "../lib/api"
 
-interface OpcoesUseApi {
+interface OpcoesUseApi<T> {
   /** Recarrega sozinho a cada N ms (sem piscar a tela: mantém os dados atuais). */
   intervaloMs?: number
+  /** Para o recarregamento automático quando devolver true (ex.: lote concluído). */
+  pararQuando?: (dados: T) => boolean
 }
 
 export interface ResultadoApi<T> {
@@ -22,7 +24,7 @@ export interface ResultadoApi<T> {
  * (por isso, coloque filtros na query string) e, se pedido, em intervalos.
  * Passe `null` para não buscar nada.
  */
-export function useApi<T>(path: string | null, { intervaloMs }: OpcoesUseApi = {}): ResultadoApi<T> {
+export function useApi<T>(path: string | null, { intervaloMs, pararQuando }: OpcoesUseApi<T> = {}): ResultadoApi<T> {
   const [dados, setDados] = useState<T | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(path !== null)
@@ -59,11 +61,14 @@ export function useApi<T>(path: string | null, { intervaloMs }: OpcoesUseApi = {
     return () => controle.abort()
   }, [path, versao])
 
+  // Calculado a cada renderização; o efeito só depende do booleano (a função pode mudar sempre).
+  const parado = dados !== null && pararQuando !== undefined && pararQuando(dados)
+
   useEffect(() => {
-    if (!intervaloMs || path === null) return
+    if (!intervaloMs || path === null || parado) return
     const id = window.setInterval(recarregar, intervaloMs)
     return () => window.clearInterval(id)
-  }, [intervaloMs, path, recarregar])
+  }, [intervaloMs, path, recarregar, parado])
 
   return { dados, erro, carregando, atualizadoEm, recarregar }
 }

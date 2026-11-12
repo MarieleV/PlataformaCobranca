@@ -121,11 +121,8 @@ async function enviar(path: string, opcoes: OpcoesRequisicao): Promise<Response>
   }
 }
 
-/**
- * Faz uma chamada à API e devolve o JSON da resposta já tipado.
- * Lança ApiError (com status e mensagem pronta para a tela) em caso de erro.
- */
-export async function apiFetch<T>(path: string, opcoes: OpcoesRequisicao = {}): Promise<T> {
+/** Envia, renova a sessão uma vez em 401 e lança ApiError se a resposta não for 2xx. */
+async function requisitar(path: string, opcoes: OpcoesRequisicao): Promise<Response> {
   let resposta = await enviar(path, opcoes)
 
   if (resposta.status === 401 && !ROTAS_SEM_RENOVACAO.includes(path)) {
@@ -140,9 +137,38 @@ export async function apiFetch<T>(path: string, opcoes: OpcoesRequisicao = {}): 
   if (!resposta.ok) {
     throw new ApiError(resposta.status, await extrairMensagem(resposta))
   }
+  return resposta
+}
 
+/**
+ * Faz uma chamada à API e devolve o JSON da resposta já tipado.
+ * Lança ApiError (com status e mensagem pronta para a tela) em caso de erro.
+ */
+export async function apiFetch<T>(path: string, opcoes: OpcoesRequisicao = {}): Promise<T> {
+  const resposta = await requisitar(path, opcoes)
   if (resposta.status === 204) return undefined as T
   return (await resposta.json()) as T
+}
+
+/**
+ * Baixa um arquivo de uma rota autenticada (ex.: CSV de erros do lote).
+ * Um <a href> comum não serviria: precisa do fetch com cookies e do refresh.
+ * O nome vem do front porque, por CORS, o navegador não expõe o Content-Disposition.
+ */
+export async function apiBaixarArquivo(path: string, nomeArquivo: string): Promise<void> {
+  const resposta = await requisitar(path, {})
+  const url = URL.createObjectURL(await resposta.blob())
+  try {
+    const link = document.createElement("a")
+    link.href = url
+    link.download = nomeArquivo
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } finally {
+    // Dá tempo ao navegador de iniciar o download antes de liberar a memória
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 }
 
 /**

@@ -9,6 +9,7 @@ import {
   YAxis,
 } from "recharts"
 import type { Page } from "../auth/permissoes"
+import { AvisoErro, Badge, Painel } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { consultarSaude } from "../lib/api"
 import * as fmt from "../lib/formatos"
@@ -32,9 +33,11 @@ const NOME_DEPENDENCIA: Record<keyof Saude["dependencias"], string> = {
 
 interface DashboardProps {
   onNavigate?: (p: Page) => void
+  /** Abre o relatório de validação de um lote. */
+  onAbrirLote?: (loteId: string) => void
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
+export default function Dashboard({ onNavigate, onAbrirLote }: DashboardProps) {
   const [dias, setDias] = useState<number>(7)
   const { dados, erro, carregando, atualizadoEm, recarregar } = useApi<DadosDashboard>(
     `/dashboard/?dias=${dias}`,
@@ -61,18 +64,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {erro && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl" role="alert">
-          <p className="text-sm font-semibold text-rose-700">
-            {dados ? "Não foi possível atualizar os dados: " : "Não foi possível carregar o dashboard: "}
-            <span className="font-medium">{erro}</span>
-          </p>
-          <button
-            onClick={recarregar}
-            className="self-start sm:self-auto px-3 py-1.5 rounded-lg text-xs font-bold text-rose-700 bg-white border border-rose-200 hover:bg-rose-100 transition-colors"
-          >
-            Tentar novamente
-          </button>
-        </div>
+        <AvisoErro
+          mensagem={
+            <>
+              {dados ? "Não foi possível atualizar os dados: " : "Não foi possível carregar o dashboard: "}
+              <span className="font-medium">{erro}</span>
+            </>
+          }
+          onTentarNovamente={recarregar}
+        />
       )}
 
       {!dados ? (
@@ -86,7 +86,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <DistribuicaoCanais dados={dados} />
           </div>
 
-          <TabelaLotes dados={dados} onNavigate={onNavigate} />
+          <TabelaLotes dados={dados} onNavigate={onNavigate} onAbrirLote={onAbrirLote} />
           <TabelaJobs dados={dados} onNavigate={onNavigate} />
 
           {atualizadoEm && (
@@ -393,18 +393,6 @@ function DistribuicaoCanais({ dados }: { dados: DadosDashboard }) {
 
 // --- Tabelas ----------------------------------------------------------------
 
-function Painel({ titulo, acao, children }: { titulo: string; acao?: ReactNode; children: ReactNode }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 overflow-hidden">
-      <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4">
-        <h2 className="text-base font-bold text-slate-900">{titulo}</h2>
-        {acao}
-      </div>
-      {children}
-    </div>
-  )
-}
-
 function BotaoAtalho({ texto, onClick }: { texto: string; onClick: () => void }) {
   return (
     <button
@@ -413,14 +401,6 @@ function BotaoAtalho({ texto, onClick }: { texto: string; onClick: () => void })
     >
       {texto} →
     </button>
-  )
-}
-
-function Badge({ texto, classe }: { texto: string; classe: string }) {
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${classe}`}>
-      {texto}
-    </span>
   )
 }
 
@@ -449,11 +429,16 @@ function Tabela({ colunas, vazio, children }: { colunas: string[]; vazio: string
 const TD = "px-6 py-4"
 const TD_NUM = "px-6 py-4 text-slate-600 font-mono text-xs"
 
-function TabelaLotes({ dados, onNavigate }: { dados: DadosDashboard; onNavigate?: (p: Page) => void }) {
+function TabelaLotes({ dados, onNavigate, onAbrirLote }: {
+  dados: DadosDashboard
+  onNavigate?: (p: Page) => void
+  onAbrirLote?: (loteId: string) => void
+}) {
   const lotes = dados.ultimos_lotes
   return (
     <Painel
       titulo="Últimos lotes importados"
+      subtitulo={onAbrirLote && lotes.length > 0 ? "Clique em um lote para ver o relatório de validação" : undefined}
       acao={onNavigate && <BotaoAtalho texto="Importar lote" onClick={() => onNavigate("importar")} />}
     >
       <Tabela
@@ -464,7 +449,11 @@ function TabelaLotes({ dados, onNavigate }: { dados: DadosDashboard; onNavigate?
           const status = fmt.STATUS_LOTE[lote.status]
           const emAndamento = lote.status === "pendente" || lote.status === "processando"
           return (
-            <tr key={lote.id} className="hover:bg-slate-50/80 transition-colors">
+            <tr
+              key={lote.id}
+              onClick={onAbrirLote && (() => onAbrirLote(lote.id))}
+              className={`hover:bg-slate-50/80 transition-colors ${onAbrirLote ? "cursor-pointer" : ""}`}
+            >
               <td className={`${TD} font-medium text-slate-800 max-w-[280px] truncate`} title={lote.nome_arquivo}>
                 {lote.nome_arquivo}
               </td>

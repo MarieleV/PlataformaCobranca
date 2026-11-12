@@ -36,6 +36,13 @@ function AreaLogada() {
   const { pode } = useAuth()
   const [pageEscolhida, setPage] = useState<Page>("dashboard")
   const page = pode(PERFIS_POR_PAGINA[pageEscolhida]) ? pageEscolhida : "dashboard"
+  // Lote aberto no Relatório de Validação (null = o mais recente)
+  const [loteRelatorio, setLoteRelatorio] = useState<string | null>(null)
+
+  const abrirRelatorio = (loteId: string) => {
+    setLoteRelatorio(loteId)
+    setPage("validacao")
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans select-none">
@@ -69,11 +76,15 @@ function AreaLogada() {
 
         {/* --- PAGE CONTENT --- */}
         <div className="flex-1 overflow-hidden bg-slate-50">
-          {page === "dashboard" && <Dashboard onNavigate={setPage} />}
-          {page === "importar" && (
-            <ImportarLote onValidated={() => setPage("validacao")} />
+          {page === "dashboard" && <Dashboard onNavigate={setPage} onAbrirLote={abrirRelatorio} />}
+          {page === "importar" && <ImportarLote onVerRelatorio={abrirRelatorio} />}
+          {page === "validacao" && (
+            <RelatorioValidacao
+              loteId={loteRelatorio}
+              onSelecionarLote={setLoteRelatorio}
+              onImportar={() => setPage("importar")}
+            />
           )}
-          {page === "validacao" && <RelatorioValidacao />}
           {page === "regua" && <ReguaCobranca />}
           {page === "devedores" && <Devedores />}
           {page === "monitoramento" && <Monitoramento />}
