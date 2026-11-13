@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+cobran%C3%A7a+multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
+  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+Cobran%C3%A7a+Multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
 </h1>
 
 <p align="center">
