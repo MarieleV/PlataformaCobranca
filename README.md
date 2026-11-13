@@ -4,7 +4,7 @@
 
 <p align="center">
   SaaS B2B de cobrança automatizada: importação em lote, régua de cobrança e disparo por e-mail, SMS e WhatsApp.<br/>
-  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC · em parceria com a <strong>Consulth</strong>
+  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC
 </p>
 
 <p align="center">
