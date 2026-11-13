@@ -1,19 +1,20 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import logoTcc from "../assets/logo-tcc.png"
-
-export type Page =
-  | "dashboard"
-  | "importar"
-  | "validacao"
-  | "regua"
-  | "devedores"
-  | "monitoramento"
-  | "usuarios"
+import { useAuth } from "../auth/AuthContext"
+import { NOME_PERFIL, PERFIS_POR_PAGINA, type Page } from "../auth/permissoes"
+import MinhaConta from "./MinhaConta"
 
 interface SidebarProps {
   current: Page
   onNavigate: (p: Page) => void
-  onLogout: () => void
+}
+
+// "Mariele Vieira" -> "MV"; "Admin" -> "AD"
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/).filter(Boolean)
+  if (partes.length === 0) return "?"
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase()
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
 }
 
 const navItems: { id: Page; label: string; icon: (isActive: boolean) => ReactNode }[] = [
@@ -66,9 +67,26 @@ const navItems: { id: Page; label: string; icon: (isActive: boolean) => ReactNod
       <svg className={`w-[16px] h-[16px] lg:w-[18px] lg:h-[18px] transition-colors ${active ? "text-black" : "text-slate-400 group-hover:text-slate-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
     ),
   },
+  {
+    id: "auditoria",
+    label: "Auditoria",
+    icon: (active) => (
+      <svg className={`w-[16px] h-[16px] lg:w-[18px] lg:h-[18px] transition-colors ${active ? "text-black" : "text-slate-400 group-hover:text-slate-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+    ),
+  },
 ]
 
-export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps) {
+export default function Sidebar({ current, onNavigate }: SidebarProps) {
+  const { usuario, logout, pode } = useAuth()
+  const [saindo, setSaindo] = useState(false)
+  const [minhaConta, setMinhaConta] = useState(false)
+  const itensVisiveis = navItems.filter((item) => pode(PERFIS_POR_PAGINA[item.id]))
+
+  const handleLogout = async () => {
+    setSaindo(true)
+    await logout() // desmonta a área logada; não precisa voltar o estado
+  }
+
   return (
     // Largura dinâmica: 208px em telas menores, 256px no desktop médio, 288px (original) no monitor grande
     <aside className="w-52 lg:w-64 xl:w-72 bg-white border-r border-slate-200/80 flex flex-col h-full flex-shrink-0 font-sans select-none z-20 relative">
@@ -98,7 +116,7 @@ export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps)
           Menu Principal
         </p>
         
-        {navItems.map((item) => {
+        {itensVisiveis.map((item) => {
           const active = current === item.id
           return (
             <button
@@ -120,28 +138,34 @@ export default function Sidebar({ current, onNavigate, onLogout }: SidebarProps)
       {/* --- USER FOOTER --- */}
       {/* Ajustamos o container do perfil e o botão de logout */}
       <div className="p-3 lg:p-5 border-t border-slate-100 bg-slate-50/50">
-        <div className="flex items-center gap-2.5 lg:gap-3.5 mb-3 lg:mb-4 px-1 lg:px-2">
+        <button
+          onClick={() => setMinhaConta(true)}
+          title="Minha conta: dados e troca de senha"
+          className="w-full text-left flex items-center gap-2.5 lg:gap-3.5 mb-3 lg:mb-4 px-1 lg:px-2 py-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+        >
           <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-200 text-black font-bold text-xs lg:text-sm flex items-center justify-center flex-shrink-0 shadow-sm">
-            MV
+            {iniciais(usuario?.nome ?? "")}
           </div>
           <div className="overflow-hidden">
             <p className="text-xs lg:text-sm font-bold text-slate-900 truncate">
-              Mariele Vieira
+              {usuario?.nome}
             </p>
             <p className="text-[9px] lg:text-[11px] font-medium text-slate-500 tracking-wide uppercase truncate">
-              Gestor Financeiro
+              {usuario ? NOME_PERFIL[usuario.perfil] : ""} · Minha conta
             </p>
           </div>
-        </div>
+        </button>
+        {minhaConta && <MinhaConta onFechar={() => setMinhaConta(false)} />}
 
         <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-2 lg:gap-2.5 px-3 lg:px-3.5 py-2 lg:py-2.5 rounded-xl text-xs lg:text-[13px] font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all"
+          onClick={handleLogout}
+          disabled={saindo}
+          className="w-full flex items-center gap-2 lg:gap-2.5 px-3 lg:px-3.5 py-2 lg:py-2.5 rounded-xl text-xs lg:text-[13px] font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-60 disabled:cursor-wait"
         >
           <svg className="w-[16px] h-[16px] lg:w-[18px] lg:h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Encerrar sessão
+          {saindo ? "Encerrando..." : "Encerrar sessão"}
         </button>
       </div>
     </aside>
