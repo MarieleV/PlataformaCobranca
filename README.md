@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/React_18-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React"/>
+  <img src="https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React"/>
   <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
   <img src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite"/>
   <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest"/>
@@ -168,7 +168,7 @@ flowchart LR
 ### Front-end
 | Camada | Tecnologia | Papel |
 |---|---|---|
-| Build & Framework | React 18 + Vite | SPA com HMR e bundle otimizado |
+| Build & Framework | React 19 + Vite 8 | SPA com HMR e bundle otimizado |
 | Linguagem | TypeScript (strict) | Tipagem dos modelos e das respostas da API |
 | Estilo | Tailwind CSS | Design system corporativo |
 | Sessão | Context API + cookies httpOnly | Rotas protegidas e refresh automático |
@@ -323,7 +323,10 @@ Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE
 
 | Documento | Conteúdo |
 |---|---|
-| [`docs/RFC`](./docs) | Requisitos funcionais, regras de negócio e requisitos não funcionais (RFC v1.1) |
+| [`docs/RFC.md`](./docs/RFC.md) | Requisitos funcionais, regras de negócio e requisitos não funcionais (RFC v1.1) |
+| [`docs/RFC-v1.0.md`](./docs/RFC-v1.0.md) | Proposta original (RFC v1.0), com os diagramas de casos de uso, mockups e C4 mantidos na v1.1 |
+| [`front-end/README.md`](./front-end/README.md) | Front-end: como rodar, validar e convenções |
+| [`front-end/ROTEIRO_TESTES.md`](./front-end/ROTEIRO_TESTES.md) | Roteiro de teste manual das telas |
 | [`back-end/DOC.md`](./back-end/DOC.md) | Execução, testes, CI/CD, métricas, regras e limitações conhecidas |
 | `http://localhost:8000/docs` | Referência interativa de todos os endpoints (OpenAPI) |
 
