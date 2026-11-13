@@ -3,7 +3,7 @@
 Contexto do projeto para o Claude Code. Leia este arquivo inteiro antes de mexer em qualquer coisa.
 
 ## O projeto
-TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobrança automatizada: importa lotes de devedores (csv/xlsx/xls), aplica uma **régua de cobrança** (regras por dias de atraso, canal e horário) e dispara mensagens por **e-mail (SendGrid), SMS e WhatsApp (Twilio)**, com reenvios, dashboard e métricas. Documento de requisitos: `docs/RFC` (RFC v1.1; os códigos RF/RN/RNF citados abaixo vêm dele).
+TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobrança automatizada: importa lotes de devedores (csv/xlsx/xls), aplica uma **régua de cobrança** (regras por dias de atraso, canal e horário) e dispara mensagens por **e-mail (SendGrid), SMS e WhatsApp (Twilio)**, com reenvios, dashboard e métricas. Documento de requisitos: `docs/RFC.md` (RFC v1.1; os códigos RF/RN/RNF citados abaixo vêm dele).
 
 Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 
@@ -111,10 +111,9 @@ Ordem sugerida:
 6. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 7. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
-Documentação desatualizada a acertar quando for mexer nela: `README.md` (badge "React 18" — é 19), `back-end/DOC.md` (ainda lista "Integração com o front-end" como pendente), `docs/RCF.md` é cópia idêntica de `docs/RFC`, e `docs/documentacao.md` é o RFC v1.0 (antigo).
-
 ## Documentação
 - `README.md`: visão geral, como rodar, status do projeto.
 - `back-end/DOC.md`: execução, testes, CI/CD, métricas, regras e limitações conhecidas.
 - `front-end/README.md` e `front-end/ROTEIRO_TESTES.md`: front e roteiro de teste manual.
-- `docs/RFC`: requisitos (RF/RN/RNF), v1.1.
+- `docs/RFC.md`: requisitos (RF/RN/RNF), v1.1 — o texto da proposta; a stack citada nele (ex.: "React 18") é a da época e não foi reescrita.
+- `docs/RFC-v1.0.md`: proposta original; a v1.1 remete a ela para os diagramas de casos de uso, mockups e C4.
