@@ -5,33 +5,39 @@ Contexto do projeto para o Claude Code. Leia este arquivo inteiro antes de mexer
 ## O projeto
 TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobrança automatizada: importa lotes de devedores (csv/xlsx/xls), aplica uma **régua de cobrança** (regras por dias de atraso, canal e horário) e dispara mensagens por **e-mail (SendGrid), SMS e WhatsApp (Twilio)**, com reenvios, dashboard e métricas. Documento de requisitos: `docs/RFC` (RFC v1.1; os códigos RF/RN/RNF citados abaixo vêm dele).
 
-Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React). **O back-end está concluído e mergeado na `main`. A integração do front com a API está concluída (8 etapas na `develop`); falta o teste final da Mariele com o `front-end/ROTEIRO_TESTES.md` e o PR `develop` → `main`.**
+Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
+
+## Situação atual (atualizado em 13/11/2026)
+- **Back-end concluído** e na `main`.
+- **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. `main` e `develop` estão no mesmo commit. Não há mais mocks nas telas.
+- **Próxima fase: as pendências do projeto** (seção "Pendências", mais abaixo), começando pelo teste real dos provedores e pelo deploy na AWS.
 
 ## Como trabalhar com a Mariele
-- Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (caminhos como `C:\Users\silva\Repositórios GitHub\tcc-cobranca\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
+- Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
 - Para cada etapa ela espera: **nome de branch** (git-flow: `feature/...`, `hotfix/...`), **árvore de pastas/arquivos** com `← NOVO` / `← SUBSTITUI`, **commits no padrão Conventional Commits** e instruções claras de teste.
 - Commits: use `git add` por nome de arquivo (nada de `git add .` sem olhar o `git status`). Mesmo que você, Claude me ajude, peço que não cite nos commits Co-Authored-By ou Claude-Session.
   - Quem faz os commits é a Mariele: entregue os comandos, não commite por ela.
   - Cuidado com `git mv`/`git rm`: eles já deixam a mudança *staged* e ela entra no próximo commit, seja qual for. E um `git add` com um caminho que não existe mais falha **inteiro** (nenhum arquivo da linha é adicionado). Monte os comandos de commit considerando isso.
-- Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL`, `Build da imagem Docker` e `Front-end (lint, tipos, testes e build)` (este último entra no Ruleset depois que o job rodar uma vez no GitHub). Não use bypass.
+- Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL`, `Build da imagem Docker` e `Front-end (lint, tipos, testes e build)`. Não use bypass.
 - Se algo for ambíguo e caro de refazer, pergunte antes. Se for barato de refazer, decida, diga a decisão e siga.
-- **Testes do front:** a Mariele só vai testar no navegador depois de concluir **toda** a integração (ela commita e mergeia cada etapa antes disso). Então, a cada etapa, valide você mesmo: `npm run verificar` (lint, tipos, testes com cobertura e build), chamadas reais à API com os mesmos parâmetros que a tela monta (via `curl` com cookie de sessão) e formatadores com `node --experimental-strip-types`. Ações destrutivas (quitar, excluir) não devem ser testadas na massa dela sem pedir. Ao entregar, acrescente a seção da etapa em `front-end/ROTEIRO_TESTES.md` (roteiro consolidado do teste final).
+- **Validação a cada entrega:** rode você mesmo `npm run verificar` (front: lint, tipos, testes com cobertura e build) e/ou `pytest` (back), e teste chamadas reais à API (via `curl` com cookie de sessão) quando mexer em contrato. Ações destrutivas (quitar, excluir) não devem ser testadas na massa dela sem pedir. Mudou comportamento visível na tela? Atualize `front-end/ROTEIRO_TESTES.md`.
 
 ## CI/CD (já funcionando)
-`.github/workflows/ci.yml`: testes (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O Deploy depende dos quatro jobs e é um passo de aviso (AWS ainda não feita). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset.
+`.github/workflows/ci.yml`: testes do back (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches; o Sonar só analisa `back-end/app`). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O Deploy depende dos quatro jobs e é **só um passo de aviso** (AWS ainda não feita). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset.
 
 ## Back-end em uma página
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
-- Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123`.
+- Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123` (o seed recusa a senha padrão em produção).
 - Máquina com pouca RAM: o RabbitMQ pode demorar a ficar *healthy* (alarme `system_memory_high_watermark` nos logs) e o `up` falhar com "dependency rabbitmq failed to start", deixando api/worker/beat em "Created". Não é defeito: rode `docker compose up -d` de novo (sem `--build`) e, se precisar, pare o monitoramento (`docker stop back-end-grafana-1 back-end-prometheus-1`).
 - Testes do back-end: no venv (`venv\Scripts\Activate.ps1`), `pytest` em `back-end/` (783 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
-- Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Ótimo para demonstrar o front.
+- Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Teste dos provedores reais: `docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`.
+- Produção (`ENVIRONMENT=production` em `app/core/config.py`): exige `COOKIE_SECURE=true` (HTTPS) e senha do admin diferente da padrão; `COOKIE_SAMESITE` (`lax` padrão) e `CORS_ORIGINS` precisam refletir o domínio real do front.
 
 ### Autenticação (importante para o front)
 - Login: `POST /auth/login` com JSON `{"email": ..., "password": ...}` (resposta: `{message, user:{id,nome,email,perfil}}`). O servidor **grava dois cookies httpOnly** (access, 15 min; refresh, 7 dias, com `path=/auth`). **O JavaScript não vê o token.**
-- O front deve enviar as requisições com **`credentials: 'include'`** (fetch) ou `withCredentials: true` (axios). CORS já está com `allow_credentials=True`; as origens permitidas vêm de `CORS_ORIGINS` no `.env` (padrão: `http://localhost:8443`, `http://localhost:5173`, `http://127.0.0.1:8443`). **Nunca** use `*`.
-- `POST /auth/refresh` renova (rotação do refresh); `DELETE /auth/logout`; `GET /auth/me` devolve o usuário logado; `PUT /auth/senha` troca a própria senha. Em 401, tente um refresh uma vez e, se falhar, volte ao login.
-- Senha: 8–128 caracteres com ao menos uma letra e um número. Tentativas de login em excesso (5 falhas) são bloqueadas por um tempo com HTTP 429.
+- O front envia as requisições com **`credentials: 'include'`**. CORS com `allow_credentials=True`; origens em `CORS_ORIGINS` no `.env` (padrão: `http://localhost:8443`, `http://localhost:5173`, `http://127.0.0.1:8443`). **Nunca** use `*`.
+- `POST /auth/refresh` renova (rotação do refresh); `DELETE /auth/logout`; `GET /auth/me` devolve o usuário logado; `PUT /auth/senha` troca a própria senha. Em 401, o front tenta um refresh uma vez e, se falhar, volta ao login.
+- Senha: 8–128 caracteres com ao menos uma letra e um número. 5 falhas de login → bloqueio temporário (HTTP 429).
 - Perfis (RBAC, RN06): `administrador`, `gestor`, `operador`. **No JSON o campo se chama `perfil`** (no banco é `cargo`).
 
 ### Endpoints (todos exigem login, salvo `/`, `/health` e `/metrics`)
@@ -49,94 +55,66 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React). 
 
 Confirme os perfis exatos de cada rota em `back-end/app/api/*.py` (`role_required`) e os campos em `back-end/app/schemas/*.py`.
 
-### Regras de negócio que a tela precisa respeitar
-- **Régua (RF04/UC03):** regra = canal (`email|sms|whatsapp`) + `dias_atraso` + `horario_disparo` (entre 08:00 e 20:00) + template. **Nasce inativa.** Só **uma regra ativa por (canal, dias_atraso)** (409 se já houver). Templates aceitam as variáveis `{nome}`, `{primeiro_nome}`, `{valor}`, `{data_vencimento}`, `{dias_atraso}` (liste em `GET /regras/variaveis`; valide/pré-visualize com `POST /regras/preview`). Limites: SMS 480, WhatsApp 1024, e-mail 5000 caracteres.
-- **Elegibilidade:** atraso **exatamente** igual ao da regra; devedor com status `ativo` ou `comunicado`; contato para o canal; no máximo uma comunicação bem-sucedida por canal por dia (RN03).
-- **Disparo:** o Celery Beat roda a cada 5 min, seg–sex, 8h–19h (Brasília), **sem feriados** (RN05). Reenvios: até 4 tentativas, 30 min entre elas (RN07); e-mail/telefone inválido = `bounce`, falha definitiva (RN08). `POST /regras/{id}/executar` dispara manualmente (até 7 dias para trás; 409 se o job do dia já existe).
+### Regras de negócio
+- **Régua (RF04/UC03):** regra = canal (`email|sms|whatsapp`) + `dias_atraso` + `horario_disparo` (entre 08:00 e 20:00, "a partir de") + template. **Nasce inativa.** Só **uma regra ativa por (canal, dias_atraso)** (409 se já houver). Variáveis: `{nome}`, `{primeiro_nome}`, `{valor}`, `{data_vencimento}`, `{dias_atraso}` (`GET /regras/variaveis`; pré-visualização em `POST /regras/preview`). Limites: SMS 480, WhatsApp 1024, e-mail 5000 caracteres. Regra com jobs não pode ser excluída (409 → desativar).
+- **Elegibilidade:** atraso **exatamente** igual ao da regra; devedor `ativo` ou `comunicado`; contato para o canal; no máximo uma comunicação bem-sucedida por canal por dia (RN03).
+- **Disparo:** Celery Beat a cada 5 min, seg–sex, 8h–19h55 (Brasília), **sem disparar em feriados** (RN05: nacionais, facultativos opcionais e `FERIADOS_EXTRAS`, em `app/core/feriados.py`). Reenvios: até 4 tentativas, 30 min entre elas (RN07); e-mail/telefone inválido = `bounce`, falha definitiva (RN08). `POST /regras/{id}/executar` dispara manualmente (regra ativa, dia entre hoje−7 e hoje; 409 se o job do dia já existe). Job fica `executando` enquanto houver reenvio pendente; termina `concluido` ou `falhou`.
 - **Status do devedor:** `ativo`, `comunicado`, `negociando`, `quitado`, `inativo`. Comunicação: `pendente`, `enviado`, `entregue` (reservado a webhooks futuros), `falha`, `bounce`.
-- **Lote:** processamento assíncrono. Após o upload, **faça polling** em `GET /lotes/{id}` até o status terminar (campo de progresso percentual); mostre os erros por linha e o CSV de erros. Reimportar um CPF/CNPJ existente **atualiza** o devedor (contador `total_atualizados`); devedor quitado é rejeitado.
-- **Dashboard (RF08):** taxa de entrega = sucesso ÷ todas as comunicações geradas no período; taxa de conversão = devedores alcançados que hoje estão quitados; meta de entrega 95% (`meta_taxa_entrega`). Taxas podem vir `null` quando não há base — trate na tela. Não há valores em R$ (o valor da dívida é criptografado).
-- O valor da dívida vem descriptografado no `DevedorResponse`. CPF/CNPJ é dado pessoal (LGPD): não registre em logs do front.
+- **Lote:** processamento assíncrono com polling em `GET /lotes/{id}`. Todo erro rejeita a linha (não há "aviso"); uma linha pode ter vários erros; `numero_linha` conta o cabeçalho como 1; lote `erro` = falha estrutural (motivo em `campo` `cabecalho`/`arquivo`). Reimportar CPF/CNPJ existente **atualiza** o devedor (`total_atualizados`); quitado é rejeitado. `GET /lotes/` não devolve total.
+- **Dashboard (RF08):** taxa de entrega = sucesso ÷ comunicações geradas no período; conversão = devedores alcançados hoje quitados; meta 95% (`meta_taxa_entrega`). Taxas podem vir `null`. Não há valores em R$ agregados (o valor da dívida é criptografado). A `timeline` é por dia, sem quebra por canal.
+- **Usuários:** não há convite por e-mail nem "último acesso"; gestor não altera perfil (403); ninguém altera o próprio perfil, desativa/exclui a si mesmo ou redefine a própria senha por `/usuarios` (400 — usar `PUT /auth/senha`); desativar/redefinir senha encerram as sessões do alvo; usuário com lotes/regras não é excluído (409).
+- O valor da dívida vem descriptografado no `DevedorResponse` como **texto** (`"1500.00"`). CPF/CNPJ é dado pessoal (LGPD): não registre em logs do front nem exporte em arquivo solto.
 
-## Front-end (em andamento)
-React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443. Detalhes em `front-end/README.md`. Requer Node.js 22 LTS. Rodar: `cd front-end; npm install; npm run dev`. Antes de entregar uma etapa, valide com `npm run typecheck` e `npm run build` (o aviso de chunk > 500 kB é do Recharts e é conhecido; code-splitting fica para o fim). O protótipo de UX do RFC descreve: KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, linha do tempo de 7 dias, últimos lotes e atalhos.
+## Front-end (concluído)
+React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 LTS. Rodar: `cd front-end; npm install; npm run dev`. Validar: `npm run verificar` (= o que o CI roda). Detalhes em `front-end/README.md`; roteiro de teste manual em `front-end/ROTEIRO_TESTES.md`.
 
-Decisões já tomadas com a Mariele:
-- **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`.
-- Todo acesso à API passa por `apiFetch` (`src/lib/api.ts`); sessão em `useAuth()` (`src/auth/AuthContext.tsx`); páginas × perfis em `src/auth/permissoes.ts`.
+### Decisões de arquitetura
+- **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`. **No deploy vale o mesmo cuidado**: o `/auth` da API precisa ficar acessível no caminho `/auth` (sem prefixo).
+- Todo acesso à API passa por `apiFetch` (`src/lib/api.ts`); sessão em `useAuth()` (`src/auth/AuthContext.tsx`); páginas e ações × perfis em `src/auth/permissoes.ts` (`PERFIS_POR_PAGINA`, `PERFIS_POR_ACAO`; use `pode([...])` para esconder ações restritas).
 - `fetch` nativo (sem axios); tipos da API escritos à mão em `src/lib/tipos.ts`, conferidos no `/openapi.json`.
-- Navegação por `useState` (sem `react-router` por enquanto; pode entrar depois).
-- O layout atual **não é o final** e não há Figma atualizado: pode melhorar a UI, mantendo a identidade (preto/branco/slate).
-- Origem do front: só `http://localhost:8443` por enquanto.
+- Navegação por `useState` em `App.tsx` (sem `react-router`); `App.tsx` guarda o lote/job aberto (`abrirRelatorio(id)`, `abrirJob(id)`) e desmonta a área logada no logout.
+- Identidade visual preto/branco/slate; não há Figma atualizado (o layout pode evoluir mantendo a identidade).
 
-Já entregue (etapa 1, `feature/front-auth-login`, mergeada na `develop`):
-- `src/lib/api.ts`: `apiFetch<T>()` com `credentials: "include"`, um refresh compartilhado em 401 (evita dois refreshes concorrentes com a rotação do back-end), `ApiError` com `status` (0 = API inacessível) e mensagem pronta para a tela (usa o `detail` do back-end; 422 do Pydantic vem em inglês e deve ser traduzido na tela).
-- `src/auth/AuthContext.tsx`: restaura a sessão com `GET /auth/me` ao abrir (F5 mantém o login), `login`, `logout`, `pode(perfis)` e aviso de "sessão expirada".
-- `src/auth/permissoes.ts`: tipo `Page`, `PERFIS_POR_PAGINA` (operador não vê "Usuários") e `NOME_PERFIL`. Ao criar telas, use `pode([...])` também para esconder **ações** restritas (excluir devedor, marcar quitado, editar régua).
-- `App.tsx` desmonta a área logada no logout (o próximo login começa no Dashboard); Sidebar mostra nome/perfil reais.
-- Login: "Esqueceu a senha?" virou "Fale com o administrador" (não há recuperação por e-mail; quem redefine é gestor/admin).
-- `package.json` renomeado para `cobranca-front-end`, script `typecheck`; Vite atualizado para 8.3.x (`npm audit` zerado); `doc.md` do Figma Make virou `front-end/README.md`; `.vscode/` no `.gitignore`.
-- As demais telas **ainda usam mocks** (arrays fixos no topo de cada arquivo em `src/pages/`); cada etapa troca os mocks pela API.
+### Mapa do código (`front-end/src`)
+- `lib/api.ts`: `apiFetch<T>()` (`credentials: "include"`, um refresh compartilhado em 401, `ApiError` com `status` — 0 = API inacessível; aproveita os 422 com prefixo `"Value error, "` em português), `apiBaixarArquivo(path, nome)` (download autenticado via blob; o nome vem do front porque o CORS não expõe `Content-Disposition`), `consultarSaude()` (lê `/health` mesmo com 503). Upload: `apiFetch(path, { method: "POST", body: formData })`.
+- `hooks/`: `useApi<T>(path, { intervaloMs, pararQuando })` (polling sem "piscar"; ao trocar de path, `dados` ainda é o da consulta anterior — compare o id), `useSaude` (`saude` undefined = verificando, null = API sem resposta), `useDebounce`, `useFecharComEsc`.
+- `lib/`: `formatos.ts` (números, `percentual`, datas de Brasília sem `new Date` para `YYYY-MM-DD`, `moeda`, `documento`/`documentoMascarado`, `telefone`, `hojeISO`, `somarDias`, `horario`, `corAtraso`, rótulos/cores de status e canal), `lotes.ts` (limites 20 MB/50.000 registros, `validarArquivo`, planilha modelo), `regua.ts` (limites por canal, janela, `validarRegra`, `trechosDoTemplate`), `janela.ts` (`estadoJanela()`; **não conhece feriados**, a tela avisa), `jobs.ts` (`jobEmAndamento`), `usuarios.ts` (validações, `gerarSenha`, `DESCRICAO_PERFIL`, `NOME_ACAO`/`NOME_ENTIDADE` — ao criar uma ação de auditoria no back, acrescente aqui).
+- `components/`: `ui.tsx` (`Badge`, `Painel`, `AvisoErro`, `Spinner`, `Modal`, `CampoForm` com `grupo`, `IconeDownload`, classes `BOTAO_*`), `estilos.ts` (`inputClasse`), `DetalheDevedor`, `DetalheJob`, `EditorRegra` (PATCH só com campos alterados; `TemplateDestacado`), `ModaisUsuario`, `MinhaConta`, `CampoSenha`, `Sidebar`.
+- `pages/`: `Login`, `Dashboard`, `ImportarLote`, `RelatorioValidacao`, `Devedores`, `ReguaCobranca`, `Monitoramento`, `Usuarios`, `Auditoria`.
+- Testes: ESLint 10 (flat config), Vitest 5 + Testing Library (jsdom), 71 testes, cobertura v8 com **mínimo de 80%** em `src/lib`, `src/hooks`, `src/auth` (hoje ~91%).
 
-Etapa 2 (`feature/front-dashboard`) — peças reutilizáveis para as próximas telas:
-- `src/hooks/useApi.ts`: `useApi<T>(path, { intervaloMs, pararQuando })` → `{dados, erro, carregando, atualizadoEm, recarregar}`. Filtros vão na query string do `path` (mudou o path, recarrega); recargas por intervalo não apagam os dados (sem "piscar"); `pararQuando(dados)` encerra o polling (ex.: lote/job terminou). Ao trocar de path, `dados` ainda é o da consulta anterior até a nova chegar — compare o id quando importar.
-- `src/lib/formatos.ts`: `numero`, `percentual` (null → "—"), `dataHora` (Brasília), `data`/`diaCurto` (datas `YYYY-MM-DD` sem `new Date`, para não mudar de dia com o fuso), `NOME_CANAL`, `COR_CANAL` e rótulos/cores de status (`STATUS_LOTE`, `STATUS_JOB`, `STATUS_DEVEDOR`).
-- `src/lib/tipos.ts`: enums, `Lote`, `Job`, `Dashboard`, `Saude`. `consultarSaude()` em `api.ts` lê o `/health` mesmo com 503.
-- A `timeline` do dashboard é **por dia, sem quebra por canal** (o gráfico mostra sucesso/falhas/aguardando); o painel "Alertas" do protótipo não tinha endpoint e virou "Distribuição por canal" + conversão.
-- Massa de demonstração: um CSV com `cpf_cnpj,nome,email,valor_divida,data_vencimento,telefone` (CPFs válidos, data `DD/MM/AAAA`, valor com ponto) + regra ativa + `POST /regras/{id}/executar`. No Git Bash do Windows, mande JSON com acento via arquivo (`--data-binary @arquivo.json`), senão a API responde "error parsing the body".
+### Desvios do protótipo/RFC já combinados (cada um por falta de endpoint ou por LGPD)
+- Dashboard: painel "Alertas" virou "Distribuição por canal" + conversão.
+- Devedores: sem filtro por canal (a API não filtra), sem "último contato" e sem "Exportar CSV" (LGPD); a coluna "Contatos" mostra os canais possíveis. **Atenção: o RF05 do RFC pede filtro por canal** (ver Pendências).
+- Régua: cards sem métricas por regra. Monitoramento: o "console de logs" fictício virou saúde dos serviços + janela de disparo + jobs.
+- Login: "Esqueceu a senha?" virou "Fale com o administrador".
 
-Etapa 3 (`feature/front-lotes`):
-- `src/components/ui.tsx`: `Badge`, `Painel` (card com título/subtítulo/ação), `AvisoErro` (com "Tentar novamente"), `Spinner`, `ICONE_DOWNLOAD`. Use nas próximas telas em vez de repetir markup.
-- `api.ts`: `apiBaixarArquivo(path, nome)` para downloads autenticados (fetch + blob; o nome vem do front porque o CORS não expõe o `Content-Disposition`). Upload: `apiFetch(path, { method: "POST", body: formData })`.
-- `src/lib/lotes.ts`: limites (20 MB, 50.000 registros, .csv/.xlsx/.xls — espelham o `config.py`), `validarArquivo`, colunas obrigatórias/opcionais, `NOME_CAMPO`, `emAndamento`, planilha modelo (CSV gerado no front; não há endpoint).
-- Fatos da API de lotes: **não existe "aviso"** — todo erro em `/lotes/{id}/erros` rejeita a linha, e uma linha pode ter vários erros (um por campo); `numero_linha` conta o cabeçalho como 1; lote com status `erro` = falha estrutural (coluna ausente, limite de registros) com o motivo em `campo` `cabecalho`/`arquivo`; `GET /lotes/` não devolve total (só `skip`/`limit`).
-- Navegação: `App.tsx` guarda o lote aberto no Relatório (`abrirRelatorio(id)`), usado pelo upload, pelo seletor e pelas linhas de lotes do Dashboard.
-- Armadilha de diagnóstico: no Windows, `curl ... | python -m json.tool` lê a saída como cp1252 e mostra acentos "corrompidos" (`invÃ¡lido`). Não é bug da API — confira com `psql`/`convert_to` antes de suspeitar do back-end.
+### Armadilhas conhecidas
+- Arquivos `.tsx` de componente só exportam componentes (react-refresh); helpers vão para `lib/`/`hooks/`. Exceção: `useAuth` junto do `AuthProvider`.
+- Ao mockar `apiFetch` nos testes, crie `vi.fn()` novo no `beforeEach` (o `mockReset` do Vitest 5 gera "unhandled rejection").
+- Em JSDoc, `***/` (ex.: CNPJ mascarado) fecha o comentário e quebra o build.
+- Dentro de `<label>` não coloque grupos de botões (use `CampoForm grupo`).
+- No Windows, `curl ... | python -m json.tool` mostra acentos "corrompidos" (cp1252) — não é bug da API. No Git Bash, mande JSON com acento via arquivo (`--data-binary @arquivo.json`).
+- Massa de demonstração: CSV `cpf_cnpj,nome,email,valor_divida,data_vencimento,telefone` (CPFs válidos, data `DD/MM/AAAA`, valor com ponto) + regra ativa + `POST /regras/{id}/executar`.
+- Build: aviso de chunk > 500 kB (~704 kB, Recharts) é conhecido; code-splitting ainda não feito.
+- `npm audit`: moderates só em dependências de dev (ESLint/`minimatch`); `npm audit --omit=dev` = 0.
 
-Etapa 4 (`feature/front-devedores`):
-- `src/components/DetalheDevedor.tsx`: painel lateral (dados, troca de status, histórico de comunicações, exclusão LGPD com confirmação digitando "EXCLUIR"). `corAtraso(dias)` exportado.
-- `ui.tsx` ganhou `Modal`, `useFecharComEsc` e as classes `BOTAO_PRIMARIO`/`BOTAO_SECUNDARIO`/`BOTAO_PERIGO`. `src/hooks/useDebounce.ts` para buscas.
-- `permissoes.ts`: `PERFIS_POR_ACAO` (`quitarDevedor`, `excluirDevedor`) — acrescente ali as ações restritas das próximas telas e use com `pode(...)`.
-- `formatos.ts`: `moeda` (o `valor_divida` vem como **texto**, ex. `"1500.00"`), `documento`, `documentoMascarado` (listas mostram CPF/CNPJ mascarado; o detalhe mostra completo), `telefone`, `STATUS_COMUNICACAO`; `STATUS_DEVEDOR` tem `descricao`.
-- A API de devedores **não filtra por canal nem devolve "último contato"**, e não há exportação: o filtro de canal e o "Exportar CSV" do protótipo saíram (exportar CPF/CNPJ em arquivo solto seria ruim pela LGPD). A coluna "Contatos" mostra quais canais o devedor pode receber.
-- Cuidado em comentários JSDoc: `***/` (ex.: CNPJ mascarado) fecha o comentário e quebra o build.
+## Pendências do projeto (próxima fase)
+Ordem sugerida:
+1. **Confirmar o Ruleset da `main`** com o check `Front-end (lint, tipos, testes e build)` (o job já rodou no GitHub).
+2. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente.
+3. **RF05 — filtro de devedores por canal**: implementar no back (`GET /devedores/?canal=` = tem contato para o canal) e no front, ou registrar o desvio no RFC.
+4. **Deploy na AWS** (RDS PostgreSQL, EC2) e o passo de deploy do CI. Antes, falta:
+   - **Containerizar o front** (RNF09: hoje só o back está no Compose) — ex.: Dockerfile multi-stage (build do Vite + Nginx servindo `dist/`), com `VITE_API_URL` definido no build.
+   - Configuração de produção: HTTPS, `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `CORS_ORIGINS` com o domínio real, `COOKIE_SAMESITE` adequado (front e API no mesmo site evita `none`), segredos fora do repositório, senha do admin trocada.
+5. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana).
+6. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
+7. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
-Etapa 5 (`feature/front-regua`):
-- `api.ts` agora aproveita os 422 de validação do Pydantic escritos no back-end: as mensagens com prefixo `"Value error, "` (em português) viram o texto do `ApiError`; as genéricas do Pydantic (em inglês) continuam caindo na mensagem padrão.
-- `src/lib/regua.ts`: limites por canal, janela 08:00–20:00, `DIAS_PARA_TRAS` (7), `validarRegra`, `variaveisUsadas`, `trechosDoTemplate` (espelham `templates.py`/`schemas/regra.py`).
-- `src/components/EditorRegra.tsx`: criar/editar em `Modal largo`, variáveis clicáveis (inserem no cursor), contador por canal e pré-visualização ao vivo (`POST /regras/preview`, debounce). Edição manda **PATCH só com os campos alterados** (a API recusa PATCH vazio). Exporta `TemplateDestacado`.
-- `formatos.ts`: `hojeISO()` (data de Brasília), `somarDias`, `horario` (`"09:00:00"` → `"09:00"`). `permissoes.ts`: `gerenciarRegua`.
-- Fatos da API: `horario_disparo` é "a partir de" (o beat roda a cada 5 min, seg–sex, 8h–19h55); regra com jobs não pode ser excluída (409, oferecer desativar); `executar` exige regra ativa, dia entre hoje−7 e hoje e devolve 409 se o job do dia já existe; não há métricas por regra (o protótipo mostrava "devedores" e "taxa" nos cards — saíram).
-- Dentro de `<label>` não coloque grupos de botões (clicar no rótulo aciona o primeiro botão): `CampoForm` tem `grupo`.
-
-Etapa 6 (`feature/front-monitoramento`):
-- O "console de logs" do protótipo era fictício (não há endpoint de logs): virou cards de saúde (`/health`), janela de disparo e a lista de jobs com o painel `src/components/DetalheJob.tsx` (comunicações por status, tentativas "N de 4", próximo reenvio, erro). `jobEmAndamento(job)` exportado.
-- `src/hooks/useSaude.ts`: polling do `/health` (`saude` undefined = verificando, null = API sem resposta), `NOME_DEPENDENCIA` (nomes longos), `dependenciasFora`. O selo do Dashboard usa o hook.
-- `src/lib/janela.ts`: `estadoJanela()` — aberta/fechada, próximo ciclo (múltiplos de 5 min, último às 19:55) e próxima abertura; não conhece feriados (a tela avisa).
-- `App.tsx` guarda o job aberto (`abrirJob(id)`): as linhas de "Últimos jobs" do Dashboard abrem o painel no Monitoramento.
-- Fatos da API: job fica `executando` enquanto houver reenvio pendente; termina `concluido` ou `falhou` (alvos > 0 e nenhum sucesso). `max_tentativas_envio` = 4 (1 + 3 reenvios), intervalo 30 min (`config.py`).
-
-Etapa 7 (`feature/front-usuarios`):
-- Telas: `pages/Usuarios.tsx` (lista + `components/ModaisUsuario.tsx`: `FormUsuario`, `RedefinirSenha`, `ConfirmarAcaoUsuario`, `DESCRICAO_PERFIL`), `pages/Auditoria.tsx` (nova página `auditoria`, só admin, no menu) e `components/MinhaConta.tsx` (troca da própria senha, aberta pelo nome no rodapé da Sidebar). `components/CampoSenha.tsx` (mostrar/gerar).
-- `CampoForm` e `inputClasse` agora ficam em `ui.tsx` (o `EditorRegra` passou a importá-los). `AuthContext` ganhou `recarregarUsuario()` (usado quando o admin edita o próprio nome/e-mail).
-- `src/lib/usuarios.ts`: `validarSenha` (8–128, letra e número), `validarNome`, `validarEmail`, `gerarSenha` (crypto, sempre válida), `NOME_ACAO` e `NOME_ENTIDADE` (rótulos da auditoria — ao criar uma nova ação de auditoria no back-end, acrescente aqui).
-- `permissoes.ts`: página `auditoria` e ação `administrarUsuarios` (admin).
-- Fatos da API: **não há convite por e-mail** (cria com senha inicial) nem "último acesso"; gestor só lista/gerencia operadores e não altera perfil (403); ninguém altera o próprio perfil, desativa/exclui a si mesmo ou redefine a própria senha por `/usuarios` (400 — use `PUT /auth/senha`); desativar e redefinir senha encerram as sessões do alvo; excluir usuário com lotes/regras → 409; a auditoria tem `usuario_id` null tanto em login com e-mail inexistente quanto em usuário excluído (FK `SET NULL`).
-
-Etapa 8 (`feature/front-ci`):
-- ESLint 10 (flat config `eslint.config.js`: typescript-eslint + react-hooks + react-refresh), Vitest 5 (`vitest.config.ts`, jsdom, Testing Library, cobertura v8 com **mínimo de 80%** em `src/lib`, `src/hooks`, `src/auth`). Scripts: `lint` (`--max-warnings 0`), `test`, `test:watch`, `test:coverage`, `verificar` (tudo que o CI roda).
-- Para o react-refresh não reclamar, arquivos `.tsx` de componente só exportam componentes: helpers foram para `lib/` (`corAtraso` em `formatos.ts`, `jobEmAndamento` em `lib/jobs.ts`, `DESCRICAO_PERFIL` em `lib/usuarios.ts`), `hooks/useFecharComEsc.ts`, `components/estilos.ts` (`inputClasse`) e `IconeDownload` virou componente. Exceção documentada: `useAuth` junto do `AuthProvider`.
-- Testes (71): `api.ts` (refresh em 401, refresh único em chamadas simultâneas, login sem refresh, mensagens 422 em português, rede fora, `/health` com 503), `AuthContext`, `useApi` (polling/`pararQuando`/recarga sem piscar), hooks pequenos e funções puras. Ao mockar `apiFetch`, crie `vi.fn()` novo no `beforeEach` (o `mockReset` do Vitest 5 gera "unhandled rejection" com promises rejeitadas).
-- `npm audit`: 10 *moderate* no `minimatch` do ESLint (só dev; o fix exige `--force` incompatível). `npm audit --omit=dev` = 0.
-
-Plano por etapas (uma `feature/*` cada): 1 `front-auth-login` ✅ → 2 `front-dashboard` ✅ → 3 `front-lotes` ✅ → 4 `front-devedores` ✅ → 5 `front-regua` ✅ → 6 `front-monitoramento` ✅ → 7 `front-usuarios` ✅ → 8 `front-ci` ✅. Próximos passos: teste final da Mariele (`ROTEIRO_TESTES.md`), incluir o check do front no Ruleset, PR `develop` → `main`. O SonarCloud só analisa `back-end/app`.
-
-## Pendências do projeto (fora do front)
-- Teste real do SendGrid/Twilio (`docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`) e autenticação de domínio do remetente, **depois da integração com o front**.
-- Deploy na AWS (RDS PostgreSQL, EC2) e o passo de deploy do CI.
-- Webhooks de status de entrega (`entregue`) e templates aprovados do WhatsApp (produção).
-- Monitoramento opcional: `docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` (Prometheus :9090, Grafana :3000).
+Documentação desatualizada a acertar quando for mexer nela: `README.md` (badge "React 18" — é 19), `back-end/DOC.md` (ainda lista "Integração com o front-end" como pendente), `docs/RCF.md` é cópia idêntica de `docs/RFC`, e `docs/documentacao.md` é o RFC v1.0 (antigo).
 
 ## Documentação
+- `README.md`: visão geral, como rodar, status do projeto.
 - `back-end/DOC.md`: execução, testes, CI/CD, métricas, regras e limitações conhecidas.
-- `docs/RFC`: requisitos (RF/RN/RNF).
+- `front-end/README.md` e `front-end/ROTEIRO_TESTES.md`: front e roteiro de teste manual.
+- `docs/RFC`: requisitos (RF/RN/RNF), v1.1.
