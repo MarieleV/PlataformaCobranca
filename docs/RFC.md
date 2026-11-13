@@ -8,6 +8,7 @@
 | **Linha** | Web / Dados / Automação |
 | **Proposta original** | 12/04/2026 |
 | **Versão** | 1.1 (atualizada em 06/11/2026) |
+| **Versão anterior** | [RFC v1.0](./RFC-v1.0.md) (diagramas, mockups e C4 citados como "os da v1.0") |
 
 ---
 

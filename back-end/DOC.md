@@ -27,9 +27,9 @@ O back-end é construído com **Python 3.14**, **FastAPI** e orquestrado via **D
 - [x] **M5: Qualidade (RNF06):** 783 testes automatizados (Pytest) com 97% de cobertura.
 - [x] **M5: CI/CD (RNF07):** GitHub Actions com testes, migrações em PostgreSQL, build do Docker e SonarCloud com Quality Gate bloqueando o deploy.
 - [x] **Seed Inicial:** cria o Administrador padrão (recusa a senha padrão em produção).
+- [x] **Integração com o front-end:** todas as telas consomem a API (React 19 + Vite), com job próprio no CI (lint, tipos, testes e build). Veja `front-end/README.md`.
 
 ### ⏳ Pendente
-- [ ] **Integração com o front-end.**
 - [ ] **Teste real dos provedores** (SendGrid e Twilio) e autenticação de domínio do remetente.
 - [ ] **Deploy na AWS** (RDS PostgreSQL, EC2) e o passo de deploy do CI.
 - [ ] **Webhooks de status de entrega** (SendGrid/Twilio) para registrar `entregue`.
