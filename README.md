@@ -1,59 +1,64 @@
-<p align="center">
-  <img src="https://files.engaged.com.br/5db0810e95b4f900077e887e/account/5db0810e95b4f900077e887e/xMCS8NFKTMqwhefy8WLd_catolica-horizontal.png" alt="Católica SC" width="220"/>
-</p>
-
-<h1 align="center">Plataforma de Cobrança Automatizada</h1>
+<h1 align="center">
+  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+cobran%C3%A7a+multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
+</h1>
 
 <p align="center">
-  <strong>Trabalho de Conclusão de Curso — Engenharia de Software · Católica SC</strong><br/>
-  SaaS Fintech B2B · Régua de cobrança multicanal · Processamento assíncrono<br/>
-  Desenvolvido em parceria com a <strong>Consulth</strong>
+  SaaS B2B de cobrança automatizada: importação em lote, régua de cobrança e disparo por e-mail, SMS e WhatsApp.<br/>
+  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC · em parceria com a <strong>Consulth</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React"/>
-  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
-  <img src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite"/>
-  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest"/>
+  <a href="./docs/RFC.md">
+    <img src="https://img.shields.io/badge/RFC_v1.1-334155?style=for-the-badge&logo=readthedocs&logoColor=white" alt="RFC" />
+  </a>
+  <a href="./back-end/DOC.md">
+    <img src="https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-475569?style=for-the-badge&logo=bookstack&logoColor=white" alt="Documentação" />
+  </a>
+  <a href="https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada" target="_blank">
+    <img src="https://img.shields.io/badge/Figma-64748B?style=for-the-badge&logo=figma&logoColor=white" alt="Figma" />
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-334155?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React_19-334155?style=flat-square&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Tailwind-334155?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Vite_8-334155?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Python_3.14-334155?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/FastAPI-334155?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL_15-334155?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/RabbitMQ-334155?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ" />
+  <img src="https://img.shields.io/badge/Celery-334155?style=flat-square&logo=celery&logoColor=white" alt="Celery" />
+  <img src="https://img.shields.io/badge/Docker-334155?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
 </p>
 <p align="center">
-  <img src="https://img.shields.io/badge/Python_3.14-3776AB?style=flat-square&logo=python&logoColor=FFD43B" alt="Python"/>
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/PostgreSQL_15-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
-  <img src="https://img.shields.io/badge/Celery-37814A?style=flat-square&logo=celery&logoColor=white" alt="Celery"/>
-  <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis"/>
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/>
-</p>
-<p align="center">
-  <img src="https://img.shields.io/badge/testes_back--end-783-brightgreen?style=flat-square" alt="783 testes"/>
-  <img src="https://img.shields.io/badge/cobertura-~97%25-brightgreen?style=flat-square" alt="Cobertura ~97%"/>
-  <img src="https://img.shields.io/badge/SonarCloud-Quality_Gate-F3702A?style=flat-square&logo=sonarcloud&logoColor=white" alt="SonarCloud"/>
-  <img src="https://img.shields.io/badge/GitHub_Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions"/>
+  <img src="https://img.shields.io/badge/testes_back--end-783-64748B?style=flat-square" alt="783 testes" />
+  <img src="https://img.shields.io/badge/cobertura-~97%25-64748B?style=flat-square" alt="Cobertura ~97%" />
+  <img src="https://img.shields.io/badge/SonarCloud-Quality_Gate-64748B?style=flat-square&logo=sonarcloud&logoColor=white" alt="SonarCloud" />
+  <img src="https://img.shields.io/badge/GitHub_Actions-CI-64748B?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
 </p>
 
 ---
 
 <p align="center">
-  <a href="#sobre-o-projeto">Sobre</a> ·
-  <a href="#destaques-técnicos">Destaques</a> ·
-  <a href="#arquitetura">Arquitetura</a> ·
-  <a href="#funcionalidades">Funcionalidades</a> ·
-  <a href="#regras-de-negócio">Regras de Negócio</a> ·
-  <a href="#stack-tecnológica">Stack</a>
+  <a href="#-sobre-o-projeto">Sobre</a> ·
+  <a href="#-destaques-técnicos">Destaques</a> ·
+  <a href="#-arquitetura">Arquitetura</a> ·
+  <a href="#-funcionalidades">Funcionalidades</a> ·
+  <a href="#-regras-de-negócio">Regras de Negócio</a> ·
+  <a href="#-tech-stack">Stack</a>
   <br/>
-  <a href="#segurança-e-lgpd">Segurança e LGPD</a> ·
-  <a href="#qualidade-e-cicd">Qualidade e CI/CD</a> ·
-  <a href="#como-executar">Como Executar</a> ·
-  <a href="#status-do-projeto">Status</a> ·
-  <a href="#design-system">Design System</a> ·
-  <a href="#documentação">Documentação</a>
+  <a href="#-segurança-e-lgpd">Segurança e LGPD</a> ·
+  <a href="#-qualidade-e-cicd">Qualidade e CI/CD</a> ·
+  <a href="#-como-executar">Como Executar</a> ·
+  <a href="#-status-do-projeto">Status</a> ·
+  <a href="#-design-system">Design System</a> ·
+  <a href="#-documentação">Documentação</a>
 </p>
 
 ---
 
-## Sobre o Projeto
+##  → Sobre o Projeto
 
 Empresas B2B que operam carteiras de cobrança ainda dependem, em boa parte, de planilhas soltas e disparos manuais para tratar a inadimplência. O processo é lento, sujeito a erro humano e não escala.
 
@@ -66,9 +71,9 @@ A **Plataforma de Cobrança Automatizada** resolve isso com um pipeline auditáv
 
 O projeto foi construído como um produto SaaS de verdade: arquitetura orientada a filas, controle de acesso por perfil, trilha de auditoria, conformidade com a LGPD, testes automatizados e pipeline de CI com Quality Gate.
 
----
+<br/>
 
-## Destaques Técnicos
+##  → Destaques Técnicos
 
 - **Processamento assíncrono** — importação e disparos rodam em workers Celery via RabbitMQ; a API responde na hora e o front acompanha o progresso por polling.
 - **Agendamento com regras de negócio** — o Celery Beat avalia a régua a cada 5 minutos, apenas em dias úteis e dentro da janela comercial (08h–19h, horário de Brasília).
@@ -78,9 +83,9 @@ O projeto foi construído como um produto SaaS de verdade: arquitetura orientada
 - **LGPD por design** — valor da dívida criptografado no banco, exclusão de titular sob demanda e cuidado para não expor CPF/CNPJ em logs.
 - **Qualidade garantida no merge** — `main` protegida por Ruleset: exige PR e aprovação dos checks de testes, SonarCloud, migrações em PostgreSQL, build Docker e front-end.
 
----
+<br/>
 
-## Arquitetura
+##  → Arquitetura
 
 ```mermaid
 flowchart LR
@@ -94,6 +99,13 @@ flowchart LR
     W -- "e-mail" --> SG["SendGrid"]
     W -- "SMS · WhatsApp" --> TW["Twilio"]
     API -. "/metrics" .-> PROM["Prometheus + Grafana<br/>(opcional)"]
+
+    classDef core fill:#334155,stroke:#334155,color:#F8FAFC;
+    classDef infra fill:#64748B,stroke:#64748B,color:#F8FAFC;
+    classDef ext fill:#F1F5F9,stroke:#94A3B8,color:#334155;
+    class FE,API,W,BEAT core;
+    class DB,MQ,R infra;
+    class SG,TW,PROM ext;
 ```
 
 **Fluxo de dados**
@@ -105,47 +117,77 @@ flowchart LR
 5. **Disparo** — as mensagens são interpoladas com os dados do devedor e enviadas pelos provedores; falhas temporárias entram na fila de reenvio.
 6. **Acompanhamento** — jobs, comunicações e indicadores ficam disponíveis no dashboard e no console de monitoramento.
 
----
+<br/>
 
-## Funcionalidades
+##  → Funcionalidades
 
-### 🔐 Autenticação e sessão
-- Login com sessão em cookies httpOnly, renovação automática do token (refresh em caso de 401) e logout.
-- Rotas protegidas por perfil e troca da própria senha.
+<table align="center" width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Autenticação e sessão</h3>
+      <ul>
+        <li>Sessão em cookies httpOnly, com renovação automática do token (refresh em caso de 401) e logout.</li>
+        <li>Rotas protegidas por perfil e troca da própria senha.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Dashboard</h3>
+      <ul>
+        <li>KPIs: devedores na base, disparos, taxa de entrega (meta de 95%), taxa de conversão e falhas.</li>
+        <li>Linha do tempo de 7 dias, distribuição por canal e últimos lotes.</li>
+        <li>Indicadores sem base de cálculo aparecem como "—" em vez de valores enganosos.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Importação de lotes</h3>
+      <ul>
+        <li>Upload de CSV, XLSX e XLS com progresso em tempo real.</li>
+        <li>Relatório de validação por linha, com a regra violada, e download do CSV de erros.</li>
+        <li>Contadores de registros importados, atualizados e rejeitados.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Devedores</h3>
+      <ul>
+        <li>Busca por nome ou CPF/CNPJ, filtros por status e atraso mínimo, e paginação.</li>
+        <li>Detalhe com histórico completo de comunicações.</li>
+        <li>Troca de status (<strong>quitado</strong> só para gestor/administrador) e exclusão LGPD (só administrador).</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>Régua de cobrança</h3>
+      <ul>
+        <li>CRUD de regras por canal, dias de atraso, horário de disparo e template.</li>
+        <li>Variáveis dinâmicas (<code>{nome}</code>, <code>{primeiro_nome}</code>, <code>{valor}</code>, <code>{data_vencimento}</code>, <code>{dias_atraso}</code>) com pré-visualização da mensagem.</li>
+        <li>Ativação com tratamento de conflito, consulta de elegíveis e execução manual.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>Monitoramento</h3>
+      <ul>
+        <li>Jobs de disparo e comunicações geradas, com atualização por polling.</li>
+        <li>Métricas em <code>/metrics</code> (Prometheus) e saúde dos serviços em <code>/health</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" valign="top">
+      <h3>Usuários e auditoria</h3>
+      <ul>
+        <li>CRUD de usuários, ativação/desativação e redefinição de senha. Gestores administram operadores; administradores administram todos.</li>
+        <li>Trilha de auditoria filtrável por usuário, ação, entidade e período (só administrador).</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-### 📊 Dashboard
-- KPIs consolidados: devedores na base, disparos, taxa de entrega (meta de 95%), taxa de conversão e falhas.
-- Linha do tempo dos últimos 7 dias, distribuição por canal e últimos lotes importados.
-- Indicadores sem base de cálculo são exibidos como "—" em vez de valores enganosos.
+<br/>
 
-### 📥 Importação de lotes
-- Upload de CSV, XLSX e XLS com acompanhamento do progresso em tempo real.
-- Relatório de validação por linha, com a regra violada, e download do CSV de erros.
-- Contadores de registros importados, atualizados e rejeitados.
-
-### 👤 Devedores
-- Listagem com busca por nome ou CPF/CNPJ, filtros por status e atraso mínimo, e paginação.
-- Detalhe do devedor com histórico completo de comunicações.
-- Troca de status (marcar como **quitado** só para gestor/administrador) e exclusão LGPD (só administrador).
-
-### 📏 Régua de cobrança
-- CRUD de regras por canal, dias de atraso, horário de disparo e template.
-- Variáveis dinâmicas (`{nome}`, `{primeiro_nome}`, `{valor}`, `{data_vencimento}`, `{dias_atraso}`) com **pré-visualização** da mensagem.
-- Ativação/desativação com tratamento de conflito (uma regra ativa por canal e dia de atraso).
-- Consulta de devedores elegíveis e **execução manual** da regra.
-
-### 🖥️ Monitoramento
-- Acompanhamento de jobs de disparo e das comunicações geradas, com atualização por polling.
-- Métricas de infraestrutura expostas em `/metrics` (Prometheus) e saúde dos serviços em `/health`.
-
-### 👥 Usuários e auditoria
-- CRUD de usuários, ativação/desativação e redefinição de senha.
-- Gestores administram operadores; administradores administram todos.
-- Trilha de auditoria filtrável por usuário, ação, entidade e período (só administrador).
-
----
-
-## Regras de Negócio
+##  → Regras de Negócio
 
 | Regra | Descrição |
 |---|---|
@@ -158,14 +200,87 @@ flowchart LR
 | Limite de template | SMS 480 · WhatsApp 1.024 · e-mail 5.000 caracteres |
 | Quitação | Devedor quitado não é reaberto nem reimportado |
 
-**Status do devedor:** `ativo` · `comunicado` · `negociando` · `quitado` · `inativo`
+**Status do devedor:** `ativo` · `comunicado` · `negociando` · `quitado` · `inativo`<br/>
 **Status da comunicação:** `pendente` · `enviado` · `entregue` · `falha` · `bounce`
 
----
+<br/>
 
-## Stack Tecnológica
+##  → Tech Stack
 
-### Front-end
+<div align="center">
+  <table align="center" cellspacing="10" cellpadding="10">
+    <!-- Front-end -->
+    <tr>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/typescript/CBD5E1" width="40" height="40" alt="TypeScript"/><br/>TypeScript
+      </td>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/react/CBD5E1" width="40" height="40" alt="React"/><br/>React 19
+      </td>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/vite/CBD5E1" width="40" height="40" alt="Vite"/><br/>Vite 8
+      </td>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/tailwindcss/CBD5E1" width="40" height="40" alt="Tailwind"/><br/>Tailwind
+      </td>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/vitest/CBD5E1" width="40" height="40" alt="Vitest"/><br/>Vitest
+      </td>
+      <td align="center" width="16%">
+        <img src="https://cdn.simpleicons.org/eslint/CBD5E1" width="40" height="40" alt="ESLint"/><br/>ESLint
+      </td>
+    </tr>
+    <!-- Back-end & Dados -->
+    <tr>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/python/CBD5E1" width="40" height="40" alt="Python"/><br/>Python 3.14
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/fastapi/CBD5E1" width="40" height="40" alt="FastAPI"/><br/>FastAPI
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/sqlalchemy/CBD5E1" width="40" height="40" alt="SQLAlchemy"/><br/>SQLAlchemy
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/pandas/CBD5E1" width="40" height="40" alt="Pandas"/><br/>Pandas
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/postgresql/CBD5E1" width="40" height="40" alt="PostgreSQL"/><br/>PostgreSQL
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/pytest/CBD5E1" width="40" height="40" alt="pytest"/><br/>pytest
+      </td>
+    </tr>
+    <!-- Mensageria, Infra & Observabilidade -->
+    <tr>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/rabbitmq/CBD5E1" width="40" height="40" alt="RabbitMQ"/><br/>RabbitMQ
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/celery/CBD5E1" width="40" height="40" alt="Celery"/><br/>Celery
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/redis/CBD5E1" width="40" height="40" alt="Redis"/><br/>Redis
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/docker/CBD5E1" width="40" height="40" alt="Docker"/><br/>Docker
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/prometheus/CBD5E1" width="40" height="40" alt="Prometheus"/><br/>Prometheus
+      </td>
+      <td align="center">
+        <img src="https://cdn.simpleicons.org/githubactions/CBD5E1" width="40" height="40" alt="GitHub Actions"/><br/>GitHub Actions
+      </td>
+    </tr>
+  </table>
+</div>
+
+<details>
+<summary><strong>Papel de cada tecnologia</strong></summary>
+<br/>
+
+**Front-end**
+
 | Camada | Tecnologia | Papel |
 |---|---|---|
 | Build & Framework | React 19 + Vite 8 | SPA com HMR e bundle otimizado |
@@ -174,7 +289,8 @@ flowchart LR
 | Sessão | Context API + cookies httpOnly | Rotas protegidas e refresh automático |
 | Qualidade | ESLint · `tsc --noEmit` · Vitest + Testing Library | Lint, checagem de tipos e testes |
 
-### Back-end
+**Back-end**
+
 | Camada | Tecnologia | Papel |
 |---|---|---|
 | API | FastAPI (Python 3.14) | REST com documentação OpenAPI autogerada |
@@ -186,9 +302,11 @@ flowchart LR
 | Observabilidade | Prometheus + Grafana | Métricas da aplicação (opcional) |
 | Infraestrutura | Docker + Docker Compose | Ambiente reproduzível |
 
----
+</details>
 
-## Segurança e LGPD
+<br/>
+
+##  → Segurança e LGPD
 
 - Tokens de acesso (15 min) e refresh (7 dias, com rotação) em cookies httpOnly.
 - Senhas de 8 a 128 caracteres, com ao menos uma letra e um número; bloqueio temporário após 5 tentativas de login malsucedidas.
@@ -196,26 +314,26 @@ flowchart LR
 - Valor da dívida armazenado de forma criptografada.
 - Exclusão de dados do titular (LGPD) restrita ao administrador e registrada na auditoria.
 
----
+<br/>
 
-## Qualidade e CI/CD
+##  → Qualidade e CI/CD
 
 | Categoria | Ferramenta / Escopo | Situação |
 |---|---|---|
-| **CI** | GitHub Actions a cada PR e na `main` | ✅ Em funcionamento |
-| **Testes (back-end)** | `pytest` — 783 testes | ✅ ~97% de cobertura (mínimo exigido: 80%) |
-| **Testes (front-end)** | Vitest + Testing Library (cliente da API e contexto de autenticação) | ✅ No CI |
-| **Lint e tipos (front-end)** | ESLint + `tsc --noEmit` | ✅ No CI |
-| **Migrações** | Alembic aplicado em PostgreSQL 15 real | ✅ No CI |
-| **Build** | Imagem Docker | ✅ No CI |
-| **Análise estática** | SonarCloud com Quality Gate | ✅ Em PRs e na `main` |
-| **Deploy** | AWS (RDS + EC2) | 📋 Planejado |
+| **CI** | GitHub Actions a cada PR e na `main` | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
+| **Testes (back-end)** | `pytest` — 783 testes, ~97% de cobertura (mínimo: 80%) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Testes (front-end)** | Vitest + Testing Library (cliente da API e contexto de autenticação) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Lint e tipos (front-end)** | ESLint + `tsc --noEmit` | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Migrações** | Alembic aplicado em PostgreSQL 15 real | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Build** | Imagem Docker | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Análise estática** | SonarCloud com Quality Gate (PRs e `main`) | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
+| **Deploy** | AWS (RDS + EC2) | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
 
 **Fluxo de trabalho:** git-flow (`feature/*` → `develop` → PR para `main`) e commits no padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/). A `main` é protegida e só recebe código via Pull Request com todos os checks aprovados.
 
----
+<br/>
 
-## Como Executar
+##  → Como Executar
 
 **Pré-requisitos:** Docker e Docker Compose, Node.js (LTS) e Git.
 
@@ -285,29 +403,29 @@ docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
 
 Prometheus em http://localhost:9090 e Grafana em http://localhost:3000.
 
----
+<br/>
 
-## Status do Projeto
+##  → Status do Projeto
 
 | Módulo | Status |
 |---|---|
-| Autenticação, sessão e RBAC | ✅ Concluído |
-| Importação e validação de lotes | ✅ Concluído |
-| Gestão de devedores (incl. LGPD) | ✅ Concluído |
-| Régua de cobrança (motor de regras) | ✅ Concluído |
-| Disparo multicanal com reenvios | ✅ Concluído (modo simulado por padrão) |
-| Dashboard e indicadores | ✅ Concluído |
-| Console de monitoramento | ✅ Concluído (dados reais da API) |
-| Usuários e auditoria | ✅ Concluído |
-| CI/CD com Quality Gate | ✅ Concluído |
-| Validação com provedores reais (SendGrid/Twilio) | 🚧 Em andamento |
-| Deploy em nuvem (AWS) | 📋 Planejado |
-| Webhooks de confirmação de entrega | 📋 Planejado |
-| Templates aprovados do WhatsApp (produção) | 📋 Planejado |
+| Autenticação, sessão e RBAC | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Importação e validação de lotes | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Gestão de devedores (incl. LGPD) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Régua de cobrança (motor de regras) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Disparo multicanal com reenvios (modo simulado por padrão) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Dashboard e indicadores | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Console de monitoramento (dados reais da API) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Usuários e auditoria | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| CI/CD com Quality Gate | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
+| Validação com provedores reais (SendGrid/Twilio) | ![Em andamento](https://img.shields.io/badge/em_andamento-64748B?style=flat-square) |
+| Deploy em nuvem (AWS) | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
+| Webhooks de confirmação de entrega | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
+| Templates aprovados do WhatsApp (produção) | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
 
----
+<br/>
 
-## Design System
+##  → Design System
 
 A interface segue um padrão **SaaS corporativo**, inspirado em ferramentas como Vercel e Stripe.
 
@@ -317,9 +435,9 @@ A interface segue um padrão **SaaS corporativo**, inspirado em ferramentas como
 
 Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada).
 
----
+<br/>
 
-## Documentação
+##  → Documentação
 
 | Documento | Conteúdo |
 |---|---|
@@ -333,5 +451,15 @@ Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE
 ---
 
 <p align="center">
-  <sub>Desenvolvido por <strong>Mariele</strong> como Trabalho de Conclusão de Curso — Engenharia de Software, Católica SC, em parceria com a Consulth · 2026</sub>
+  <img src="https://files.engaged.com.br/5db0810e95b4f900077e887e/account/5db0810e95b4f900077e887e/xMCS8NFKTMqwhefy8WLd_catolica-horizontal.png" alt="Católica SC" width="160"/>
+</p>
+
+<p align="center">
+  <sub>Desenvolvido por <strong>Mariele Vieira</strong> como Trabalho de Conclusão de Curso - Engenharia de Software, Católica SC, em parceria com a Consulth · 2026</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/MarieleV">← Voltar ao perfil</a> ·
+  <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
+  <a href="mailto:silvamariele797@gmail.com">E-mail</a>
 </p>
