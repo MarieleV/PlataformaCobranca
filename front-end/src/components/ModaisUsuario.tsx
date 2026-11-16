@@ -12,7 +12,7 @@ import { ApiError, apiFetch } from "../lib/api"
 import type { MensagemResponse, Perfil, UsuarioEntrada, UsuarioGerenciado } from "../lib/tipos"
 import { DESCRICAO_PERFIL, validarEmail, validarNome, validarSenha } from "../lib/usuarios"
 import CampoSenha from "./CampoSenha"
-import { AvisoErro, BOTAO_PERIGO, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal } from "./ui"
+import { AcoesModal, Aviso, AvisoErro, BOTAO_PERIGO, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Selecao, Spinner } from "./ui"
 import { inputClasse } from "./estilos"
 
 const PERFIS: Perfil[] = ["operador", "gestor", "administrador"]
@@ -105,31 +105,32 @@ export function FormUsuario({ usuario, onFechar, onSalvo }: {
 
         {podeEscolherPerfil ? (
           <CampoForm rotulo="Perfil de acesso" dica={DESCRICAO_PERFIL[form.perfil]}>
-            <select value={form.perfil} onChange={(e) => alterar("perfil", e.target.value as Perfil)} className={inputClasse()}>
+            <Selecao value={form.perfil} onChange={(e) => alterar("perfil", e.target.value as Perfil)}>
               {PERFIS.map((p) => <option key={p} value={p}>{NOME_PERFIL[p]}</option>)}
-            </select>
+            </Selecao>
           </CampoForm>
         ) : (
-          <p className="text-xs text-slate-500">
-            Perfil: <strong>{NOME_PERFIL[usuario?.perfil ?? "operador"]}</strong>
+          <p className="text-[13px] text-slate-500">
+            Perfil: <strong className="font-medium text-slate-800">{NOME_PERFIL[usuario?.perfil ?? "operador"]}</strong>
             {ehProprio ? " (você não pode alterar o próprio perfil)." : !ehAdmin ? " (o gestor só gerencia operadores)." : ""}
           </p>
         )}
 
         {usuario && form.perfil !== usuario.perfil && (
-          <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+          <Aviso tipo="atencao">
             O novo perfil vale na próxima ação do usuário (as permissões são lidas do banco a cada requisição).
-          </p>
+          </Aviso>
         )}
       </div>
 
       {erro && <div className="mt-4"><AvisoErro mensagem={erro} /></div>}
-      <div className="flex justify-end gap-2 mt-6">
+      <AcoesModal>
         <button onClick={onFechar} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
         <button onClick={salvar} disabled={salvando} className={BOTAO_PRIMARIO}>
+          {salvando && <Spinner />}
           {salvando ? "Salvando..." : usuario ? "Salvar alterações" : "Criar usuário"}
         </button>
-      </div>
+      </AcoesModal>
     </Modal>
   )
 }
@@ -163,17 +164,20 @@ export function RedefinirSenha({ usuario, onFechar, onFeito }: {
 
   return (
     <Modal titulo="Redefinir senha" onFechar={onFechar} ocupado={salvando}>
-      <p className="text-sm text-slate-600 mb-4">
-        Define uma nova senha para <strong>{usuario.nome}</strong> e encerra as sessões abertas dele. Passe a senha ao usuário por um canal seguro.
+      <p className="mb-4">
+        Define uma nova senha para <strong className="font-medium text-slate-950">{usuario.nome}</strong> e encerra as sessões abertas dele. Passe a senha ao usuário por um canal seguro.
       </p>
       <CampoForm rotulo="Nova senha" erro={tocado ? erroSenha : null} dica="De 8 a 128 caracteres, com letra e número.">
         <CampoSenha valor={senha} onChange={setSenha} erro={tocado ? erroSenha : null} permitirGerar autoFocus />
       </CampoForm>
       {erro && <div className="mt-4"><AvisoErro mensagem={erro} /></div>}
-      <div className="flex justify-end gap-2 mt-6">
+      <AcoesModal>
         <button onClick={onFechar} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
-        <button onClick={salvar} disabled={salvando} className={BOTAO_PRIMARIO}>{salvando ? "Salvando..." : "Redefinir senha"}</button>
-      </div>
+        <button onClick={salvar} disabled={salvando} className={BOTAO_PRIMARIO}>
+          {salvando && <Spinner />}
+          {salvando ? "Salvando..." : "Redefinir senha"}
+        </button>
+      </AcoesModal>
     </Modal>
   )
 }
@@ -212,24 +216,25 @@ export function ConfirmarAcaoUsuario({ usuario, acao, onFechar, onFeito, onDesat
 
   return (
     <Modal titulo={acao === "desativar" ? "Desativar usuário?" : "Excluir usuário?"} onFechar={onFechar} ocupado={enviando}>
-      <p className="text-sm text-slate-600 mb-4">
+      <p>
         {acao === "desativar" ? (
-          <><strong>{usuario.nome}</strong> perde o acesso imediatamente e as sessões abertas são encerradas. Os registros dele são mantidos; dá para reativar depois.</>
+          <><strong className="font-medium text-slate-950">{usuario.nome}</strong> perde o acesso imediatamente e as sessões abertas são encerradas. Os registros dele são mantidos; dá para reativar depois.</>
         ) : (
-          <><strong>{usuario.nome}</strong> será apagado definitivamente. Quem já importou lotes ou criou regras não pode ser excluído — nesse caso, desative.</>
+          <><strong className="font-medium text-slate-950">{usuario.nome}</strong> será apagado definitivamente. Quem já importou lotes ou criou regras não pode ser excluído; nesse caso, desative.</>
         )}
       </p>
-      {erro && <div className="mb-4"><AvisoErro mensagem={erro.message} /></div>}
-      <div className="flex justify-end gap-2">
+      {erro && <div className="mt-4"><AvisoErro mensagem={erro.message} /></div>}
+      <AcoesModal>
         <button onClick={onFechar} disabled={enviando} className={BOTAO_SECUNDARIO}>Cancelar</button>
         {comVinculos ? (
           usuario.ativo && onDesativarEmVez && <button onClick={onDesativarEmVez} className={BOTAO_PRIMARIO}>Desativar em vez disso</button>
         ) : (
           <button onClick={confirmar} disabled={enviando} className={acao === "excluir" ? BOTAO_PERIGO : BOTAO_PRIMARIO}>
-            {enviando ? "Aguarde..." : acao === "desativar" ? "Desativar" : "Excluir definitivamente"}
+            {enviando && <Spinner />}
+            {enviando ? (acao === "desativar" ? "Desativando..." : "Excluindo...") : acao === "desativar" ? "Desativar" : "Excluir definitivamente"}
           </button>
         )}
-      </div>
+      </AcoesModal>
     </Modal>
   )
 }

@@ -1,8 +1,19 @@
 // Log de auditoria (UC07-A5 / RF11): exclusivo do administrador.
 
 import { useState } from "react"
-import { inputClasse } from "../components/estilos"
-import { AvisoErro, Painel, Spinner } from "../components/ui"
+import { CONTEUDO, ID, inputClasse, PAGINA, ROTULO, TABELA, TBODY, TD, TH, THEAD } from "../components/estilos"
+import {
+  AvisoErro,
+  BOTAO_FANTASMA_P,
+  BOTAO_SECUNDARIO_P,
+  CabecalhoPagina,
+  Contagem,
+  EsqueletoTabela,
+  Paginacao,
+  Painel,
+  Selecao,
+  Vazio,
+} from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import * as fmt from "../lib/formatos"
 import type { LogAuditoria, Pagina, UsuarioGerenciado } from "../lib/tipos"
@@ -45,117 +56,133 @@ export default function Auditoria() {
   }
 
   return (
-    <div className="p-4 md:p-6 xl:p-8 overflow-y-auto h-full bg-slate-50 font-sans space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Auditoria</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Quem fez o quê e quando: logins, gestão de usuários, régua e ações sobre devedores. Somente leitura.
-        </p>
-      </div>
+    <div className={PAGINA}>
+      <div className={CONTEUDO}>
+        <CabecalhoPagina
+          titulo="Auditoria"
+          descricao="Quem fez o quê e quando: logins, gestão de usuários, régua e ações sobre devedores. Somente leitura."
+        />
 
-      {/* --- FILTROS --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 items-end">
-        <label className="block">
-          <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Usuário</span>
-          <select value={usuarioId} onChange={filtro(setUsuarioId)} className={inputClasse()}>
-            <option value="">Todos</option>
-            {usuarios.dados?.itens.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
-          </select>
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Ação</span>
-          <select value={acao} onChange={filtro(setAcao)} className={inputClasse()}>
-            <option value="">Todas</option>
-            {Object.entries(NOME_ACAO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Entidade</span>
-          <select value={entidade} onChange={filtro(setEntidade)} className={inputClasse()}>
-            <option value="">Todas</option>
-            {Object.entries(NOME_ENTIDADE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">De</span>
-          <input type="date" value={de} max={ate || fmt.hojeISO()} onChange={filtro(setDe)} className={inputClasse(periodoInvalido ? "x" : null)} />
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Até</span>
-          <input type="date" value={ate} min={de || undefined} max={fmt.hojeISO()} onChange={filtro(setAte)} className={inputClasse(periodoInvalido ? "x" : null)} />
-        </label>
-      </div>
-      <div className="flex items-center gap-4 -mt-2">
-        {periodoInvalido && <p className="text-xs font-medium text-rose-600">A data inicial é depois da final: o filtro de período foi ignorado.</p>}
-        {filtrando && <button onClick={limpar} className="text-xs font-bold text-slate-500 hover:text-black">Limpar filtros</button>}
-      </div>
+        {consulta.erro && <AvisoErro mensagem={`Não foi possível carregar a auditoria: ${consulta.erro}`} onTentarNovamente={consulta.recarregar} />}
 
-      {consulta.erro && <AvisoErro mensagem={`Não foi possível carregar a auditoria: ${consulta.erro}`} onTentarNovamente={consulta.recarregar} />}
-
-      <Painel
-        titulo={<>Registros {dados && <span className="font-mono text-slate-400">({fmt.numero(dados.total)})</span>}</>}
-        subtitulo="Mais recentes primeiro. Datas no horário de Brasília."
-        acao={<button onClick={consulta.recarregar} className="px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50">Atualizar</button>}
-      >
-        {!dados && consulta.carregando ? (
-          <div className="px-6 py-10 flex justify-center gap-2 text-sm text-slate-500"><Spinner /> Carregando...</div>
-        ) : dados && dados.itens.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm font-medium text-slate-400">
-            {filtrando ? "Nenhum registro com os filtros aplicados." : "Nenhum registro de auditoria ainda."}
-          </p>
-        ) : dados ? (
-          <div className={`overflow-x-auto transition-opacity ${consulta.carregando ? "opacity-60" : ""}`}>
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50/50">
-                <tr>
-                  {["Data e hora", "Usuário", "Ação", "Entidade", "Registro", "IP"].map((h) => (
-                    <th key={h} className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {dados.itens.map((l) => (
-                  <tr key={l.id} className="hover:bg-slate-50/80">
-                    <td className="px-6 py-3 font-mono text-xs text-slate-600">{fmt.dataHora(l.criado_em)}</td>
-                    <td className="px-6 py-3">
-                      {l.usuario_nome ? (
-                        <>
-                          <p className="text-[13px] font-semibold text-slate-800 max-w-[220px] truncate">{l.usuario_nome}</p>
-                          <p className="font-mono text-[11px] text-slate-400">{l.usuario_email}</p>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-400" title="Login com e-mail não cadastrado ou usuário que foi excluído">
-                          Sem usuário vinculado
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className={`text-xs font-semibold ${ACOES_ALERTA.has(l.acao) ? "text-rose-600" : "text-slate-700"}`}>
-                        {NOME_ACAO[l.acao] ?? l.acao}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-xs text-slate-600">{l.entidade ? (NOME_ENTIDADE[l.entidade] ?? l.entidade) : "—"}</td>
-                    <td className="px-6 py-3 font-mono text-[11px] text-slate-400" title={l.entidade_id ?? undefined}>
-                      {l.entidade_id ? `${l.entidade_id.slice(0, 8)}…` : "—"}
-                    </td>
-                    <td className="px-6 py-3 font-mono text-[11px] text-slate-500">{l.ip ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-
-        {dados && dados.total > POR_PAGINA && (
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
-            <span>Página {pagina + 1} de {totalPaginas}</span>
-            <div className="flex gap-2">
-              <button onClick={() => setPagina((p) => p - 1)} disabled={pagina === 0} className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">← Anterior</button>
-              <button onClick={() => setPagina((p) => p + 1)} disabled={pagina + 1 >= totalPaginas} className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">Próxima →</button>
+        <Painel
+          titulo={<>Registros {dados && <Contagem valor={fmt.numero(dados.total)} />}</>}
+          subtitulo="Mais recentes primeiro. Datas no horário de Brasília."
+          acao={<button onClick={consulta.recarregar} className={BOTAO_SECUNDARIO_P}>Atualizar</button>}
+        >
+          {/* --- FILTROS --- */}
+          <div className="px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 items-end">
+              <label className="block">
+                <span className={ROTULO}>Usuário</span>
+                <Selecao value={usuarioId} onChange={filtro(setUsuarioId)}>
+                  <option value="">Todos</option>
+                  {usuarios.dados?.itens.map((u) => <option key={u.id} value={u.id}>{u.nome}</option>)}
+                </Selecao>
+              </label>
+              <label className="block">
+                <span className={ROTULO}>Ação</span>
+                <Selecao value={acao} onChange={filtro(setAcao)}>
+                  <option value="">Todas</option>
+                  {Object.entries(NOME_ACAO).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </Selecao>
+              </label>
+              <label className="block">
+                <span className={ROTULO}>Entidade</span>
+                <Selecao value={entidade} onChange={filtro(setEntidade)}>
+                  <option value="">Todas</option>
+                  {Object.entries(NOME_ENTIDADE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </Selecao>
+              </label>
+              <label className="block">
+                <span className={ROTULO}>De</span>
+                <input type="date" value={de} max={ate || fmt.hojeISO()} onChange={filtro(setDe)} className={inputClasse(periodoInvalido ? "x" : null)} />
+              </label>
+              <label className="block">
+                <span className={ROTULO}>Até</span>
+                <input type="date" value={ate} min={de || undefined} max={fmt.hojeISO()} onChange={filtro(setAte)} className={inputClasse(periodoInvalido ? "x" : null)} />
+              </label>
             </div>
+            {(periodoInvalido || filtrando) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+                {periodoInvalido && <p className="text-xs font-medium text-rose-700">A data inicial é depois da final: o filtro de período foi ignorado.</p>}
+                {filtrando && <button onClick={limpar} className={`-ml-3 ${BOTAO_FANTASMA_P}`}>Limpar filtros</button>}
+              </div>
+            )}
           </div>
-        )}
-      </Painel>
+
+          {!dados && consulta.carregando ? (
+            <EsqueletoTabela rotulo="Carregando registros" />
+          ) : dados && dados.itens.length === 0 ? (
+            <Vazio
+              titulo={filtrando ? "Nenhum registro encontrado" : "Nenhum registro de auditoria ainda"}
+              descricao={filtrando ? "Nenhum registro corresponde aos filtros aplicados." : undefined}
+            />
+          ) : dados ? (
+            <div className={`overflow-x-auto transition-opacity ${consulta.carregando ? "opacity-60" : ""}`}>
+              <table className={TABELA}>
+                <thead className={THEAD}>
+                  <tr>
+                    {["Data e hora", "Usuário", "Ação", "Entidade", "Registro", "IP"].map((h) => (
+                      <th key={h} className={TH}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className={TBODY}>
+                  {dados.itens.map((l) => {
+                    const alerta = ACOES_ALERTA.has(l.acao)
+                    return (
+                      <tr key={l.id}>
+                        <td className={`${TD} text-slate-500`}>{fmt.dataHora(l.criado_em)}</td>
+                        <td className={TD}>
+                          {l.usuario_nome ? (
+                            <>
+                              <p className="font-medium text-slate-950 max-w-[220px] truncate">{l.usuario_nome}</p>
+                              <p className="text-xs text-slate-500">{l.usuario_email}</p>
+                            </>
+                          ) : (
+                            <span className="text-slate-500" title="Login com e-mail não cadastrado ou usuário que foi excluído">
+                              Sem usuário vinculado
+                            </span>
+                          )}
+                        </td>
+                        <td className={TD}>
+                          {/* Ações sensíveis: cor + ícone (nunca só a cor) */}
+                          <span className={`inline-flex items-center gap-1.5 ${alerta ? "font-medium text-rose-800" : "text-slate-800"}`}>
+                            {alerta && (
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-label="Ação sensível">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.5m0 3.5h.01M10.3 4.2L2.6 17.5A2 2 0 004.3 20.5h15.4a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0z" />
+                              </svg>
+                            )}
+                            {NOME_ACAO[l.acao] ?? l.acao}
+                          </span>
+                        </td>
+                        <td className={TD}>{l.entidade ? (NOME_ENTIDADE[l.entidade] ?? l.entidade) : "—"}</td>
+                        <td className={`${TD} ${ID}`} title={l.entidade_id ?? undefined}>
+                          {l.entidade_id ? `${l.entidade_id.slice(0, 8)}…` : "—"}
+                        </td>
+                        <td className={`${TD} ${ID}`}>{l.ip ?? "—"}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+
+          {dados && dados.total > POR_PAGINA && (
+            <Paginacao
+              inicio={fmt.numero(pagina * POR_PAGINA + 1)}
+              fim={fmt.numero(pagina * POR_PAGINA + dados.itens.length)}
+              total={fmt.numero(dados.total)}
+              pagina={pagina}
+              totalPaginas={totalPaginas}
+              onAnterior={() => setPagina((p) => p - 1)}
+              onProxima={() => setPagina((p) => p + 1)}
+            />
+          )}
+        </Painel>
+      </div>
     </div>
   )
 }

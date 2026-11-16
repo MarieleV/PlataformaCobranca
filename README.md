@@ -1,10 +1,10 @@
 <h1 align="center">
-  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+cobran%C3%A7a+multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
+  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+Cobran%C3%A7a+Multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
 </h1>
 
 <p align="center">
   SaaS B2B de cobrança automatizada: importação em lote, régua de cobrança e disparo por e-mail, SMS e WhatsApp.<br/>
-  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC · em parceria com a <strong>Consulth</strong>
+  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC
 </p>
 
 <p align="center">
@@ -456,6 +456,12 @@ Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE
 
 <p align="center">
   <sub>Desenvolvido por <strong>Mariele Vieira</strong> como Trabalho de Conclusão de Curso - Engenharia de Software, Católica SC, em parceria com a Consulth · 2026</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/MarieleV">← Voltar ao perfil</a> ·
+  <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
+  <a href="mailto:silvamariele797@gmail.com">E-mail</a>
 </p>
 
 <p align="center">

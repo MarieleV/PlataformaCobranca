@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
-import { AvisoErro, IconeDownload, Spinner } from "../components/ui"
+import { CONTEUDO, PAGINA, SUPERFICIE } from "../components/estilos"
+import { Aviso, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, BOTAO_SECUNDARIO_P, CabecalhoPagina, IconeDownload, Spinner } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
@@ -79,157 +80,184 @@ export default function ImportarLote({ onVerRelatorio }: ImportarLoteProps) {
     if (arquivo) void enviar(arquivo)
   }
 
+  // Etapa atual para o indicador: 0 enviando, 1 validando, 2 concluído (ou recusado)
+  const etapa = enviando ? 0 : !loteId ? null : lote && !emAndamento(lote) ? 2 : 1
+
   return (
-    <div className="p-4 md:p-6 xl:p-8 overflow-y-auto h-full bg-slate-50 font-sans">
+    <div className={PAGINA}>
+      <div className={CONTEUDO}>
+        <CabecalhoPagina
+          titulo="Importar lote de devedores"
+          descricao="Envie uma planilha CSV ou Excel. O processamento acontece em segundo plano e você acompanha o progresso aqui."
+        />
 
-      {/* --- HEADER --- */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Importar Lote de Devedores
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Envie uma planilha CSV ou Excel. O processamento acontece em segundo plano e você acompanha o progresso aqui.
-        </p>
-      </div>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* --- ÁREA PRINCIPAL --- */}
+          <div className="xl:col-span-7 space-y-4">
+            {etapa !== null && <Etapas atual={etapa} falhou={lote?.status === "erro"} />}
 
-        {/* --- ÁREA PRINCIPAL --- */}
-        <div className="lg:col-span-7 space-y-4">
-          {erroEnvio && <AvisoErro mensagem={erroEnvio} />}
-
-          {enviando ? (
-            <CardEnviando nomeArquivo={nomeArquivo} />
-          ) : loteId ? (
-            <CardAcompanhamento
-              loteId={loteId}
-              nomeArquivo={nomeArquivo}
-              lote={lote}
-              erroConsulta={consulta.erro}
-              onVerRelatorio={() => onVerRelatorio(loteId)}
-              onNovo={recomecar}
-            />
-          ) : (
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="Selecionar arquivo para importar"
-              className={`rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer p-10 bg-white border-2 border-dashed shadow-sm shadow-slate-200/50 min-h-[320px] outline-none focus-visible:ring-4 focus-visible:ring-black/10 ${
-                arrastando
-                  ? "border-blue-600 bg-blue-50/40"
-                  : "border-slate-300 hover:border-slate-400"
-              }`}
-              onDragOver={(e) => { e.preventDefault(); setArrastando(true) }}
-              onDragLeave={() => setArrastando(false)}
-              onDrop={handleDrop}
-              onClick={() => inputRef.current?.click()}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
-            >
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 shadow-sm shadow-slate-200/50">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </div>
-              <p className="font-bold text-slate-900 text-base mb-1">
-                Arraste o arquivo aqui
-              </p>
-              <p className="text-sm text-slate-500 mb-6">
-                ou clique para selecionar do computador
-              </p>
-              <span className="font-mono text-xs font-semibold text-slate-400 bg-slate-100 px-3 py-1 rounded-md">
-                CSV · XLSX · XLS · até {fmt.numero(MAXIMO_REGISTROS)} registros · {TAMANHO_MAXIMO_MB} MB
-              </span>
-              <input
-                ref={inputRef}
-                type="file"
-                accept={EXTENSOES_ACEITAS.join(",")}
-                className="hidden"
-                onChange={handleFileChange}
+            {enviando ? (
+              <CardEnviando nomeArquivo={nomeArquivo} />
+            ) : loteId ? (
+              <CardAcompanhamento
+                loteId={loteId}
+                nomeArquivo={nomeArquivo}
+                lote={lote}
+                erroConsulta={consulta.erro}
+                onVerRelatorio={() => onVerRelatorio(loteId)}
+                onNovo={recomecar}
               />
-            </div>
-          )}
-        </div>
-
-        {/* --- COLUNAS E REGRAS --- */}
-        <div className="lg:col-span-5 space-y-6">
-
-          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm shadow-slate-200/50">
-            <h2 className="font-bold text-slate-900 text-base mb-4">
-              Colunas da planilha
-            </h2>
-            <div className="space-y-3">
-              {COLUNAS_OBRIGATORIAS.map((c) => (
-                <LinhaColuna key={c.coluna} coluna={c.coluna} descricao={c.descricao} />
-              ))}
-            </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-5 mb-3">Opcionais</p>
-            <div className="space-y-3">
-              {COLUNAS_OPCIONAIS.map((c) => (
-                <LinhaColuna key={c.coluna} coluna={c.coluna} descricao={c.descricao} opcional />
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-white p-6 border border-slate-200/60 shadow-sm shadow-slate-200/50">
-            <h2 className="font-bold text-slate-900 text-base mb-4">
-              Regras de validação
-            </h2>
-            <div className="space-y-2.5">
-              {[
-                "Uma linha com qualquer campo inválido é rejeitada inteira; as demais são importadas.",
-                "CPF/CNPJ precisa ter dígito verificador válido.",
-                "CPF/CNPJ repetido no mesmo arquivo: vale a primeira ocorrência, as outras são rejeitadas.",
-                "CPF/CNPJ que já está na base atualiza o devedor (exceto quitado, que é rejeitado).",
-                "Telefone e WhatsApp são opcionais, mas se preenchidos precisam de DDD + número.",
-                "Arquivo com coluna obrigatória faltando é recusado inteiro.",
-              ].map((r, i) => (
-                <div key={i} className="flex items-start gap-2.5">
-                  <span className="text-amber-500 font-bold text-sm flex-shrink-0">·</span>
-                  <p className="text-xs text-slate-600 leading-relaxed">{r}</p>
+            ) : (
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Selecionar arquivo para importar"
+                aria-describedby={erroEnvio ? "erro-arquivo" : undefined}
+                className={`rounded-xl flex flex-col items-center justify-center text-center transition-colors cursor-pointer px-6 py-12 border-2 border-dashed min-h-[320px] ${
+                  arrastando
+                    ? "border-tinta bg-slate-100"
+                    : erroEnvio
+                      ? "border-rose-300 bg-white hover:border-rose-400"
+                      : "border-slate-300 bg-white hover:border-slate-500 hover:bg-slate-50"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setArrastando(true) }}
+                onDragLeave={() => setArrastando(false)}
+                onDrop={handleDrop}
+                onClick={() => inputRef.current?.click()}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click() } }}
+              >
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors ${
+                    arrastando ? "bg-tinta text-white" : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
                 </div>
-              ))}
-            </div>
+                <p className="font-medium text-slate-950 text-base">
+                  {arrastando ? "Solte para enviar" : "Arraste a planilha para cá"}
+                </p>
+                <p className="text-sm text-slate-500 mt-1 mb-5">
+                  ou <span className="font-medium text-slate-800 underline underline-offset-2">escolha um arquivo</span> no computador
+                </p>
+                <p className="text-xs text-slate-500">
+                  CSV, XLSX ou XLS, até {fmt.numero(MAXIMO_REGISTROS)} registros e {TAMANHO_MAXIMO_MB} MB
+                </p>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept={EXTENSOES_ACEITAS.join(",")}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            )}
+
+            {erroEnvio && (
+              <div id="erro-arquivo">
+                <Aviso tipo="erro">
+                  <span className="font-medium">Arquivo recusado.</span> {erroEnvio}
+                </Aviso>
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={baixarPlanilhaModelo}
-            className="w-full py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold font-mono transition-all shadow-sm shadow-slate-200/50 flex items-center justify-center gap-2"
-          >
-            <span className="text-slate-500"><IconeDownload /></span>
-            Baixar planilha modelo (.csv)
-          </button>
+          {/* --- COLUNAS E REGRAS --- */}
+          <div className="xl:col-span-5 space-y-4">
 
+            <section className={`${SUPERFICIE} p-5 sm:p-6`}>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <h2 className="text-base font-semibold text-slate-950">Colunas da planilha</h2>
+                <button onClick={baixarPlanilhaModelo} className={BOTAO_SECUNDARIO_P}>
+                  <IconeDownload />
+                  Planilha modelo
+                </button>
+              </div>
+              <p className="text-[13px] font-medium text-slate-700 mb-2">Obrigatórias</p>
+              <dl className="space-y-2.5">
+                {COLUNAS_OBRIGATORIAS.map((c) => (
+                  <LinhaColuna key={c.coluna} coluna={c.coluna} descricao={c.descricao} />
+                ))}
+              </dl>
+              <p className="text-[13px] font-medium text-slate-700 mt-5 mb-2">Opcionais</p>
+              <dl className="space-y-2.5">
+                {COLUNAS_OPCIONAIS.map((c) => (
+                  <LinhaColuna key={c.coluna} coluna={c.coluna} descricao={c.descricao} />
+                ))}
+              </dl>
+            </section>
+
+            <section className={`${SUPERFICIE} p-5 sm:p-6`}>
+              <h2 className="text-base font-semibold text-slate-950 mb-3">Regras de validação</h2>
+              <ul className="space-y-2 list-disc pl-4 marker:text-slate-300">
+                {[
+                  "Uma linha com qualquer campo inválido é rejeitada inteira; as demais são importadas.",
+                  "CPF/CNPJ precisa ter dígito verificador válido.",
+                  "CPF/CNPJ repetido no mesmo arquivo: vale a primeira ocorrência, as outras são rejeitadas.",
+                  "CPF/CNPJ que já está na base atualiza o devedor (exceto quitado, que é rejeitado).",
+                  "Telefone e WhatsApp são opcionais, mas se preenchidos precisam de DDD + número.",
+                  "Arquivo com coluna obrigatória faltando é recusado inteiro.",
+                ].map((r, i) => (
+                  <li key={i} className="text-[13px] text-slate-600 leading-relaxed pl-1">{r}</li>
+                ))}
+              </ul>
+            </section>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function LinhaColuna({ coluna, descricao, opcional = false }: { coluna: string; descricao: string; opcional?: boolean }) {
+const ETAPAS = ["Enviar arquivo", "Validar e importar", "Concluído"]
+
+/** Indicador das três etapas de um lote. */
+function Etapas({ atual, falhou }: { atual: number; falhou: boolean }) {
   return (
-    <div className="flex items-start gap-3">
-      <span
-        className={`font-mono text-xs font-semibold px-2 py-0.5 rounded border flex-shrink-0 mt-0.5 ${
-          opcional ? "text-slate-500 bg-slate-50 border-slate-200" : "text-blue-600 bg-blue-50 border-blue-100"
-        }`}
-      >
-        {coluna}
-      </span>
-      <p className="text-xs text-slate-600 leading-relaxed">{descricao}</p>
+    <ol className="flex items-center gap-2 text-[13px]" aria-label="Etapas da importação">
+      {ETAPAS.map((nome, i) => {
+        const feita = i < atual || (i === atual && i === ETAPAS.length - 1 && !falhou)
+        const erro = falhou && i === ETAPAS.length - 1
+        const corrente = i === atual && !feita && !erro
+        return (
+          <li key={nome} className="flex items-center gap-2 min-w-0" aria-current={i === atual ? "step" : undefined}>
+            {i > 0 && <span className={`w-6 sm:w-10 h-px ${i <= atual ? "bg-slate-500" : "bg-slate-200"}`} aria-hidden="true" />}
+            <span
+              className={`w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center text-xs font-medium ${
+                erro ? "bg-rose-600 text-white" : feita ? "bg-tinta text-white" : corrente ? "border-2 border-tinta text-slate-950" : "border border-slate-300 text-slate-400"
+              }`}
+            >
+              {erro ? "!" : feita ? "✓" : corrente ? <Spinner className="h-3 w-3" /> : i + 1}
+            </span>
+            <span className={`truncate ${erro ? "text-rose-800 font-medium" : i <= atual ? "text-slate-950" : "text-slate-400"}`}>
+              {erro ? "Recusado" : nome}
+            </span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+function LinhaColuna({ coluna, descricao }: { coluna: string; descricao: string }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,9rem)_1fr] gap-3 items-baseline">
+      <dt className="font-mono text-xs text-slate-950 truncate" title={coluna}>{coluna}</dt>
+      <dd className="text-[13px] text-slate-600 leading-relaxed">{descricao}</dd>
     </div>
   )
 }
 
-const CARD = "rounded-2xl bg-white p-8 flex flex-col items-center justify-center text-center border shadow-sm shadow-slate-200/50 min-h-[320px]"
+const CARD = `${SUPERFICIE} px-6 py-10 flex flex-col items-center justify-center text-center min-h-[320px]`
 
 function CardEnviando({ nomeArquivo }: { nomeArquivo: string }) {
   return (
-    <div className={`${CARD} border-slate-200/60`}>
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-2">
-        <Spinner className="h-4 w-4 text-blue-600" />
-        Enviando arquivo...
-      </div>
-      <p className="font-bold text-slate-900 text-base break-all">{nomeArquivo}</p>
+    <div className={CARD} role="status">
+      <Spinner className="h-6 w-6 text-slate-900 mb-4" />
+      <p className="text-sm text-slate-500 mb-1">Enviando arquivo...</p>
+      <p className="font-medium text-slate-950 text-base break-all">{nomeArquivo}</p>
     </div>
   )
 }
@@ -253,39 +281,40 @@ function CardAcompanhamento({ loteId, nomeArquivo, lote, erroConsulta, onVerRela
   const progresso = lote?.progresso_percentual ?? 0
   const status = lote ? fmt.STATUS_LOTE[lote.status].texto : "Na fila"
   return (
-    <div className={`${CARD} border-slate-200/60`}>
-      <div className="flex items-center gap-2 font-mono text-xs font-semibold text-slate-500 mb-2">
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-        </span>
-        {status}...
-      </div>
-      <p className="font-bold text-slate-900 text-base mb-6 break-all">{lote?.nome_arquivo ?? nomeArquivo}</p>
+    <div className={CARD} role="status">
+      <p className="text-sm text-slate-500 mb-1">{status}...</p>
+      <p className="font-medium text-slate-950 text-base mb-6 break-all">{lote?.nome_arquivo ?? nomeArquivo}</p>
 
-      <div className="w-full max-w-sm space-y-2">
-        <div className="flex justify-between text-xs font-mono">
-          <span className="font-semibold text-slate-500">Validação e importação</span>
-          <span className="font-bold text-blue-600">{progresso}%</span>
+      <div className="w-full max-w-sm">
+        <div className="flex justify-between text-[13px] mb-1.5">
+          <span className="text-slate-500">Validação e importação</span>
+          <span className="font-medium text-slate-950">{progresso}%</span>
         </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
-          <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${progresso}%` }} />
+        <div
+          className="h-2 bg-slate-100 rounded-full overflow-hidden"
+          role="progressbar"
+          aria-valuenow={progresso}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Progresso do lote"
+        >
+          <div className="h-full bg-tinta rounded-full transition-[width] duration-500" style={{ width: `${progresso}%` }} />
         </div>
       </div>
 
       {lote && lote.total_registros > 0 && (
-        <p className="font-mono text-xs text-slate-500 mt-6">
+        <p className="text-[13px] text-slate-500 mt-4">
           {fmt.numero(lote.total_importados + lote.total_atualizados + lote.total_rejeitados)} de{" "}
           {fmt.numero(lote.total_registros)} linhas analisadas
         </p>
       )}
       {erroConsulta && (
-        <p className="text-xs font-medium text-amber-600 mt-4">
+        <p className="text-[13px] text-amber-800 mt-4">
           Não foi possível consultar o progresso ({erroConsulta}). Tentando de novo...
         </p>
       )}
-      <p className="text-xs text-slate-400 mt-6 max-w-sm">
-        Pode sair desta tela: o processamento continua e o resultado fica no Relatório.
+      <p className="text-xs text-slate-500 mt-6 max-w-sm">
+        Pode sair desta tela: o processamento continua e o resultado fica no relatório de validação.
       </p>
     </div>
   )
@@ -293,9 +322,9 @@ function CardAcompanhamento({ loteId, nomeArquivo, lote, erroConsulta, onVerRela
 
 function Numero({ rotulo, valor, cor }: { rotulo: string; valor: number; cor: string }) {
   return (
-    <div className="px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
-      <p className={`text-xl font-bold ${cor}`}>{fmt.numero(valor)}</p>
-      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{rotulo}</p>
+    <div className="px-4 py-3 text-left">
+      <dt className="text-[13px] text-slate-500">{rotulo}</dt>
+      <dd className={`mt-0.5 text-2xl font-semibold tracking-tight ${cor}`}>{fmt.numero(valor)}</dd>
     </div>
   )
 }
@@ -303,45 +332,37 @@ function Numero({ rotulo, valor, cor }: { rotulo: string; valor: number; cor: st
 function CardConcluido({ lote, onVerRelatorio, onNovo }: { lote: Lote; onVerRelatorio: () => void; onNovo: () => void }) {
   const comRejeicao = lote.total_rejeitados > 0
   return (
-    <div className={`${CARD} ${comRejeicao ? "border-amber-200" : "border-emerald-200"}`}>
+    <div className={CARD}>
       <div
-        className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 shadow-sm shadow-slate-200/50 ${
-          comRejeicao ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
+        className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+          comRejeicao ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
         }`}
       >
-        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+          {comRejeicao
+            ? <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v5m0 4h.01" />
+            : <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />}
         </svg>
       </div>
 
-      <p className="font-bold text-slate-900 text-xl mb-1">
-        {comRejeicao ? "Arquivo processado com rejeições" : "Arquivo processado!"}
+      <p className="font-semibold text-slate-950 text-lg">
+        {comRejeicao ? "Arquivo processado com rejeições" : "Arquivo processado"}
       </p>
-      <p className="text-sm text-slate-500 mb-6 font-medium break-all">
-        {lote.nome_arquivo} · <span className="font-mono text-slate-700 font-bold">{fmt.numero(lote.total_registros)} registros analisados</span>
+      <p className="text-sm text-slate-500 mt-1 mb-6 break-all">
+        {lote.nome_arquivo}: {fmt.numero(lote.total_registros)} registros analisados
       </p>
 
-      <div className="grid grid-cols-3 gap-3 w-full max-w-md mb-8">
-        <Numero rotulo="Novos" valor={lote.total_importados} cor="text-emerald-600" />
-        <Numero rotulo="Atualizados" valor={lote.total_atualizados} cor="text-blue-600" />
-        <Numero rotulo="Rejeitados" valor={lote.total_rejeitados} cor={comRejeicao ? "text-rose-600" : "text-slate-400"} />
-      </div>
+      <dl className="grid grid-cols-3 divide-x divide-slate-200 w-full max-w-md mb-8 rounded-lg border border-slate-200">
+        <Numero rotulo="Novos" valor={lote.total_importados} cor="text-slate-950" />
+        <Numero rotulo="Atualizados" valor={lote.total_atualizados} cor="text-slate-950" />
+        <Numero rotulo="Rejeitados" valor={lote.total_rejeitados} cor={comRejeicao ? "text-rose-700" : "text-slate-400"} />
+      </dl>
 
-      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-        <button
-          onClick={onVerRelatorio}
-          className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${
-            comRejeicao
-              ? "bg-black hover:bg-slate-900 text-white shadow-sm shadow-black/10"
-              : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm shadow-slate-200/50"
-          }`}
-        >
+      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
+        <button onClick={onVerRelatorio} className={`flex-1 ${comRejeicao ? BOTAO_PRIMARIO : BOTAO_SECUNDARIO}`}>
           {comRejeicao ? "Ver linhas rejeitadas" : "Ver relatório"}
         </button>
-        <button
-          onClick={onNovo}
-          className="px-5 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm shadow-slate-200/50"
-        >
+        <button onClick={onNovo} className={`flex-1 ${comRejeicao ? BOTAO_SECUNDARIO : BOTAO_PRIMARIO}`}>
           Importar outro arquivo
         </button>
       </div>
@@ -358,36 +379,30 @@ function CardErro({ loteId, lote, onVerRelatorio, onNovo }: {
 }) {
   const { dados: erros } = useApi<ErroLote[]>(`/lotes/${loteId}/erros?limit=5`)
   return (
-    <div className={`${CARD} border-rose-200`}>
-      <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4">
-        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+    <div className={CARD}>
+      <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-700 flex items-center justify-center mb-4">
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </div>
-      <p className="font-bold text-slate-900 text-xl mb-1">O arquivo não pôde ser importado</p>
-      <p className="text-sm text-slate-500 mb-4 font-medium break-all">{lote.nome_arquivo}</p>
+      <p className="font-semibold text-slate-950 text-lg">O arquivo não pôde ser importado</p>
+      <p className="text-sm text-slate-500 mt-1 mb-5 break-all">{lote.nome_arquivo}</p>
 
       {erros && erros.length > 0 && (
-        <ul className="mb-8 space-y-1.5 text-sm text-rose-700 font-medium">
+        <ul className="mb-8 w-full max-w-md text-left rounded-lg border border-rose-200 bg-rose-50 divide-y divide-rose-100">
           {erros.map((e) => (
-            <li key={e.id}>
-              {NOME_CAMPO[e.campo] ?? e.campo}: {e.regra_violada}
+            <li key={e.id} className="px-4 py-2.5 text-[13px] text-rose-800">
+              <span className="font-medium">{NOME_CAMPO[e.campo] ?? e.campo}:</span> {e.regra_violada}
             </li>
           ))}
         </ul>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-        <button
-          onClick={onNovo}
-          className="flex-1 py-3 rounded-xl bg-black hover:bg-slate-900 text-white font-semibold text-sm transition-all shadow-sm shadow-black/10"
-        >
+      <div className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
+        <button onClick={onNovo} className={`flex-1 ${BOTAO_PRIMARIO}`}>
           Enviar outro arquivo
         </button>
-        <button
-          onClick={onVerRelatorio}
-          className="px-5 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition-all shadow-sm shadow-slate-200/50"
-        >
+        <button onClick={onVerRelatorio} className={`flex-1 ${BOTAO_SECUNDARIO}`}>
           Ver relatório
         </button>
       </div>

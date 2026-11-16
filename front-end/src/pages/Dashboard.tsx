@@ -9,7 +9,8 @@ import {
   YAxis,
 } from "recharts"
 import type { Page } from "../auth/permissoes"
-import { AvisoErro, Badge, Painel } from "../components/ui"
+import { PAGINA, CONTEUDO, SUPERFICIE, TABELA, TBODY, TD, TD_NUM, TH, TH_NUM, THEAD, TR_CLICAVEL } from "../components/estilos"
+import { AvisoErro, Badge, BOTAO_SECUNDARIO_P, CabecalhoPagina, Painel, Vazio } from "../components/ui"
 import { useApi } from "../hooks/useApi"
 import { dependenciasFora, useSaude } from "../hooks/useSaude"
 import * as fmt from "../lib/formatos"
@@ -18,11 +19,12 @@ import type { Dashboard as DadosDashboard, Job, Saude } from "../lib/tipos"
 const PERIODOS = [7, 15, 30] as const
 const ATUALIZAR_A_CADA_MS = 60_000
 
-// Cores do gráfico por desfecho da comunicação
+// Cores do gráfico por desfecho. Sucesso é o estado normal (tinta); só a falha ganha cor.
+// Tinta x vermelho separa bem também para daltonismo (verde x vermelho não separava).
 const CORES = {
-  sucesso: "#10b981", // emerald-500
-  falhas: "#f43f5e", // rose-500
-  aguardando: "#cbd5e1", // slate-300
+  sucesso: "#334155", // slate-700
+  falhas: "#e11d48", // rose-600
+  aguardando: "#94a3b8", // slate-400
 }
 
 // Nomes curtos para o selo do cabeçalho (o Monitoramento usa os longos de useSaude)
@@ -48,60 +50,60 @@ export default function Dashboard({ onNavigate, onAbrirLote, onAbrirJob }: Dashb
   )
 
   return (
-    <div className="p-4 md:p-6 xl:p-8 overflow-y-auto h-full bg-slate-50 font-sans space-y-6">
-
-      {/* --- HEADER --- */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Dashboard Geral
-          </h1>
-          <p className="text-sm text-slate-500 mt-1 first-letter:uppercase">
-            {fmt.dataLonga(new Date())} · Disparos automáticos de seg. a sex., das 8h às 19h
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <SeletorPeriodo valor={dias} onChange={setDias} />
-          <StatusSistema />
-        </div>
-      </div>
-
-      {erro && (
-        <AvisoErro
-          mensagem={
+    <div className={PAGINA}>
+      <div className={CONTEUDO}>
+        <CabecalhoPagina
+          titulo="Dashboard"
+          descricao={
+            <span className="inline-block first-letter:uppercase">
+              {fmt.dataLonga(new Date())}. Disparos automáticos de segunda a sexta, das 8h às 19h55.
+            </span>
+          }
+          acoes={
             <>
-              {dados ? "Não foi possível atualizar os dados: " : "Não foi possível carregar o dashboard: "}
-              <span className="font-medium">{erro}</span>
+              <StatusSistema />
+              <SeletorPeriodo valor={dias} onChange={setDias} />
             </>
           }
-          onTentarNovamente={recarregar}
         />
-      )}
 
-      {!dados ? (
-        carregando ? <Esqueleto /> : null
-      ) : (
-        <div className={`space-y-6 transition-opacity ${carregando ? "opacity-60" : ""}`}>
-          <Kpis dados={dados} />
+        {erro && (
+          <AvisoErro
+            mensagem={
+              <>
+                {dados ? "Não foi possível atualizar os dados: " : "Não foi possível carregar o dashboard: "}
+                {erro}
+              </>
+            }
+            onTentarNovamente={recarregar}
+          />
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <GraficoTimeline dados={dados} />
-            <DistribuicaoCanais dados={dados} />
+        {!dados ? (
+          carregando ? <Esqueleto /> : null
+        ) : (
+          <div className={`space-y-6 transition-opacity ${carregando ? "opacity-60" : ""}`}>
+            <Kpis dados={dados} />
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <GraficoTimeline dados={dados} />
+              <DistribuicaoCanais dados={dados} />
+            </div>
+
+            <TabelaLotes dados={dados} onNavigate={onNavigate} onAbrirLote={onAbrirLote} />
+            <TabelaJobs dados={dados} onNavigate={onNavigate} onAbrirJob={onAbrirJob} />
+
+            {atualizadoEm && (
+              <p className="text-center text-xs text-slate-500">
+                Atualizado às {fmt.hora(atualizadoEm)}. Os dados se renovam a cada minuto.{" "}
+                <button onClick={recarregar} className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-950">
+                  Atualizar agora
+                </button>
+              </p>
+            )}
           </div>
-
-          <TabelaLotes dados={dados} onNavigate={onNavigate} onAbrirLote={onAbrirLote} />
-          <TabelaJobs dados={dados} onNavigate={onNavigate} onAbrirJob={onAbrirJob} />
-
-          {atualizadoEm && (
-            <p className="text-center text-[11px] font-mono text-slate-400">
-              Atualizado às {fmt.hora(atualizadoEm)} · atualiza sozinho a cada minuto ·{" "}
-              <button onClick={recarregar} className="underline hover:text-slate-700">
-                atualizar agora
-              </button>
-            </p>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -110,14 +112,14 @@ export default function Dashboard({ onNavigate, onAbrirLote, onAbrirJob }: Dashb
 
 function SeletorPeriodo({ valor, onChange }: { valor: number; onChange: (d: number) => void }) {
   return (
-    <div className="inline-flex p-1 rounded-xl bg-white border border-slate-200/80 shadow-sm" role="group" aria-label="Período">
+    <div className="inline-flex h-10 p-1 rounded-lg bg-slate-100" role="group" aria-label="Período">
       {PERIODOS.map((p) => (
         <button
           key={p}
           onClick={() => onChange(p)}
           aria-pressed={valor === p}
-          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-            valor === p ? "bg-black text-white" : "text-slate-500 hover:text-slate-900"
+          className={`px-3 rounded-md text-[13px] font-medium transition-colors ${
+            valor === p ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"
           }`}
         >
           {p} dias
@@ -141,101 +143,92 @@ function StatusSistema() {
       : `Instável: ${fora.map((d) => NOME_DEPENDENCIA[d]).join(", ")}`
 
   return (
-    <div
-      className={`inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border ${
-        ok ? "bg-emerald-50 border-emerald-200" : "bg-rose-50 border-rose-200"
+    <span
+      className={`inline-flex items-center gap-2 h-8 px-3 rounded-full text-[13px] ${
+        ok ? "text-slate-600" : "bg-rose-50 text-rose-800 font-medium"
       }`}
       role="status"
     >
-      <span className="relative flex h-2.5 w-2.5">
-        {ok && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-        <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${ok ? "bg-emerald-500" : "bg-rose-500"}`}></span>
-      </span>
-      <span className={`text-xs font-semibold tracking-wide uppercase ${ok ? "text-emerald-700" : "text-rose-700"}`}>
-        {texto}
-      </span>
-    </div>
+      <span className={`w-2 h-2 rounded-full ${ok ? "bg-emerald-500" : "bg-rose-600"}`} aria-hidden="true" />
+      {texto}
+    </span>
   )
 }
 
 // --- KPIs -------------------------------------------------------------------
 
+/** Faixa única com os quatro indicadores, separados por linhas (não quatro cards soltos). */
 function Kpis({ dados }: { dados: DadosDashboard }) {
   const { base, hoje, periodo } = dados
   const taxa = periodo.taxa_entrega
   const meta = periodo.meta_taxa_entrega
-  const corTaxa = taxa === null ? "text-slate-500" : taxa >= meta ? "text-emerald-600" : "text-amber-600"
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      <CardKpi
+    <section aria-label="Indicadores" className={`${SUPERFICIE} grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 overflow-hidden`}>
+      <Kpi
         titulo="Devedores na base"
         valor={fmt.numero(base.total)}
-        icone={ICONES.devedores}
-        corIcone="bg-blue-50 text-blue-600"
         rodape={
-          <span className="text-slate-500">
-            {fmt.numero(base.por_status.ativo)} ativos · {fmt.numero(base.por_status.negociando)} negociando ·{" "}
+          <>
+            {fmt.numero(base.por_status.ativo)} ativos, {fmt.numero(base.por_status.negociando)} negociando,{" "}
             {fmt.numero(base.por_status.quitado)} quitados
-          </span>
+          </>
         }
       />
-      <CardKpi
+      <Kpi
         titulo="Disparos hoje"
         valor={fmt.numero(hoje.disparos)}
-        icone={ICONES.disparos}
-        corIcone="bg-violet-50 text-violet-600"
-        rodape={
-          <span className="text-slate-500">
-            {fmt.numero(hoje.sucesso)} com sucesso · {fmt.numero(hoje.aguardando)} aguardando
-          </span>
-        }
+        rodape={<>{fmt.numero(hoje.sucesso)} com sucesso, {fmt.numero(hoje.aguardando)} aguardando</>}
       />
-      <CardKpi
-        titulo={`Taxa de entrega · ${dados.dias}d`}
+      <Kpi
+        titulo={`Taxa de entrega em ${dados.dias} dias`}
         valor={fmt.percentual(taxa)}
-        icone={ICONES.entrega}
-        corIcone="bg-emerald-50 text-emerald-600"
+        sinal={taxa === null ? undefined : taxa >= meta ? "bom" : "atencao"}
         rodape={
-          <span className={corTaxa}>
-            {taxa === null
-              ? "Sem disparos no período"
-              : taxa >= meta
-                ? `Dentro da meta de ${fmt.percentual(meta)}`
-                : `Abaixo da meta de ${fmt.percentual(meta)}`}
-          </span>
+          taxa === null
+            ? "Sem disparos no período"
+            : taxa >= meta
+              ? `Dentro da meta de ${fmt.percentual(meta)}`
+              : `Abaixo da meta de ${fmt.percentual(meta)}`
         }
       />
-      <CardKpi
-        titulo={`Falhas / bounces · ${dados.dias}d`}
+      <Kpi
+        titulo={`Falhas e bounces em ${dados.dias} dias`}
         valor={fmt.numero(periodo.falhas)}
-        icone={ICONES.falhas}
-        corIcone="bg-rose-50 text-rose-600"
-        rodape={
-          <span className={hoje.falhas > 0 ? "text-rose-600" : "text-slate-500"}>
-            {fmt.numero(hoje.falhas)} hoje · falhas definitivas, sem novo reenvio
-          </span>
-        }
+        sinal={hoje.falhas > 0 ? "ruim" : undefined}
+        rodape={<>{fmt.numero(hoje.falhas)} hoje. Falhas definitivas, sem novo reenvio.</>}
       />
-    </div>
+    </section>
   )
 }
 
-function CardKpi({ titulo, valor, icone, corIcone, rodape }: {
+const SINAL = {
+  bom: { cor: "text-emerald-800", d: "M5 13l4 4L19 7" },
+  atencao: { cor: "text-amber-800", d: "M12 8v5m0 4h.01" },
+  ruim: { cor: "text-rose-800", d: "M12 8v5m0 4h.01" },
+} as const
+
+function Kpi({ titulo, valor, rodape, sinal }: {
   titulo: string
   valor: string
-  icone: ReactNode
-  corIcone: string
   rodape: ReactNode
+  /** Estado do indicador: dá cor e ícone ao rodapé (nunca só a cor). */
+  sinal?: keyof typeof SINAL
 }) {
+  const estilo = sinal ? SINAL[sinal] : null
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
-      <div className="flex items-start justify-between mb-4">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{titulo}</p>
-        <div className={`p-2 rounded-lg ${corIcone}`}>{icone}</div>
-      </div>
-      <p className="text-3xl font-bold text-slate-900 mb-1">{valor}</p>
-      <p className="text-xs font-medium">{rodape}</p>
+    // As linhas entre os indicadores: -ml/-mt de 1px escondem a borda que encosta na lateral do painel
+    <div className="px-5 py-5 sm:px-6 -ml-px -mt-px border-l border-t border-slate-200">
+      <p className="text-[13px] text-slate-500">{titulo}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{valor}</p>
+      <p className={`mt-2 flex items-start gap-1.5 text-[13px] ${estilo ? `${estilo.cor} font-medium` : "text-slate-500"}`}>
+        {estilo && (
+          <svg className="w-4 h-4 mt-px flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d={estilo.d} />
+          </svg>
+        )}
+        <span>{rodape}</span>
+      </p>
     </div>
   )
 }
@@ -252,13 +245,17 @@ function TooltipDia({ active, payload, label }: { active?: boolean; payload?: It
   if (!active || !payload?.length) return null
   const total = payload.reduce((soma, p) => soma + (p.value ?? 0), 0)
   return (
-    <div className="bg-white border border-slate-200 p-3 rounded-lg shadow-lg shadow-slate-200/50">
-      <p className="text-xs font-semibold text-slate-500 mb-2">{label} · {fmt.numero(total)} disparos</p>
+    <div className="bg-white border border-slate-200 px-3 py-2.5 rounded-lg shadow-lg shadow-slate-950/10 min-w-[160px]">
+      <p className="text-xs text-slate-500 mb-1.5">
+        {label}: <span className="font-medium text-slate-800">{fmt.numero(total)} disparos</span>
+      </p>
       <div className="space-y-1">
-        {payload.map((p) => (
-          <p key={p.name} className="text-sm font-medium flex items-center gap-2 text-slate-700">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-            {p.name}: <span className="font-bold">{fmt.numero(p.value ?? 0)}</span>
+        {/* Ordem do empilhamento invertida: o topo da barra aparece primeiro */}
+        {[...payload].reverse().map((p) => (
+          <p key={p.name} className="text-[13px] flex items-center gap-2 text-slate-600">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
+            <span className="flex-1">{p.name}</span>
+            <span className="font-medium text-slate-950">{fmt.numero(p.value ?? 0)}</span>
           </p>
         ))}
       </div>
@@ -276,12 +273,12 @@ function GraficoTimeline({ dados }: { dados: DadosDashboard }) {
   const vazio = dados.timeline.every((p) => p.disparos === 0)
 
   return (
-    <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+    <section className={`xl:col-span-2 ${SUPERFICIE} p-5 sm:p-6`}>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-5 gap-3">
         <div>
-          <h2 className="text-base font-bold text-slate-900">Volume de disparos</h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Todos os canais, por dia · {fmt.data(dados.data_inicial)} a {fmt.data(dados.data_final)}
+          <h2 className="text-base font-semibold text-slate-950">Volume de disparos</h2>
+          <p className="text-[13px] text-slate-500 mt-0.5">
+            Todos os canais, por dia, de {fmt.data(dados.data_inicial)} a {fmt.data(dados.data_final)}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -293,34 +290,35 @@ function GraficoTimeline({ dados }: { dados: DadosDashboard }) {
 
       <div className="relative h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={pontos} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-            <XAxis dataKey="dia" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} dy={10} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} dx={-10} />
+          <BarChart data={pontos} margin={{ top: 8, right: 4, left: -20, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="#eef2f6" />
+            <XAxis dataKey="dia" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={{ stroke: "#e2e8f0" }} tickLine={false} dy={8} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} dx={-6} />
             {!vazio && <Tooltip content={<TooltipDia />} cursor={{ fill: "#f1f5f9" }} />}
-            <Bar dataKey="sucesso" name="Sucesso" stackId="d" fill={CORES.sucesso} maxBarSize={40} />
-            <Bar dataKey="falhas" name="Falhas" stackId="d" fill={CORES.falhas} maxBarSize={40} />
-            <Bar dataKey="aguardando" name="Aguardando" stackId="d" fill={CORES.aguardando} radius={[4, 4, 0, 0]} maxBarSize={40} />
+            {/* Contorno branco de 2px separa os segmentos empilhados */}
+            <Bar dataKey="sucesso" name="Sucesso" stackId="d" fill={CORES.sucesso} stroke="#fff" strokeWidth={2} maxBarSize={36} />
+            <Bar dataKey="falhas" name="Falhas" stackId="d" fill={CORES.falhas} stroke="#fff" strokeWidth={2} maxBarSize={36} />
+            <Bar dataKey="aguardando" name="Aguardando" stackId="d" fill={CORES.aguardando} stroke="#fff" strokeWidth={2} radius={[4, 4, 0, 0]} maxBarSize={36} />
           </BarChart>
         </ResponsiveContainer>
         {vazio && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="px-4 py-2 rounded-xl bg-white/90 border border-slate-200 text-sm font-medium text-slate-500">
+            <p className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-[13px] text-slate-600">
               Nenhum disparo nos últimos {dados.dias} dias
             </p>
           </div>
         )}
       </div>
-    </div>
+    </section>
   )
 }
 
 function Legenda({ cor, texto }: { cor: string; texto: string }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cor }} />
-      <span className="text-xs font-medium text-slate-600">{texto}</span>
-    </div>
+    <span className="flex items-center gap-1.5 text-[13px] text-slate-600">
+      <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: cor }} />
+      {texto}
+    </span>
   )
 }
 
@@ -331,48 +329,42 @@ function DistribuicaoCanais({ dados }: { dados: DadosDashboard }) {
   const { periodo } = dados
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 flex flex-col">
-      <h2 className="text-base font-bold text-slate-900">Distribuição por canal</h2>
-      <p className="text-xs text-slate-500 mt-1 mb-6">Disparos e taxa de entrega nos últimos {dados.dias} dias</p>
+    <section className={`${SUPERFICIE} p-5 sm:p-6 flex flex-col`}>
+      <h2 className="text-base font-semibold text-slate-950">Distribuição por canal</h2>
+      <p className="text-[13px] text-slate-500 mt-0.5 mb-6">Disparos e taxa de entrega nos últimos {dados.dias} dias</p>
 
       <div className="space-y-5 flex-1">
         {dados.por_canal.map((c) => {
           const fatia = total > 0 ? (c.disparos / total) * 100 : 0
           return (
             <div key={c.canal}>
-              <div className="flex items-baseline justify-between mb-2">
-                <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: fmt.COR_CANAL[c.canal] }} />
-                  {fmt.NOME_CANAL[c.canal]}
-                </span>
-                <span className="text-xs text-slate-500">
-                  <span className="font-mono font-semibold text-slate-800">{fmt.numero(c.disparos)}</span> disparos ·{" "}
-                  <span className="font-mono font-semibold text-slate-800">{fmt.percentual(c.taxa_entrega)}</span> entrega
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <span className="text-sm font-medium text-slate-800">{fmt.NOME_CANAL[c.canal]}</span>
+                <span className="text-[13px] text-slate-500 text-right">
+                  <span className="font-medium text-slate-950">{fmt.numero(c.disparos)}</span> disparos,{" "}
+                  <span className="font-medium text-slate-950">{fmt.percentual(c.taxa_entrega)}</span> entrega
                 </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${fatia}%`, backgroundColor: fmt.COR_CANAL[c.canal] }}
-                />
+              <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden" aria-hidden="true">
+                <div className="h-full rounded-full bg-slate-700 transition-[width] duration-500" style={{ width: `${fatia}%` }} />
               </div>
             </div>
           )
         })}
       </div>
 
-      <div className="mt-6 pt-5 border-t border-slate-100">
+      <div className="mt-6 pt-5 border-t border-slate-200">
         <div className="flex items-baseline justify-between">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Conversão</span>
-          <span className="text-xl font-bold text-slate-900">{fmt.percentual(periodo.taxa_conversao)}</span>
+          <span className="text-[13px] text-slate-500">Conversão</span>
+          <span className="text-2xl font-semibold tracking-tight text-slate-950">{fmt.percentual(periodo.taxa_conversao)}</span>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-[13px] text-slate-500 mt-1">
           {periodo.devedores_alcancados > 0
             ? `${fmt.numero(periodo.devedores_quitados)} de ${fmt.numero(periodo.devedores_alcancados)} devedores alcançados já estão quitados`
             : "Nenhum devedor alcançado no período"}
         </p>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -380,39 +372,34 @@ function DistribuicaoCanais({ dados }: { dados: DadosDashboard }) {
 
 function BotaoAtalho({ texto, onClick }: { texto: string; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="text-xs font-bold text-slate-600 hover:text-black px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
-    >
-      {texto} →
+    <button onClick={onClick} className={BOTAO_SECUNDARIO_P}>
+      {texto}
     </button>
   )
 }
 
-function Tabela({ colunas, vazio, children }: { colunas: string[]; vazio: string | null; children: ReactNode }) {
-  if (vazio) {
-    return <p className="px-6 py-10 text-center text-sm font-medium text-slate-400">{vazio}</p>
-  }
+interface Coluna {
+  titulo: string
+  numero?: boolean
+}
+
+function Tabela({ colunas, vazio, children }: { colunas: Coluna[]; vazio: ReactNode; children: ReactNode }) {
+  if (vazio) return vazio
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm whitespace-nowrap">
-        <thead className="bg-slate-50/50">
+      <table className={TABELA}>
+        <thead className={THEAD}>
           <tr>
-            {colunas.map((h) => (
-              <th key={h} className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                {h}
-              </th>
+            {colunas.map((c) => (
+              <th key={c.titulo} className={c.numero ? TH_NUM : TH}>{c.titulo}</th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">{children}</tbody>
+        <tbody className={TBODY}>{children}</tbody>
       </table>
     </div>
   )
 }
-
-const TD = "px-6 py-4"
-const TD_NUM = "px-6 py-4 text-slate-600 font-mono text-xs"
 
 function TabelaLotes({ dados, onNavigate, onAbrirLote }: {
   dados: DadosDashboard
@@ -423,38 +410,35 @@ function TabelaLotes({ dados, onNavigate, onAbrirLote }: {
   return (
     <Painel
       titulo="Últimos lotes importados"
-      subtitulo={onAbrirLote && lotes.length > 0 ? "Clique em um lote para ver o relatório de validação" : undefined}
+      subtitulo={onAbrirLote && lotes.length > 0 ? "Clique em um lote para ver o relatório de validação." : undefined}
       acao={onNavigate && <BotaoAtalho texto="Importar lote" onClick={() => onNavigate("importar")} />}
     >
       <Tabela
-        colunas={["Arquivo", "Status", "Registros", "Importados", "Atualizados", "Rejeitados", "Enviado em"]}
-        vazio={lotes.length === 0 ? "Nenhum lote importado ainda." : null}
+        colunas={[
+          { titulo: "Arquivo" }, { titulo: "Status" }, { titulo: "Registros", numero: true },
+          { titulo: "Importados", numero: true }, { titulo: "Atualizados", numero: true },
+          { titulo: "Rejeitados", numero: true }, { titulo: "Enviado em" },
+        ]}
+        vazio={lotes.length === 0 ? <Vazio titulo="Nenhum lote importado ainda" descricao="Os lotes enviados aparecem aqui com o resultado da validação." /> : null}
       >
         {lotes.map((lote) => {
           const status = fmt.STATUS_LOTE[lote.status]
           const emAndamento = lote.status === "pendente" || lote.status === "processando"
           return (
-            <tr
-              key={lote.id}
-              onClick={onAbrirLote && (() => onAbrirLote(lote.id))}
-              className={`hover:bg-slate-50/80 transition-colors ${onAbrirLote ? "cursor-pointer" : ""}`}
-            >
-              <td className={`${TD} font-medium text-slate-800 max-w-[280px] truncate`} title={lote.nome_arquivo}>
+            <tr key={lote.id} onClick={onAbrirLote && (() => onAbrirLote(lote.id))} className={onAbrirLote ? TR_CLICAVEL : ""}>
+              <td className={`${TD} font-medium text-slate-950 max-w-[280px] truncate`} title={lote.nome_arquivo}>
                 {lote.nome_arquivo}
               </td>
               <td className={TD}>
-                <Badge
-                  texto={emAndamento ? `${status.texto} · ${lote.progresso_percentual}%` : status.texto}
-                  classe={status.classe}
-                />
+                <Badge texto={emAndamento ? `${status.texto}, ${lote.progresso_percentual}%` : status.texto} classe={status.classe} />
               </td>
               <td className={TD_NUM}>{fmt.numero(lote.total_registros)}</td>
               <td className={TD_NUM}>{fmt.numero(lote.total_importados)}</td>
               <td className={TD_NUM}>{fmt.numero(lote.total_atualizados)}</td>
-              <td className={`${TD_NUM} ${lote.total_rejeitados > 0 ? "text-rose-600 font-semibold" : ""}`}>
+              <td className={`${TD_NUM} ${lote.total_rejeitados > 0 ? "text-rose-700 font-medium" : ""}`}>
                 {fmt.numero(lote.total_rejeitados)}
               </td>
-              <td className="px-6 py-4 text-slate-500 font-mono text-xs">{fmt.dataHora(lote.criado_em)}</td>
+              <td className={`${TD} text-slate-500`}>{fmt.dataHora(lote.criado_em)}</td>
             </tr>
           )
         })}
@@ -477,53 +461,46 @@ function TabelaJobs({ dados, onNavigate, onAbrirJob }: {
   return (
     <Painel
       titulo="Últimos jobs da régua"
-      subtitulo={onAbrirJob && jobs.length > 0 ? "Clique em um job para ver as comunicações" : undefined}
-      acao={onNavigate && <BotaoAtalho texto="Monitoramento" onClick={() => onNavigate("monitoramento")} />}
+      subtitulo={onAbrirJob && jobs.length > 0 ? "Clique em um job para ver as comunicações." : undefined}
+      acao={onNavigate && <BotaoAtalho texto="Abrir monitoramento" onClick={() => onNavigate("monitoramento")} />}
     >
       <Tabela
-        colunas={["Regra", "Canal", "Dia de referência", "Status", "Alvos", "Sucesso", "Falhas", "Taxa", "Início"]}
-        vazio={jobs.length === 0 ? "Nenhum job executado ainda. Ative uma regra na Régua de Cobrança." : null}
+        colunas={[
+          { titulo: "Regra" }, { titulo: "Canal" }, { titulo: "Dia de referência" }, { titulo: "Status" },
+          { titulo: "Alvos", numero: true }, { titulo: "Sucesso", numero: true }, { titulo: "Falhas", numero: true },
+          { titulo: "Taxa", numero: true }, { titulo: "Início" },
+        ]}
+        vazio={jobs.length === 0 ? <Vazio titulo="Nenhum job executado ainda" descricao="Ative uma regra na régua de cobrança para começar os disparos." /> : null}
       >
         {jobs.map((job) => {
           const status = fmt.STATUS_JOB[job.status]
           const taxa = taxaDoJob(job)
           return (
-            <tr
-              key={job.id}
-              onClick={onAbrirJob && (() => onAbrirJob(job.id))}
-              className={`hover:bg-slate-50/80 transition-colors ${onAbrirJob ? "cursor-pointer" : ""}`}
-            >
-              <td className={`${TD} font-medium text-slate-800 max-w-[260px] truncate`} title={job.regra_nome}>
+            <tr key={job.id} onClick={onAbrirJob && (() => onAbrirJob(job.id))} className={onAbrirJob ? TR_CLICAVEL : ""}>
+              <td className={`${TD} font-medium text-slate-950 max-w-[260px] truncate`} title={job.regra_nome}>
                 {job.regra_nome}
               </td>
-              <td className={TD}>
-                <span className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: fmt.COR_CANAL[job.canal] }} />
-                  {fmt.NOME_CANAL[job.canal]}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-slate-500 font-mono text-xs">{fmt.data(job.dia_referencia)}</td>
+              <td className={TD}>{fmt.NOME_CANAL[job.canal]}</td>
+              <td className={`${TD} text-slate-500`}>{fmt.data(job.dia_referencia)}</td>
               <td className={TD}>
                 <Badge
-                  texto={job.status === "executando" ? `${status.texto} · ${job.progresso_percentual}%` : status.texto}
+                  texto={job.status === "executando" ? `${status.texto}, ${job.progresso_percentual}%` : status.texto}
                   classe={status.classe}
                 />
               </td>
               <td className={TD_NUM}>{fmt.numero(job.total_alvos)}</td>
               <td className={TD_NUM}>{fmt.numero(job.total_sucesso)}</td>
-              <td className={`${TD_NUM} ${job.total_falhas > 0 ? "text-rose-600 font-semibold" : ""}`}>
+              <td className={`${TD_NUM} ${job.total_falhas > 0 ? "text-rose-700 font-medium" : ""}`}>
                 {fmt.numero(job.total_falhas)}
               </td>
-              <td className={TD}>
-                <span
-                  className={`font-mono text-xs font-semibold ${
-                    taxa === null ? "text-slate-400" : taxa >= dados.periodo.meta_taxa_entrega ? "text-emerald-600" : "text-amber-600"
-                  }`}
-                >
-                  {fmt.percentual(taxa)}
-                </span>
+              <td
+                className={`${TD_NUM} font-medium ${
+                  taxa === null ? "text-slate-400" : taxa >= dados.periodo.meta_taxa_entrega ? "text-emerald-800" : "text-amber-800"
+                }`}
+              >
+                {fmt.percentual(taxa)}
               </td>
-              <td className="px-6 py-4 text-slate-500 font-mono text-xs">{fmt.dataHora(job.inicio_em ?? job.criado_em)}</td>
+              <td className={`${TD} text-slate-500`}>{fmt.dataHora(job.inicio_em ?? job.criado_em)}</td>
             </tr>
           )
         })}
@@ -535,43 +512,15 @@ function TabelaJobs({ dados, onNavigate, onAbrirJob }: {
 // --- Carregando ---------------------------------------------------------------
 
 function Esqueleto() {
+  const bloco = "bg-white rounded-xl border border-slate-200"
   return (
-    <div className="space-y-6 animate-pulse" aria-label="Carregando dashboard">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-[148px] bg-white rounded-2xl border border-slate-200/60" />
-        ))}
+    <div className="space-y-6 animate-pulse" role="status" aria-label="Carregando dashboard">
+      <div className={`${bloco} h-[132px]`} />
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className={`xl:col-span-2 h-[380px] ${bloco}`} />
+        <div className={`h-[380px] ${bloco}`} />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-[380px] bg-white rounded-2xl border border-slate-200/60" />
-        <div className="h-[380px] bg-white rounded-2xl border border-slate-200/60" />
-      </div>
-      <div className="h-[240px] bg-white rounded-2xl border border-slate-200/60" />
+      <div className={`h-[240px] ${bloco}`} />
     </div>
   )
-}
-
-// --- Ícones -------------------------------------------------------------------
-
-const ICONES = {
-  devedores: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-    </svg>
-  ),
-  disparos: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    </svg>
-  ),
-  entrega: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  falhas: (
-    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  ),
 }
