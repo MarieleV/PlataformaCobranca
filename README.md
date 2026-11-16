@@ -463,3 +463,13 @@ Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE
   <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
   <a href="mailto:silvamariele797@gmail.com">E-mail</a>
 </p>
+
+<p align="center">
+  <a href="https://github.com/MarieleV">← Voltar ao perfil</a> ·
+  <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
+  <a href="mailto:silvamariele797@gmail.com">E-mail</a>
+</p>
+
+<div align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:334155,100:64748B&height=100&section=footer" width="100%"/>
+</div>
