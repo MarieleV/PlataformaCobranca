@@ -8,7 +8,7 @@ import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
 import { JANELA, LIMITE_POR_CANAL, trechosDoTemplate, validarRegra } from "../lib/regua"
 import type { Canal, PreviewTemplate, Regra, RegraEntrada, VariavelTemplate } from "../lib/tipos"
-import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner } from "./ui"
+import { AcoesModal, Aviso, AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner } from "./ui"
 import { inputClasse } from "./estilos"
 
 const CANAIS: Canal[] = ["email", "sms", "whatsapp"]
@@ -97,19 +97,19 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
   return (
     <Modal titulo={regra ? "Editar regra" : "Nova regra"} onFechar={onFechar} ocupado={salvando} largo>
       {regra?.ativa && (
-        <p className="mb-4 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-          Esta regra está ativa: as alterações valem a partir do próximo ciclo de disparo.
-        </p>
+        <div className="mb-5">
+          <Aviso tipo="atencao">Esta regra está ativa: as alterações valem a partir do próximo ciclo de disparo.</Aviso>
+        </div>
       )}
       {!regra && (
-        <p className="mb-4 text-xs font-medium text-slate-500">
-          A regra é criada <strong>inativa</strong>. Revise o template e ative-a na lista para começar os disparos.
+        <p className="mb-5 text-[13px] text-slate-500">
+          A regra é criada <strong className="font-medium text-slate-800">inativa</strong>. Revise o template e ative-a na lista para começar os disparos.
         </p>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* --- FORMULÁRIO --- */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <CampoForm rotulo="Nome da regra" erro={tocado ? erros.nome : undefined}>
             <input
               value={form.nome}
@@ -130,11 +130,10 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
                   role="radio"
                   aria-checked={form.canal === c}
                   onClick={() => alterar("canal", c)}
-                  className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
-                    form.canal === c ? "border-black bg-black text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+                  className={`h-10 px-3 rounded-lg border text-sm font-medium transition-colors ${
+                    form.canal === c ? "border-tinta bg-tinta text-white" : "border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50"
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: fmt.COR_CANAL[c] }} />
                   {fmt.NOME_CANAL[c]}
                 </button>
               ))}
@@ -171,17 +170,17 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
               value={form.template_mensagem}
               onChange={(e) => alterar("template_mensagem", e.target.value)}
               rows={form.canal === "email" ? 9 : 6}
-              className={`${inputClasse(erros.template_mensagem)} font-mono text-[13px] leading-relaxed resize-y`}
+              className={`${inputClasse(erros.template_mensagem)} h-auto py-2.5 font-mono text-[13px] leading-relaxed resize-y`}
             />
             <div className="flex justify-end mt-1">
-              <span className={`text-[11px] font-mono font-semibold ${form.template_mensagem.length > limite ? "text-rose-600" : "text-slate-400"}`}>
+              <span className={`text-xs ${form.template_mensagem.length > limite ? "text-rose-700 font-medium" : "text-slate-500"}`}>
                 {fmt.numero(form.template_mensagem.length)} / {fmt.numero(limite)}
               </span>
             </div>
           </CampoForm>
 
           <div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Inserir variável</p>
+            <p className="text-[13px] font-medium text-slate-700 mb-1.5">Inserir variável</p>
             {variaveis.dados ? (
               <div className="flex flex-wrap gap-1.5">
                 {variaveis.dados.map((v) => (
@@ -190,14 +189,14 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
                     type="button"
                     onClick={() => inserirVariavel(v.placeholder)}
                     title={`${v.descricao} — ex.: ${v.exemplo}`}
-                    className="px-2 py-1 rounded-md border border-blue-200 bg-blue-50 text-blue-700 font-mono text-xs font-semibold hover:bg-blue-100 transition-colors"
+                    className="h-7 px-2 rounded-md border border-slate-300 bg-white text-slate-800 font-mono text-xs hover:bg-slate-100 hover:border-slate-400 transition-colors"
                   >
                     {v.placeholder}
                   </button>
                 ))}
               </div>
             ) : variaveis.erro ? (
-              <p className="text-xs text-rose-600">Não foi possível carregar as variáveis.</p>
+              <p className="text-xs text-rose-700">Não foi possível carregar as variáveis.</p>
             ) : (
               <Spinner className="h-4 w-4 text-slate-400" />
             )}
@@ -210,11 +209,14 @@ export default function EditorRegra({ regra, onFechar, onSalvo }: EditorRegraPro
 
       {erro && <div className="mt-5"><AvisoErro mensagem={erro} /></div>}
 
-      <div className="flex justify-end gap-2 mt-6 pt-5 border-t border-slate-100">
-        <button onClick={onFechar} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
-        <button onClick={salvar} disabled={salvando || (tocado && !valido)} className={BOTAO_PRIMARIO}>
-          {salvando ? "Salvando..." : regra ? "Salvar alterações" : "Criar regra"}
-        </button>
+      <div className="mt-6 pt-1 border-t border-slate-200">
+        <AcoesModal>
+          <button onClick={onFechar} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando || (tocado && !valido)} className={BOTAO_PRIMARIO}>
+            {salvando && <Spinner />}
+            {salvando ? "Salvando..." : regra ? "Salvar alterações" : "Criar regra"}
+          </button>
+        </AcoesModal>
       </div>
     </Modal>
   )
@@ -226,7 +228,7 @@ export function TemplateDestacado({ template }: { template: string }) {
     <>
       {trechosDoTemplate(template).map((t, i) =>
         t.variavel ? (
-          <span key={i} className="text-blue-700 font-bold bg-blue-50/80 px-1 py-0.5 rounded border border-blue-200 mx-0.5">
+          <span key={i} className="font-mono text-[12px] font-medium text-slate-950 bg-white px-1 py-px rounded border border-slate-300 mx-px">
             {t.texto}
           </span>
         ) : (
@@ -275,28 +277,28 @@ function Previa({ template, canal }: { template: string; canal: Canal }) {
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-bold text-slate-700">Pré-visualização</span>
+        <span className="text-[13px] font-medium text-slate-700">Pré-visualização</span>
         {carregando && <Spinner className="h-3.5 w-3.5 text-slate-400" />}
       </div>
-      <div className="flex-1 min-h-[200px] rounded-2xl bg-slate-50 border border-slate-200 p-5">
-        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">
-          {fmt.NOME_CANAL[canal]} · com dados de exemplo
+      <div className="flex-1 min-h-[200px] rounded-lg bg-slate-50 border border-slate-200 p-5">
+        <p className="text-xs text-slate-500 mb-3">
+          {fmt.NOME_CANAL[canal]}, com dados de exemplo
         </p>
         {erro ? (
-          <p className="text-sm font-medium text-rose-600">{erro}</p>
+          <p className="text-sm text-rose-700">{erro}</p>
         ) : previa ? (
           <>
-            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words">{previa.mensagem}</p>
-            <p className={`mt-4 text-[11px] font-mono font-semibold ${previa.tamanho > previa.limite ? "text-rose-600" : "text-slate-400"}`}>
+            <p className="text-sm text-slate-900 leading-relaxed whitespace-pre-wrap break-words bg-white rounded-lg border border-slate-200 p-4">{previa.mensagem}</p>
+            <p className={`mt-3 text-xs ${previa.tamanho > previa.limite ? "text-rose-700 font-medium" : "text-slate-500"}`}>
               Mensagem final: {fmt.numero(previa.tamanho)} de {fmt.numero(previa.limite)} caracteres
-              {canal === "sms" && previa.tamanho > 160 && ` · ${Math.ceil(previa.tamanho / 160)} partes de SMS`}
+              {canal === "sms" && previa.tamanho > 160 && `, ${Math.ceil(previa.tamanho / 160)} partes de SMS`}
             </p>
           </>
         ) : (
-          <p className="text-sm text-slate-400">Escreva o template para ver como a mensagem fica.</p>
+          <p className="text-sm text-slate-500">Escreva o template para ver como a mensagem fica.</p>
         )}
       </div>
-      <p className="text-[11px] text-slate-400 mt-2">
+      <p className="text-xs text-slate-500 mt-2">
         No envio real, as variáveis são trocadas pelos dados de cada devedor.
       </p>
     </div>

@@ -9,7 +9,7 @@ import { ApiError, apiFetch } from "../lib/api"
 import type { MensagemResponse } from "../lib/tipos"
 import { validarSenha } from "../lib/usuarios"
 import CampoSenha from "./CampoSenha"
-import { AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal } from "./ui"
+import { AcoesModal, Aviso, AvisoErro, BOTAO_PRIMARIO, BOTAO_SECUNDARIO, CampoForm, Modal, Spinner } from "./ui"
 
 export default function MinhaConta({ onFechar }: { onFechar: () => void }) {
   const { usuario } = useAuth()
@@ -46,25 +46,25 @@ export default function MinhaConta({ onFechar }: { onFechar: () => void }) {
   return (
     <Modal titulo="Minha conta" onFechar={onFechar} ocupado={salvando}>
       {usuario && (
-        <div className="mb-5 p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm">
-          <p className="font-bold text-slate-900">{usuario.nome}</p>
+        <div className="mb-5 p-4 rounded-lg bg-slate-50 border border-slate-200 text-sm">
+          <p className="font-medium text-slate-950">{usuario.nome}</p>
           <p className="text-slate-500">{usuario.email}</p>
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">{NOME_PERFIL[usuario.perfil]}</p>
+          <p className="text-xs text-slate-500 mt-1">Perfil: {NOME_PERFIL[usuario.perfil]}</p>
         </div>
       )}
 
       {sucesso ? (
         <>
-          <p className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-sm font-semibold text-emerald-700" role="status">
+          <Aviso tipo="sucesso">
             Senha alterada. As sessões abertas em outros navegadores ou aparelhos foram encerradas; esta continua ativa.
-          </p>
-          <div className="flex justify-end">
+          </Aviso>
+          <AcoesModal>
             <button onClick={onFechar} className={BOTAO_PRIMARIO}>Fechar</button>
-          </div>
+          </AcoesModal>
         </>
       ) : (
         <>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Trocar senha</p>
+          <h3 className="text-sm font-semibold text-slate-950 mb-3">Trocar senha</h3>
           <div className="space-y-4">
             <CampoForm rotulo="Senha atual" erro={tocado ? erros.atual : null}>
               <CampoSenha valor={atual} onChange={setAtual} erro={tocado ? erros.atual : null} autoComplete="current-password" autoFocus />
@@ -77,12 +77,13 @@ export default function MinhaConta({ onFechar }: { onFechar: () => void }) {
             </CampoForm>
           </div>
           {erro && <div className="mt-4"><AvisoErro mensagem={erro} /></div>}
-          <div className="flex justify-end gap-2 mt-6">
+          <AcoesModal>
             <button onClick={onFechar} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
             <button onClick={salvar} disabled={salvando} className={BOTAO_PRIMARIO}>
+              {salvando && <Spinner />}
               {salvando ? "Salvando..." : "Trocar senha"}
             </button>
-          </div>
+          </AcoesModal>
         </>
       )}
     </Modal>

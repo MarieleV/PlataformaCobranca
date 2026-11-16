@@ -1,54 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import 'tailwindcss';
 
-@theme inline {
-  --font-sans: 'Inter', sans-serif;
-  --font-display: 'DM Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+/*
+ * Identidade: preto, branco e slate. A cor só aparece para dizer algo sobre a
+ * cobrança (atraso, entrega, falha, quitação) — ver STATUS_* em lib/formatos.ts.
+ */
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --color-tinta: #0a0a0a;
+  --color-papel: #f8fafc;
+  --color-linha: #e2e8f0;
 }
 
 html, body, #root {
   height: 100%;
-  /* Deixamos o controle de cor de fundo e texto para os componentes React */
-  font-family: var(--font-sans);
 }
 
-/* Scrollbar global suave ajustada para o Tema Claro (Light Mode) */
+body {
+  font-family: var(--font-sans);
+  background: var(--color-papel);
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  /* Números alinhados em colunas (R$, datas, contagens) sem precisar de fonte mono */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Foco de teclado visível e igual em todo lugar (inputs têm o próprio anel) */
+:where(button, a, [tabindex], summary):focus-visible {
+  outline: 2px solid var(--color-tinta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+tr[tabindex]:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0;
+}
+
+::selection {
+  background: #0a0a0a;
+  color: #fff;
+}
+
+/* Barra de rolagem discreta */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
 }
-
-*::-webkit-scrollbar { 
-  width: 6px; 
-  height: 6px; 
-}
-
-*::-webkit-scrollbar-track { 
-  background: transparent; 
-}
-
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(15, 23, 42, 0.3); }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+/* Entrada de painéis e modais: só em resposta a uma ação (abrir) */
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to { opacity: 1; transform: none; }
 }
-
-/* Em monitores menores que 1366px (Notebooks pequenos), reduzimos a escala global */
-@media (max-width: 1366px) {
-  html {
-    font-size: 14px; /* O padrão é 16px. Isso vai encolher tudo em cerca de 12.5% */
-  }
+@keyframes deslizar {
+  from { transform: translateX(16px); opacity: 0; }
+  to { transform: none; opacity: 1; }
 }
+@keyframes esmaecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animar-surgir { animation: surgir 160ms ease-out; }
+.animar-deslizar { animation: deslizar 200ms ease-out; }
+.animar-esmaecer { animation: esmaecer 160ms ease-out; }
 
-/* Em telas muito pequenas ou tablets */
-@media (max-width: 1024px) {
-  html {
-    font-size: 13px;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import Sidebar from "./components/Sidebar"
+import { Spinner } from "./components/ui"
 import { useAuth } from "./auth/AuthContext"
 import { PERFIS_POR_PAGINA, type Page } from "./auth/permissoes"
 import Login from "./pages/Login"
@@ -14,9 +15,9 @@ import Auditoria from "./pages/Auditoria"
 
 const pageTitles: Record<Page, string> = {
   dashboard: "Dashboard",
-  importar: "Importar Lote",
-  validacao: "Relatório de Validação",
-  regua: "Régua de Cobrança",
+  importar: "Importar lote",
+  validacao: "Relatório de validação",
+  regua: "Régua de cobrança",
   devedores: "Devedores",
   monitoramento: "Monitoramento",
   usuarios: "Usuários",
@@ -47,6 +48,9 @@ function AreaLogada() {
   }
   // Job aberto no painel do Monitoramento (null = nenhum)
   const [jobAberto, setJobAberto] = useState<string | null>(null)
+  // Menu lateral como gaveta em telas estreitas
+  const [menuAberto, setMenuAberto] = useState(false)
+  const fecharMenu = useCallback(() => setMenuAberto(false), [])
 
   const abrirJob = (jobId: string) => {
     setJobAberto(jobId)
@@ -54,37 +58,32 @@ function AreaLogada() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans select-none">
-      <Sidebar current={page} onNavigate={setPage} />
+    <div className="flex h-screen overflow-hidden bg-papel">
+      <Sidebar current={page} onNavigate={setPage} aberta={menuAberto} onFechar={fecharMenu} />
 
-      <main className="flex-1 overflow-hidden flex flex-col bg-slate-50">
+      <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
 
-        {/* --- TOP BAR --- */}
-        <div className="h-16 px-8 border-b border-slate-200/80 bg-white flex items-center justify-between flex-shrink-0 z-10">
-
-          {/* Navegação Estrutural (Breadcrumbs) */}
-          <div className="flex items-center gap-2.5 text-sm">
-            <span className="font-medium text-slate-500">
-              Plataforma
-            </span>
-            <svg className="w-3.5 h-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-black font-bold tracking-tight">
-              {pageTitles[page]}
-            </span>
+        {/* --- BARRA SUPERIOR --- */}
+        <div className="h-14 px-4 md:px-6 xl:px-8 border-b border-slate-200 bg-white flex items-center justify-between gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0 text-sm">
+            <button
+              onClick={() => setMenuAberto(true)}
+              aria-label="Abrir menu"
+              className="md:hidden -ml-1.5 w-9 h-9 inline-flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+            <span className="hidden sm:inline text-slate-500">Plataforma</span>
+            <span className="hidden sm:inline text-slate-300" aria-hidden="true">/</span>
+            <span className="font-medium text-slate-950 truncate">{pageTitles[page]}</span>
           </div>
-
-          {/* Metadados / Perfil */}
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-              Consulth Soluções
-            </span>
-          </div>
+          <span className="hidden sm:inline text-xs text-slate-400 whitespace-nowrap">Consulth Soluções</span>
         </div>
 
-        {/* --- PAGE CONTENT --- */}
-        <div className="flex-1 overflow-hidden bg-slate-50">
+        {/* --- CONTEÚDO --- */}
+        <div className="flex-1 overflow-hidden">
           {page === "dashboard" && <Dashboard onNavigate={setPage} onAbrirLote={abrirRelatorio} onAbrirJob={abrirJob} />}
           {page === "importar" && <ImportarLote onVerRelatorio={abrirRelatorio} />}
           {page === "validacao" && (
@@ -107,12 +106,9 @@ function AreaLogada() {
 
 function TelaCarregando() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">
-      <div className="flex items-center gap-3 text-sm font-semibold text-slate-500">
-        <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+    <div className="min-h-screen flex items-center justify-center bg-papel">
+      <div className="flex items-center gap-3 text-sm text-slate-500" role="status">
+        <Spinner className="h-5 w-5 text-slate-900" />
         Verificando sessão...
       </div>
     </div>

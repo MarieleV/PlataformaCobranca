@@ -29,7 +29,7 @@ export default function CampoSenha({ valor, onChange, erro, autoComplete = "new-
         <button
           type="button"
           onClick={() => setVisivel((v) => !v)}
-          className="absolute inset-y-0 right-2 my-auto h-7 px-2 rounded-md text-[11px] font-bold text-slate-500 hover:text-black hover:bg-slate-100"
+          className="absolute inset-y-0 right-1.5 my-auto h-7 px-2 rounded-md text-xs font-medium text-slate-600 hover:text-slate-950 hover:bg-slate-100"
         >
           {visivel ? "Ocultar" : "Mostrar"}
         </button>
@@ -41,7 +41,7 @@ export default function CampoSenha({ valor, onChange, erro, autoComplete = "new-
             onChange(gerarSenha())
             setVisivel(true)
           }}
-          className="px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-black whitespace-nowrap"
+          className="h-10 px-3 rounded-lg border border-slate-300 bg-white text-[13px] font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950 whitespace-nowrap"
         >
           Gerar senha
         </button>
