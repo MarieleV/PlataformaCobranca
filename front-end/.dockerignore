@@ -1,0 +1,8 @@
+# O .env local aponta para http://localhost:8000; em produção o front
+# chama a API no próprio domínio (VITE_API_URL vazio no build).
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+coverage/

@@ -1,0 +1,37 @@
+# Caddy em produção: HTTPS automático, front (dist/) e proxy da API.
+# DOMINIO vem do docker-compose (ex.: cobranca.duckdns.org). Com "localhost",
+# o Caddy usa um certificado local (o navegador avisa; serve para teste).
+{$DOMINIO:localhost} {
+	encode zstd gzip
+
+	# Rotas da API, no MESMO caminho da API (sem prefixo /api): o cookie de
+	# refresh tem path=/auth e o navegador só o envia para /auth/...
+	# /docs, /openapi.json e /metrics ficam de fora de propósito.
+	@api path /auth /auth/* /lotes /lotes/* /devedores /devedores/* /usuarios /usuarios/* /auditoria /auditoria/* /regras /regras/* /jobs /jobs/* /dashboard /dashboard/* /health
+	handle @api {
+		reverse_proxy api:8000
+	}
+
+	# Todo o resto é o front (SPA)
+	handle {
+		root * /srv
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		header /index.html Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
