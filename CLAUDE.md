@@ -11,6 +11,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - **Back-end concluído** e na `main`.
 - **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. `main` e `develop` estão no mesmo commit. Não há mais mocks nas telas.
 - **Próxima fase: as pendências do projeto** (seção "Pendências", mais abaixo), começando pelo teste real dos provedores e pelo deploy na AWS.
+- **Deploy (16/11/2026, `feature/deploy-aws`)**: arquivos prontos e testados localmente (imagem do front com Caddy, `deploy/docker-compose.prod.yml`, passo Deploy do CI); falta a Mariele provisionar a AWS seguindo `deploy/README.md`.
 
 ## Como trabalhar com a Mariele
 - Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
@@ -23,7 +24,14 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - **Validação a cada entrega:** rode você mesmo `npm run verificar` (front: lint, tipos, testes com cobertura e build) e/ou `pytest` (back), e teste chamadas reais à API (via `curl` com cookie de sessão) quando mexer em contrato. Ações destrutivas (quitar, excluir) não devem ser testadas na massa dela sem pedir. Mudou comportamento visível na tela? Atualize `front-end/ROTEIRO_TESTES.md`.
 
 ## CI/CD (já funcionando)
-`.github/workflows/ci.yml`: testes do back (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches; o Sonar só analisa `back-end/app`). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O Deploy depende dos quatro jobs e é **só um passo de aviso** (AWS ainda não feita). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset.
+`.github/workflows/ci.yml`: testes do back (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches; o Sonar só analisa `back-end/app`). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O job `Build da imagem Docker` constrói as imagens da API e do front e valida o `Caddyfile` e o `deploy/docker-compose.prod.yml`. O **Deploy** (só push na `main`, depois dos quatro jobs, ambiente `producao`) publica `ghcr.io/marielev/cobranca-api` e `cobranca-web` (tags = SHA do commit e `latest`), copia o compose para `~/cobranca/` na EC2 por SSH, roda `docker compose pull` + `up -d --wait` e testa `https://DOMINIO/health`. Segredos do ambiente `producao`: `EC2_HOST`, `EC2_USUARIO`, `EC2_CHAVE_SSH`, `EC2_KNOWN_HOSTS`; variável `DOMINIO`. Na `main` o `concurrency` não cancela execuções (deploy pela metade). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset.
+
+### Produção (`deploy/`)
+- EC2 Ubuntu 24.04 `t3.small` (+ swap de 2 GB, `deploy/preparar-ec2.sh`) com Docker Compose: `web` (Caddy), `api`, `worker`, `beat`, `redis`, `rabbitmq`. Banco no **RDS PostgreSQL 15** (`DATABASE_URL` com `?sslmode=require`, sem acesso público, SG só da EC2). Região `sa-east-1`.
+- `front-end/Dockerfile` (multi-stage: `npm run build` com `VITE_API_URL=""` → Caddy com o `dist/`). O **`front-end/Caddyfile`** serve o front e faz proxy, **no mesmo domínio e sem prefixo**, de `/auth`, `/lotes`, `/devedores`, `/usuarios`, `/auditoria`, `/regras`, `/jobs`, `/dashboard`, `/health` para `api:8000`; `/docs`, `/openapi.json` e `/metrics` não são expostos. **Rota nova na API = acrescentar o prefixo no `@api` do Caddyfile.** HTTPS automático (Let's Encrypt) para `DOMINIO`; certificados no volume `caddy_data`.
+- A API roda com `FORWARDED_ALLOW_IPS=*` (IP real do usuário para o bloqueio de login e a auditoria; seguro porque a porta 8000 não é publicada) e `--workers 2`.
+- Segredos só em `~/cobranca/.env` na EC2 (modelo `deploy/.env.example`). Rollback: `IMAGE_TAG=<sha> docker compose up -d`. Teste local da imagem do front: ver o fim de `deploy/README.md`.
+- `.gitattributes` força LF em `*.sh`, `Caddyfile` e `*.yml` (rodam em Linux).
 
 ## Back-end em uma página
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
@@ -106,9 +114,7 @@ Ordem sugerida:
 1. **Confirmar o Ruleset da `main`** com o check `Front-end (lint, tipos, testes e build)` (o job já rodou no GitHub).
 2. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente.
 3. **RF05 — filtro de devedores por canal**: implementar no back (`GET /devedores/?canal=` = tem contato para o canal) e no front, ou registrar o desvio no RFC.
-4. **Deploy na AWS** (RDS PostgreSQL, EC2) e o passo de deploy do CI. Antes, falta:
-   - **Containerizar o front** (RNF09: hoje só o back está no Compose) — ex.: Dockerfile multi-stage (build do Vite + Nginx servindo `dist/`), com `VITE_API_URL` definido no build.
-   - Configuração de produção: HTTPS, `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `CORS_ORIGINS` com o domínio real, `COOKIE_SAMESITE` adequado (front e API no mesmo site evita `none`), segredos fora do repositório, senha do admin trocada.
+4. **Deploy na AWS** (RDS PostgreSQL, EC2): código pronto (ver "Produção (`deploy/`)"). Falta provisionar seguindo `deploy/README.md` (security groups, RDS, EC2 + Elastic IP, domínio, `.env` na EC2, ambiente `producao` no GitHub, pacotes do GHCR públicos após o 1º deploy, seed do admin) e registrar os resultados (URL, prints) na documentação do TCC.
 5. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana).
 6. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 7. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
