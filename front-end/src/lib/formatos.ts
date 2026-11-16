@@ -46,7 +46,12 @@ export function telefone(digitos: string | null): string {
 
 /** Cor do atraso (Tailwind): D+60 vermelho, D+30 âmbar, menos que isso neutro. */
 export function corAtraso(dias: number): string {
-  return dias >= 60 ? "text-rose-600" : dias >= 30 ? "text-amber-600" : "text-slate-700"
+  return dias >= 60 ? "text-rose-700" : dias >= 30 ? "text-amber-700" : "text-slate-700"
+}
+
+/** Cor de fundo da marca de atraso (mesma faixa de corAtraso), para a régua visual. */
+export function fundoAtraso(dias: number): string {
+  return dias >= 60 ? "bg-rose-600" : dias >= 30 ? "bg-amber-500" : dias > 0 ? "bg-slate-500" : "bg-slate-300"
 }
 
 /** 2847 -> "2.847" */
@@ -115,12 +120,6 @@ export const NOME_CANAL: Record<Canal, string> = {
   whatsapp: "WhatsApp",
 }
 
-/** Cores fixas por canal (hex, para o Recharts) — as mesmas em todas as telas. */
-export const COR_CANAL: Record<Canal, string> = {
-  email: "#2563eb", // blue-600
-  sms: "#8b5cf6", // violet-500
-  whatsapp: "#10b981", // emerald-500
-}
 
 interface Rotulo {
   texto: string
@@ -128,11 +127,14 @@ interface Rotulo {
   classe: string
 }
 
-const VERDE = "bg-emerald-50 text-emerald-700 border-emerald-200"
-const AZUL = "bg-blue-50 text-blue-700 border-blue-200"
-const CINZA = "bg-slate-50 text-slate-600 border-slate-200"
-const VERMELHO = "bg-rose-50 text-rose-700 border-rose-200"
-const AMARELO = "bg-amber-50 text-amber-700 border-amber-200"
+// Cor só para estado: verde = resolvido/sucesso, âmbar = atenção, vermelho = falha,
+// azul = em andamento/em cobrança, violeta = já comunicado, cinza = neutro/parado.
+const VERDE = "bg-emerald-50 text-emerald-800"
+const AZUL = "bg-blue-50 text-blue-800"
+const CINZA = "bg-slate-100 text-slate-700"
+const VERMELHO = "bg-rose-50 text-rose-800"
+const AMARELO = "bg-amber-50 text-amber-900"
+const VIOLETA = "bg-violet-50 text-violet-800"
 
 export const STATUS_LOTE: Record<StatusLote, Rotulo> = {
   pendente: { texto: "Na fila", classe: CINZA },
@@ -150,7 +152,7 @@ export const STATUS_JOB: Record<StatusJob, Rotulo> = {
 
 export const STATUS_DEVEDOR: Record<StatusDevedor, Rotulo & { descricao: string }> = {
   ativo: { texto: "Ativo", classe: AZUL, descricao: "Em cobrança: a régua envia mensagens." },
-  comunicado: { texto: "Comunicado", classe: "bg-violet-50 text-violet-700 border-violet-200", descricao: "Já recebeu comunicação; continua na régua." },
+  comunicado: { texto: "Comunicado", classe: VIOLETA, descricao: "Já recebeu comunicação; continua na régua." },
   negociando: { texto: "Negociando", classe: AMARELO, descricao: "Em negociação; a régua para de enviar mensagens." },
   quitado: { texto: "Quitado", classe: VERDE, descricao: "Dívida paga. Definitivo: não pode ser reaberto." },
   inativo: { texto: "Inativo", classe: CINZA, descricao: "Fora da cobrança; a régua não envia mensagens." },

@@ -9,13 +9,18 @@ import { useApi } from "../hooks/useApi"
 import { ApiError, apiFetch } from "../lib/api"
 import * as fmt from "../lib/formatos"
 import type { Comunicacao, Devedor, StatusDevedor } from "../lib/tipos"
+import { ID, inputClasse } from "./estilos"
 import {
+  AcoesModal,
   AvisoErro,
+  BOTAO_FANTASMA_P,
   BOTAO_PERIGO,
   BOTAO_PRIMARIO,
   BOTAO_SECUNDARIO,
   Badge,
+  IconeFechar,
   Modal,
+  Selecao,
   Spinner,
 } from "./ui"
 import { useFecharComEsc } from "../hooks/useFecharComEsc"
@@ -46,21 +51,20 @@ export default function DetalheDevedor({ devedorId, onFechar, onAlterado, onExcl
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/30" onClick={onFechar} />
+      <div className="absolute inset-0 bg-slate-950/40 animar-esmaecer" onClick={onFechar} />
       <aside
         role="dialog"
         aria-modal="true"
         aria-label="Detalhe do devedor"
-        className="relative w-full max-w-xl h-full bg-slate-50 shadow-2xl flex flex-col"
+        className="relative w-full max-w-xl h-full bg-papel shadow-2xl shadow-slate-950/20 flex flex-col animar-deslizar"
       >
         {/* Cabeçalho */}
         <div className="px-6 py-5 bg-white border-b border-slate-200 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Devedor</p>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight truncate">{devedor?.nome ?? "Carregando..."}</h2>
+            <h2 className="text-lg font-semibold text-slate-950 tracking-tight truncate">{devedor?.nome ?? "Carregando..."}</h2>
             {devedor && (
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <span className="font-mono text-xs text-slate-500">
+                <span className={ID}>
                   {devedor.cpf_cnpj.length === 14 ? "CNPJ" : "CPF"} {fmt.documento(devedor.cpf_cnpj)}
                 </span>
                 <Badge texto={fmt.STATUS_DEVEDOR[devedor.status].texto} classe={fmt.STATUS_DEVEDOR[devedor.status].classe} />
@@ -70,21 +74,19 @@ export default function DetalheDevedor({ devedorId, onFechar, onAlterado, onExcl
           <button
             onClick={onFechar}
             aria-label="Fechar"
-            className="p-2 -mr-2 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="w-8 h-8 -mr-2 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-slate-950 hover:bg-slate-100 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <IconeFechar />
           </button>
         </div>
 
         {/* Conteúdo */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {detalhe.erro && !devedor ? (
             <AvisoErro mensagem={`Não foi possível carregar o devedor: ${detalhe.erro}`} onTentarNovamente={detalhe.recarregar} />
           ) : !devedor ? (
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-              <Spinner /> Carregando...
+            <div className="flex items-center gap-2 text-sm text-slate-500" role="status">
+              <Spinner /> Carregando devedor...
             </div>
           ) : (
             <>
@@ -111,8 +113,8 @@ export default function DetalheDevedor({ devedorId, onFechar, onAlterado, onExcl
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
-    <section className="bg-white rounded-2xl border border-slate-200/60 shadow-sm shadow-slate-200/50 p-5">
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">{titulo}</h3>
+    <section className="bg-white rounded-xl border border-slate-200 p-5">
+      <h3 className="text-sm font-semibold text-slate-950 mb-4">{titulo}</h3>
       {children}
     </section>
   )
@@ -121,8 +123,8 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 function Campo({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{rotulo}</dt>
-      <dd className="text-sm font-medium text-slate-900 mt-0.5 break-words">{children}</dd>
+      <dt className="text-[13px] text-slate-500">{rotulo}</dt>
+      <dd className="text-sm text-slate-950 mt-0.5 break-words">{children}</dd>
     </div>
   )
 }
@@ -132,11 +134,11 @@ function Dados({ devedor, onAbrirLote }: { devedor: Devedor; onAbrirLote?: (id: 
     <Secao titulo="Dívida e contato">
       <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
         <Campo rotulo="Valor da dívida">
-          <span className="text-lg font-bold">{fmt.moeda(devedor.valor_divida)}</span>
+          <span className="text-xl font-semibold tracking-tight">{fmt.moeda(devedor.valor_divida)}</span>
         </Campo>
         <Campo rotulo="Vencimento">
           {fmt.data(devedor.data_vencimento)}{" "}
-          <span className={`font-mono text-xs font-bold ${fmt.corAtraso(devedor.dias_atraso)}`}>D+{devedor.dias_atraso}</span>
+          <span className={`ml-1 text-[13px] font-medium ${fmt.corAtraso(devedor.dias_atraso)}`}>D+{devedor.dias_atraso}</span>
         </Campo>
         <Campo rotulo="E-mail">{devedor.email ?? "—"}</Campo>
         <Campo rotulo="Telefone (SMS)">{fmt.telefone(devedor.telefone)}</Campo>
@@ -146,9 +148,9 @@ function Dados({ devedor, onAbrirLote }: { devedor: Devedor; onAbrirLote?: (id: 
       {onAbrirLote && (
         <button
           onClick={() => onAbrirLote(devedor.lote_id)}
-          className="mt-4 text-xs font-bold text-slate-600 hover:text-black underline underline-offset-2"
+          className={`mt-4 -ml-3 ${BOTAO_FANTASMA_P}`}
         >
-          Ver lote de origem →
+          Ver lote de origem
         </button>
       )}
     </Secao>
@@ -207,20 +209,20 @@ function AlterarStatus({ devedor, onModal, onAlterado }: {
   return (
     <Secao titulo="Situação da cobrança">
       <p className="text-sm text-slate-600 mb-4">
-        Atual: <strong>{fmt.STATUS_DEVEDOR[devedor.status].texto}</strong> — {fmt.STATUS_DEVEDOR[devedor.status].descricao}
+        Atual: <strong className="font-medium text-slate-950">{fmt.STATUS_DEVEDOR[devedor.status].texto}</strong>. {fmt.STATUS_DEVEDOR[devedor.status].descricao}
       </p>
       <div className="flex flex-col sm:flex-row gap-2">
-        <select
+        <Selecao
           value={novo}
           onChange={(e) => setNovo(e.target.value as StatusDevedor | "")}
           aria-label="Novo status"
-          className="flex-1 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-900 outline-none focus:border-black focus:ring-4 focus:ring-black/5"
+          className="flex-1"
         >
           <option value="">Alterar para...</option>
           {opcoes.map((s) => (
             <option key={s} value={s}>{fmt.STATUS_DEVEDOR[s].texto}</option>
           ))}
-        </select>
+        </Selecao>
         <button
           onClick={novo === "quitado" ? abrirConfirmacao : aplicar}
           disabled={!novo || salvando}
@@ -231,22 +233,23 @@ function AlterarStatus({ devedor, onModal, onAlterado }: {
       </div>
       {novo && <p className="text-xs text-slate-500 mt-2">{fmt.STATUS_DEVEDOR[novo].descricao}</p>}
       {!podeQuitar && (
-        <p className="text-xs text-slate-400 mt-2">Marcar como quitado é permitido só ao gestor e ao administrador.</p>
+        <p className="text-xs text-slate-500 mt-2">Marcar como quitado é permitido só ao gestor e ao administrador.</p>
       )}
       {erro && <div className="mt-3"><AvisoErro mensagem={erro} /></div>}
 
       {confirmarQuitado && (
         <Modal titulo="Marcar como quitado?" onFechar={fecharConfirmacao} ocupado={salvando}>
-          <p className="text-sm text-slate-600 mb-6">
-            <strong>{devedor.nome}</strong> sai da régua de cobrança e passa a contar na taxa de conversão.
+          <p>
+            <strong className="font-medium text-slate-950">{devedor.nome}</strong> sai da régua de cobrança e passa a contar na taxa de conversão.
             Essa ação é <strong>definitiva</strong>: um devedor quitado não pode ser reaberto.
           </p>
-          <div className="flex justify-end gap-2">
+          <AcoesModal>
             <button onClick={fecharConfirmacao} disabled={salvando} className={BOTAO_SECUNDARIO}>Cancelar</button>
             <button onClick={aplicar} disabled={salvando} className={BOTAO_PRIMARIO}>
+              {salvando && <Spinner />}
               {salvando ? "Salvando..." : "Confirmar quitação"}
             </button>
-          </div>
+          </AcoesModal>
         </Modal>
       )}
     </Secao>
@@ -264,29 +267,29 @@ function Historico({ devedorId }: { devedorId: string }) {
       {historico.erro && !historico.dados ? (
         <AvisoErro mensagem={`Não foi possível carregar o histórico: ${historico.erro}`} onTentarNovamente={historico.recarregar} />
       ) : !historico.dados ? (
-        <div className="flex items-center gap-2 text-sm text-slate-500"><Spinner /> Carregando...</div>
+        <div className="flex items-center gap-2 text-sm text-slate-500" role="status"><Spinner /> Carregando histórico...</div>
       ) : lista.length === 0 ? (
-        <p className="text-sm text-slate-400">Nenhuma comunicação enviada a este devedor ainda.</p>
+        <p className="text-sm text-slate-500">Nenhuma comunicação enviada a este devedor ainda. Elas aparecem aqui quando uma regra ativa o alcançar.</p>
       ) : (
-        <ol className="space-y-3">
+        <ol className="relative">
           {lista.map((c) => {
             const status = fmt.STATUS_COMUNICACAO[c.status]
             return (
-              <li key={c.id} className="flex gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
-                <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: fmt.COR_CANAL[c.canal] }} />
+              <li key={c.id} className="relative flex gap-3 pb-4 last:pb-0 before:absolute before:left-[3px] before:top-3 before:bottom-0 before:w-px before:bg-slate-200 last:before:hidden">
+                <span className="relative mt-1.5 w-[7px] h-[7px] rounded-full flex-shrink-0 bg-slate-400" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">{fmt.NOME_CANAL[c.canal]}</span>
+                    <span className="text-sm font-medium text-slate-950">{fmt.NOME_CANAL[c.canal]}</span>
                     <Badge texto={status.texto} classe={status.classe} />
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {c.tentativas} {c.tentativas === 1 ? "tentativa" : "tentativas"}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 font-mono">
+                  <p className="text-xs text-slate-500 mt-1">
                     {c.enviado_em ? `Enviado em ${fmt.dataHora(c.enviado_em)}` : `Gerado em ${fmt.dataHora(c.criado_em)}`}
                   </p>
                   {(c.mensagem_erro || c.codigo_erro) && (
-                    <p className="text-xs text-rose-600 mt-1">
+                    <p className="text-xs text-rose-700 mt-1">
                       {c.codigo_erro && <span className="font-mono">[{c.codigo_erro}] </span>}
                       {c.mensagem_erro}
                     </p>
@@ -300,7 +303,7 @@ function Historico({ devedorId }: { devedorId: string }) {
       {podeMais && (
         <button
           onClick={() => setLimite((l) => Math.min(l + PASSO_HISTORICO, MAXIMO_HISTORICO))}
-          className="mt-4 text-xs font-bold text-slate-600 hover:text-black"
+          className={`mt-4 ${BOTAO_FANTASMA_P}`}
         >
           Carregar mais
         </button>
@@ -349,8 +352,8 @@ function ZonaExclusao({ devedor, onModal, onExcluido }: {
   }
 
   return (
-    <section className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5">
-      <h3 className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2">Exclusão de dados (LGPD)</h3>
+    <section className="rounded-xl border border-rose-200 bg-white p-5">
+      <h3 className="text-sm font-semibold text-rose-800 mb-2">Exclusão de dados (LGPD)</h3>
       <p className="text-sm text-slate-600 mb-4">
         Atende ao pedido de exclusão do titular: apaga o devedor e todo o histórico de comunicações.
         A ação fica registrada na auditoria e não pode ser desfeita.
@@ -359,28 +362,29 @@ function ZonaExclusao({ devedor, onModal, onExcluido }: {
 
       {aberto && (
         <Modal titulo="Excluir devedor definitivamente?" onFechar={fechar} ocupado={excluindo}>
-          <p className="text-sm text-slate-600 mb-4">
-            Os dados de <strong>{devedor.nome}</strong> e o histórico de comunicações serão apagados.
-            Para confirmar, digite <strong className="font-mono">{PALAVRA_CONFIRMACAO}</strong>:
+          <p className="mb-4">
+            Os dados de <strong className="font-medium text-slate-950">{devedor.nome}</strong> e o histórico de comunicações serão apagados.
+            Para confirmar, digite <strong className="font-mono font-medium text-slate-950">{PALAVRA_CONFIRMACAO}</strong>:
           </p>
           <input
             value={confirmacao}
             onChange={(e) => setConfirmacao(e.target.value)}
             autoFocus
             aria-label={`Digite ${PALAVRA_CONFIRMACAO} para confirmar`}
-            className="w-full px-3 py-2.5 mb-4 rounded-xl border border-slate-200 font-mono text-sm outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10"
+            className={`${inputClasse()} font-mono`}
           />
-          {erro && <div className="mb-4"><AvisoErro mensagem={erro} /></div>}
-          <div className="flex justify-end gap-2">
+          {erro && <div className="mt-4"><AvisoErro mensagem={erro} /></div>}
+          <AcoesModal>
             <button onClick={fechar} disabled={excluindo} className={BOTAO_SECUNDARIO}>Cancelar</button>
             <button
               onClick={excluir}
               disabled={excluindo || confirmacao.trim().toUpperCase() !== PALAVRA_CONFIRMACAO}
               className={BOTAO_PERIGO}
             >
+              {excluindo && <Spinner />}
               {excluindo ? "Excluindo..." : "Excluir definitivamente"}
             </button>
-          </div>
+          </AcoesModal>
         </Modal>
       )}
     </section>

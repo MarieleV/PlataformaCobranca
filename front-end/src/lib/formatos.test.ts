@@ -75,7 +75,14 @@ describe("datas", () => {
 describe("cores", () => {
   it("destaca atrasos de 30 e 60 dias", () => {
     expect(fmt.corAtraso(10)).toBe("text-slate-700")
-    expect(fmt.corAtraso(30)).toBe("text-amber-600")
-    expect(fmt.corAtraso(60)).toBe("text-rose-600")
+    expect(fmt.corAtraso(30)).toBe("text-amber-700")
+    expect(fmt.corAtraso(60)).toBe("text-rose-700")
+  })
+
+  it("usa a mesma faixa na marca da régua", () => {
+    expect(fmt.fundoAtraso(0)).toBe("bg-slate-300")
+    expect(fmt.fundoAtraso(5)).toBe("bg-slate-500")
+    expect(fmt.fundoAtraso(30)).toBe("bg-amber-500")
+    expect(fmt.fundoAtraso(90)).toBe("bg-rose-600")
   })
 })

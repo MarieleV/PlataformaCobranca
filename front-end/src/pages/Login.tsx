@@ -1,6 +1,8 @@
 import { useState } from "react"
 import logoTcc from "../assets/logo-tcc.png"
 import { useAuth } from "../auth/AuthContext"
+import { inputClasse } from "../components/estilos"
+import { Aviso, BOTAO_PRIMARIO, Spinner } from "../components/ui"
 import { ApiError } from "../lib/api"
 
 // Mensagem de erro do login para a tela. 401, 403 e 429 já vêm em português
@@ -41,87 +43,68 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 font-sans">
-      
-      {/* --- PAINEL ESQUERDO (Branding & Valor) --- */}
-      <div className="hidden lg:flex flex-col justify-between w-[480px] bg-black p-12 text-white flex-shrink-0">
-        <div>
-          {/* Logo e Empresa */}
-          <div className="flex items-center gap-4 mb-16">
-            
-            {/* CAIXA DA LOGO */}
-            <div className="bg-white rounded-xl w-11 h-11 flex items-center justify-center shadow-lg shadow-white/10 overflow-hidden">
-              <img 
-                src={logoTcc} 
-                alt="Logo Cobrança Automatizada" 
-                className="w-full h-full object-contain p-1.5" 
-              />
-            </div>
+    <div className="min-h-screen flex bg-papel">
 
-            <div>
-              <p className="font-bold text-lg leading-tight tracking-tight">Cobrança Automatizada</p>
-              <p className="text-xs text-white/60 font-medium tracking-wide">CONSULTH SOLUÇÕES</p>
+      {/* --- PAINEL ESQUERDO (marca) --- */}
+      <div className="hidden lg:flex flex-col justify-between w-[480px] bg-tinta px-12 py-12 text-white flex-shrink-0">
+        <div>
+          <div className="flex items-center gap-3 mb-20">
+            <div className="bg-white rounded-lg w-10 h-10 flex items-center justify-center overflow-hidden">
+              <img src={logoTcc} alt="" className="w-full h-full object-contain p-1.5" />
+            </div>
+            <div className="leading-tight">
+              <p className="font-semibold">Cobrança Automatizada</p>
+              <p className="text-sm text-white/60">Consulth Soluções</p>
             </div>
           </div>
 
-          {/* Título de Impacto */}
-          <h1 className="text-4xl font-bold leading-tight mb-6 tracking-tight">
+          <h1 className="text-[2rem] font-semibold leading-[1.15] tracking-tight mb-5">
             Escale sua recuperação de crédito com segurança total.
           </h1>
-          <p className="text-white/70 leading-relaxed text-sm font-medium">
+          <p className="text-white/70 leading-relaxed max-w-[38ch]">
             Automatize todo o ciclo de cobrança: da integração de dados ao acionamento multicanal. Tenha rastreabilidade ponta a ponta com zero intervenção manual.
           </p>
+
+          <ReguaDecorativa />
         </div>
 
-        {/* Métricas de Credibilidade */}
-        <div className="space-y-3">
+        <dl className="divide-y divide-white/10 border-y border-white/10">
           {[
             { metric: "70M+", label: "Inadimplentes no Brasil (Serasa)" },
             { metric: "10k", label: "Registros processados por minuto" },
             { metric: "95%+", label: "Taxa de entrega multicanal" },
           ].map((s) => (
-            <div 
-              key={s.metric}
-              className="flex items-center gap-5 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md transition-all hover:bg-white/10 cursor-default"
-            >
-              <span className="font-bold text-2xl text-white min-w-[70px] tracking-tight">
-                {s.metric}
-              </span>
-              <span className="text-sm text-white/70 font-medium leading-tight">{s.label}</span>
+            <div key={s.metric} className="flex items-baseline gap-5 py-3.5">
+              <dt className="font-semibold text-xl min-w-[72px] tracking-tight">{s.metric}</dt>
+              <dd className="text-sm text-white/65">{s.label}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </div>
 
-      {/* --- PAINEL DIREITO (Formulário) --- */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-[420px]">
-          
-          {/* Cabeçalho do Formulário */}
-          <div className="mb-10 text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">
-              Acessar plataforma
-            </h2>
-            <p className="text-sm text-slate-500 font-medium">
-              Insira suas credenciais corporativas para continuar.
-            </p>
+      {/* --- PAINEL DIREITO (formulário) --- */}
+      <div className="flex-1 flex items-center justify-center px-4 py-10 sm:px-12">
+        <div className="w-full max-w-[400px]">
+
+          <div className="lg:hidden flex items-center gap-3 mb-10">
+            <img src={logoTcc} alt="" className="w-9 h-9 object-contain rounded-md" />
+            <p className="font-semibold text-slate-950">Cobrança Automatizada</p>
           </div>
 
-          {/* Aviso de sessão expirada */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-slate-950 tracking-tight">Acessar plataforma</h2>
+            <p className="text-sm text-slate-500 mt-1.5">Insira suas credenciais corporativas para continuar.</p>
+          </div>
+
           {sessaoExpirada && !error && (
-            <div className="mb-5 p-3 bg-amber-50 border border-amber-100 rounded-xl" role="status">
-              <p className="text-xs font-bold text-amber-700 text-center">
-                Sua sessão expirou. Entre novamente para continuar.
-              </p>
+            <div className="mb-5">
+              <Aviso tipo="atencao">Sua sessão expirou. Entre novamente para continuar.</Aviso>
             </div>
           )}
 
-          {/* Formulário */}
-          <form onSubmit={handleSubmit} noValidate className="space-y-5 bg-white p-8 rounded-3xl shadow-sm border border-slate-200/60">
-            
-            {/* Input E-mail */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-bold text-slate-900">
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            <div>
+              <label htmlFor="email" className="block text-[13px] font-medium text-slate-700 mb-1.5">
                 E-mail corporativo
               </label>
               <input
@@ -132,20 +115,17 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="analista@empresa.com.br"
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 outline-none transition-all placeholder:text-slate-400 font-medium"
+                className={`${inputClasse()} h-11`}
               />
             </div>
 
-            {/* Input Senha */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-bold text-slate-900">
+            <div>
+              <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                <label htmlFor="password" className="text-[13px] font-medium text-slate-700">
                   Senha
                 </label>
                 {/* Não há recuperação por e-mail: quem redefine é o gestor/administrador. */}
-                <span className="text-xs font-medium text-slate-400">
-                  Esqueceu? Fale com o administrador.
-                </span>
+                <span className="text-xs text-slate-500">Esqueceu? Fale com o administrador.</span>
               </div>
               <input
                 id="password"
@@ -154,51 +134,48 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 outline-none transition-all placeholder:text-slate-400 font-medium"
+                className={`${inputClasse()} h-11`}
               />
             </div>
 
-            {/* Mensagem de Erro */}
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-100 rounded-xl" role="alert">
-                <p className="text-xs font-bold text-red-600 text-center">{error}</p>
-              </div>
-            )}
+            {error && <Aviso tipo="erro">{error}</Aviso>}
 
-            {/* Botão Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 mt-4 rounded-xl text-sm font-bold text-white bg-black hover:bg-slate-900 active:scale-[0.99] transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-xl shadow-black/10 flex justify-center items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Autenticando...
-                </>
-              ) : (
-                "Entrar na plataforma"
-              )}
+            <button type="submit" disabled={loading} className={`w-full h-11 ${BOTAO_PRIMARIO}`}>
+              {loading && <Spinner />}
+              {loading ? "Autenticando..." : "Entrar na plataforma"}
             </button>
           </form>
 
-          {/* Rodapé de Segurança */}
-          <div className="mt-8 flex flex-col items-center justify-center gap-2 text-center">
-            <p className="text-xs font-medium text-slate-400 flex items-center justify-center gap-1.5">
-              <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              Ambiente seguro e criptografado
-            </p>
-            <p className="text-[11px] font-mono text-slate-300">
-              Sessão renovada automaticamente enquanto você usa a plataforma
-            </p>
-          </div>
+          <p className="mt-8 flex items-center gap-2 text-xs text-slate-500">
+            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            Conexão segura. A sessão é renovada automaticamente enquanto você usa a plataforma.
+          </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** A régua de cobrança como assinatura da marca: marcas nos dias em que a cobrança age. */
+function ReguaDecorativa() {
+  const marcas = [
+    { dia: 1, x: 6 },
+    { dia: 5, x: 24 },
+    { dia: 15, x: 48 },
+    { dia: 30, x: 72 },
+    { dia: 60, x: 94 },
+  ]
+  return (
+    <div className="mt-14 relative h-14" aria-hidden="true">
+      <span className="absolute inset-x-0 top-3 h-px bg-white/25" />
+      {marcas.map((m, i) => (
+        <span key={m.dia} className="absolute top-0 -translate-x-1/2 flex flex-col items-center" style={{ left: `${m.x}%` }}>
+          <span className={`w-[7px] h-[7px] mt-[9px] rounded-full ${i === marcas.length - 1 ? "bg-white" : "border border-white/70 bg-tinta"}`} />
+          <span className="mt-2 text-xs text-white/55">D+{m.dia}</span>
+        </span>
+      ))}
     </div>
   )
 }

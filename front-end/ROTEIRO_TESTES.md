@@ -26,7 +26,7 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 
 ## 1. Login e sessão
 
-- [ ] Login com o admin mostra nome, iniciais e "ADMINISTRADOR" na sidebar.
+- [ ] Login com o admin mostra nome, iniciais e "Administrador · Minha conta" no rodapé do menu.
 - [ ] Senha errada: "E-mail ou senha incorretos". E-mail malformado: "Informe um e-mail válido".
 - [ ] 5 erros seguidos + 1: mensagem de muitas tentativas (429).
 - [ ] F5 mantém o login.
@@ -34,29 +34,33 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 - [ ] "Encerrar sessão" volta ao login; F5 depois disso continua no login.
 - [ ] Com a API parada (`docker compose stop api`): aviso de que não foi possível conectar.
 - [ ] Operador não vê "Usuários" no menu.
+- [ ] Menu agrupado em Acompanhar / Cobrança / Administração; o item da tela atual tem a barra preta à esquerda.
+- [ ] Janela estreita (< 768 px, ou DevTools no modo celular): o menu vira gaveta pelo botão ☰; fecha ao escolher uma tela, ao clicar fora ou com Esc.
+- [ ] Navegando só com Tab, todo botão, link e linha clicável mostra o contorno de foco.
 
 ## 2. Dashboard
 
-- [ ] KPIs batem com a base (devedores, disparos de hoje, taxa de entrega × meta de 95%, falhas).
+- [ ] KPIs (faixa única com 4 indicadores) batem com a base (devedores, disparos de hoje, taxa de entrega × meta de 95%, falhas). Taxa abaixo da meta aparece em âmbar com "!"; dentro da meta, verde com "✓".
 - [ ] Taxas sem base aparecem como "—".
 - [ ] Período 7/15/30 dias muda o gráfico e as datas.
-- [ ] Gráfico empilhado (sucesso/falhas/aguardando); sem disparos, mostra "Nenhum disparo...".
+- [ ] Gráfico empilhado (sucesso em grafite, falhas em vermelho, aguardando em cinza, com legenda); sem disparos, mostra "Nenhum disparo...".
 - [ ] Distribuição por canal e conversão.
 - [ ] Tabelas de últimos lotes e jobs; clicar num lote abre o Relatório daquele lote; clicar num job abre o painel do job no Monitoramento.
-- [ ] Atalhos "Importar lote" e "Monitoramento".
+- [ ] Atalhos "Importar lote" e "Abrir monitoramento".
 - [ ] Atualiza sozinho a cada minuto ("Atualizado às...").
 - [ ] `docker stop cobranca_redis`: selo vermelho "Instável: Redis" em até 1 min (depois `docker start cobranca_redis`).
 
 ## 3. Importar lote e Relatório de validação
 
-- [ ] `teste-formato-invalido.txt` e `teste-vazio.csv` são recusados antes de enviar.
-- [ ] `teste-com-rejeicoes.csv`: barra de progresso avança; resultado 31 novos, 1 atualizado, 5 rejeitados.
-- [ ] "Ver linhas rejeitadas" abre o relatório do lote; a linha 7 tem 2 problemas (Nome e Vencimento).
+- [ ] `teste-formato-invalido.txt` e `teste-vazio.csv` são recusados antes de enviar: a área de arrastar fica com borda vermelha e aparece "Arquivo recusado." com o motivo.
+- [ ] Arrastar um arquivo sobre a área muda o texto para "Solte para enviar".
+- [ ] `teste-com-rejeicoes.csv`: o indicador de etapas passa por Enviar arquivo → Validar e importar → Concluído; a barra de progresso avança; resultado 31 novos, 1 atualizado, 5 rejeitados.
+- [ ] "Ver linhas rejeitadas" abre o relatório do lote; a linha 7 tem 2 problemas (Nome e Vencimento), agrupados sob um único "Linha 7".
 - [ ] Filtro por campo e paginação dos problemas.
 - [ ] "Exportar CSV de erros" baixa o arquivo e ele abre no Excel com acentos.
 - [ ] Seletor de lote troca o relatório.
-- [ ] `teste-sem-coluna-email.csv`: card vermelho "Colunas obrigatórias ausentes: email".
-- [ ] Planilha modelo baixa e, importada, gera 2 novos e 0 rejeitados.
+- [ ] `teste-sem-coluna-email.csv`: etapa final "Recusado" e a lista vermelha "Colunas obrigatórias ausentes: email".
+- [ ] Botão "Planilha modelo" (no quadro "Colunas da planilha") baixa o arquivo e, importado, gera 2 novos e 0 rejeitados.
 - [ ] `docker stop cobranca_rabbitmq`: upload mostra "Fila de processamento indisponível" (depois `docker start cobranca_rabbitmq`).
 
 ## 4. Devedores
@@ -65,6 +69,8 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 - [ ] Busca por nome, por CPF só com dígitos e por CPF com pontuação (ex.: `104.332`). Com 1 caractere aparece a dica "pelo menos 2".
 - [ ] Filtros de status e de atraso (combinados), "Limpar filtros" e paginação (com mais de 50 devedores).
 - [ ] Coluna "Contatos" risca os canais sem contato cadastrado.
+- [ ] Coluna "Atraso": D+N com uma pequena régua; a marca fica cinza até D+29, âmbar de D+30 a D+59 e vermelha a partir de D+60 (o texto D+N acompanha a cor). "A vencer" sem régua.
+- [ ] Sem resultados com filtro: "Nenhum devedor encontrado" com o botão "Limpar filtros".
 - [ ] Clicar numa linha abre o painel: CPF completo, valor em R$, vencimento com D+N, contatos, "Ver lote de origem".
 - [ ] Histórico mostra as comunicações (enviado / bounce / falha com o motivo e as tentativas).
 - [ ] Trocar status para Negociando e de volta para Ativo; a lista atualiza.
@@ -76,7 +82,8 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 ## 5. Régua de cobrança
 
 Visualização (todos os perfis):
-- [ ] Selo de status: "Régua ativa · N de M regras ativas" (verde) ou "Régua inativa..." (âmbar) quando nenhuma regra está ativa.
+- [ ] Quadro "Linha do tempo da cobrança": status "Régua ativa. N de M regras ativas." (ponto verde) ou "Régua inativa..." (ponto âmbar) quando nenhuma regra está ativa.
+- [ ] Na linha do tempo, uma faixa por canal; cada regra é uma marca no seu D+N (cheia = ativa, vazada = inativa). Clicar numa marca seleciona a regra (o card correspondente fica com borda preta).
 - [ ] Cards com canal, D+N, horário e início do template; filtro Todos / E-mail / SMS / WhatsApp.
 - [ ] Clicar num card mostra o detalhe (template com as variáveis destacadas) e os **Elegíveis hoje** com o total e a explicação do critério.
 - [ ] Com a massa de demonstração, a regra "Lembrete 3 dias (e-mail)" mostra os devedores com 3 dias de atraso que ainda não receberam com sucesso hoje (ex.: o bounce e a falha).
@@ -104,28 +111,28 @@ Ativar, executar e excluir (gestor/admin):
 ## 6. Monitoramento
 
 Serviços e janela:
-- [ ] Quatro cards: Banco de dados, Redis, RabbitMQ (Operacional) e Janela de disparo.
+- [ ] Faixa com quatro indicadores: Banco de dados, Redis, RabbitMQ (Operacional) e Janela de disparo.
 - [ ] Janela **Aberta** em dia útil das 8h às 19h55, com "Próximo ciclo às HH:MM" (múltiplo de 5 min); fora disso **Fechada** com "Abre hoje/amanhã/seg. às 08:00".
-- [ ] `docker stop cobranca_redis`: em até 30 s o card do Redis fica vermelho "Fora do ar" (depois `docker start cobranca_redis`).
-- [ ] Com a API parada, os cards de serviço mostram "API sem resposta".
+- [ ] `docker stop cobranca_redis`: em até 30 s o indicador do Redis fica vermelho "Fora do ar" (depois `docker start cobranca_redis`).
+- [ ] Com a API parada, os indicadores de serviço mostram "API sem resposta".
 
 Jobs:
-- [ ] Lista com total, regra, canal, dia de referência, status, barra de progresso (verde = sucesso, vermelho = falha), sucesso/falhas/pendentes e início.
+- [ ] Lista com total, regra, canal, dia de referência, status, barra de progresso (grafite = sucesso, vermelho = falha), sucesso/falhas/pendentes e início.
 - [ ] Filtros por status e por regra; "Atualizar"; paginação com mais de 20 jobs.
-- [ ] Com job em andamento, aparece "Há jobs em andamento · atualiza sozinho a cada 15 s" e os números mudam sem recarregar.
-- [ ] Sem jobs: "Nenhum job executado ainda...".
+- [ ] Com job em andamento, aparece "Há jobs em andamento. Atualizado às HH:MM; a lista se renova a cada 15 segundos." e os números mudam sem recarregar.
+- [ ] Sem jobs: "Nenhum job executado ainda" com a orientação de ativar uma regra.
 
 Painel do job (clique numa linha):
 - [ ] Números (alvos, sucesso, falhas, pendentes), progresso, início e fim ("em andamento" enquanto executa).
 - [ ] Comunicações com filtro Todas / Pendentes / Enviadas / Falhas / Bounces e o total de cada.
-- [ ] No job da massa demo: 7 enviadas, o bounce do Hugo Alves com `[SIMULADO_BOUNCE]`, e a Iara Costa como "Falha · vai reenviar" com "reenvio às ..." e "N de 4" tentativas (após a 4ª, vira "Falha definitiva").
+- [ ] No job da massa demo: 7 enviadas, o bounce do Hugo Alves com `[SIMULADO_BOUNCE]`, e a Iara Costa como "Falha, vai reenviar" com "Reenvio às ..." e "N de 4" tentativas (após a 4ª, vira "Falha definitiva").
 - [ ] Quando todas se resolvem, o job vira **Concluído** (ou **Falhou**, se nenhuma deu certo) e o painel para de atualizar.
 - [ ] Esc ou clique fora fecha o painel.
 
 ## 7. Usuários, Minha conta e Auditoria
 
 Administrador:
-- [ ] Cards com a descrição dos 3 perfis; lista com nome, e-mail, perfil, situação e criado em; a própria linha mostra "você" e só tem "Editar".
+- [ ] Faixa com a descrição dos 3 perfis (selos em tons de cinza a preto); lista com nome, e-mail, perfil, situação (Ativo em verde, Inativo em cinza) e criado em; a própria linha mostra "(você)" e só tem "Editar".
 - [ ] Busca por nome ou e-mail (mín. 2 caracteres), filtros de perfil e situação.
 - [ ] "Novo usuário": "Gerar senha" preenche e mostra uma senha válida; senha `abcdefgh` mostra "ao menos uma letra e um número"; e-mail já usado mostra "E-mail já cadastrado".
 - [ ] Criar um **gestor** e um **operador**: aviso verde e aparecem na lista.
@@ -149,7 +156,7 @@ Minha conta (qualquer perfil — clique no nome no rodapé do menu):
 - [ ] Troca com sucesso: mensagem de que as outras sessões foram encerradas e esta continua (F5 mantém o login); outra janela logada com o mesmo usuário cai para o login.
 
 Auditoria (só administrador):
-- [ ] Lista com data/hora, usuário, ação (ações sensíveis em vermelho), entidade, registro e IP; mais recentes primeiro.
+- [ ] Lista com data/hora, usuário, ação (ações sensíveis em vermelho com ícone de alerta), entidade, registro e IP; mais recentes primeiro.
 - [ ] As ações feitas nos testes acima aparecem (criou usuário, redefiniu senha, desativou, alterou status de devedor, ativou regra...).
 - [ ] Falha de login com e-mail inexistente aparece como "Sem usuário vinculado".
 - [ ] Filtros de usuário, ação, entidade e período (De/Até); "Limpar filtros"; paginação com mais de 50 registros.
