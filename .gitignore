@@ -30,3 +30,9 @@ htmlcov/
 .pytest_cache/
 # === EDITOR ===
 .vscode/
+
+# === TESTE DE CARGA (carga/) ===
+# Massa gerada e resultados das execuções (a pasta resultados/ é mantida pelo .gitkeep)
+carga/massa-*.csv
+carga/resultados/*
+!carga/resultados/.gitkeep
