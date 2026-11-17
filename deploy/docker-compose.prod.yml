@@ -1,0 +1,119 @@
+# Produção (EC2). O CI copia este arquivo para ~/cobranca/docker-compose.yml
+# no servidor; os segredos ficam só em ~/cobranca/.env (modelo: deploy/.env.example).
+#
+#   internet ──443──> web (Caddy: front + HTTPS) ──> api ──> RDS PostgreSQL (TLS)
+#                                                     │
+#                         worker / beat (Celery) ─────┤──> redis, rabbitmq (locais)
+#
+# O PostgreSQL NÃO roda aqui: é o RDS (DATABASE_URL no .env).
+name: cobranca
+
+x-logs: &logs
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-backend: &backend
+  image: ${REGISTRO:-ghcr.io/marielev}/cobranca-api:${IMAGE_TAG:-latest}
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    REDIS_URL: redis://redis:6379/0
+    CELERY_RESULT_BACKEND: redis://redis:6379/1
+    RABBITMQ_URL: amqp://${RABBITMQ_USER:?defina RABBITMQ_USER no .env}:${RABBITMQ_PASSWORD:?defina RABBITMQ_PASSWORD no .env}@rabbitmq:5672//
+  volumes:
+    - uploads_data:/code/uploads # arquivos dos lotes: a API grava, o worker lê
+  depends_on:
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+  <<: *logs
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes # sessões revogadas sobrevivem a um restart
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    <<: *logs
+
+  rabbitmq:
+    image: rabbitmq:3-alpine # sem o painel de gestão: economiza memória
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    <<: *logs
+
+  api:
+    <<: *backend
+    # Só a API migra (worker e beat esperam por ela).
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672//
+      # Confia no X-Forwarded-For do Caddy: o IP real do usuário vai para o
+      # bloqueio de login e a auditoria. Seguro porque a porta 8000 não é publicada.
+      FORWARDED_ALLOW_IPS: "*"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  worker:
+    <<: *backend
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=2
+    depends_on:
+      api:
+        condition: service_healthy
+
+  beat:
+    <<: *backend
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    image: ${REGISTRO:-ghcr.io/marielev}/cobranca-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DOMINIO: ${DOMINIO:?defina DOMINIO no .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data # certificados: não apague (limite de emissão do Let's Encrypt)
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    <<: *logs
+
+volumes:
+  uploads_data:
+  redis_data:
+  rabbitmq_data:
+  caddy_data:
+  caddy_config:
