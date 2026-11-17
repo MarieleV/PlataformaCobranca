@@ -25,7 +25,10 @@ Arquivos desta pasta:
 | `.env.example` | Modelo do `~/cobranca/.env` da EC2 (segredos; nunca versionar) |
 | `preparar-ec2.sh` | Instala Docker + Compose e cria swap na EC2 (roda uma vez) |
 
-> **Custos.** Contas novas da AWS têm créditos/Free Tier; confira no console se a instância e o banco aparecem como *Free tier eligible*. Crie um **alerta de orçamento** (Billing → Budgets → *Zero spend budget* ou US$ 5) **antes** de criar os recursos. Lembre que o RDS e o Elastic IP cobram mesmo com a EC2 parada.
+> **Custos.** Contas novas da AWS têm créditos/Free Tier; confira no console se a instância e o banco aparecem como *Free tier eligible*. Crie um **alerta de orçamento** **antes** de criar os recursos (Billing → Budgets → *Customize* → *Cost budget*), com um valor mensal (ex.: US$ 16) e alertas em 80% do gasto real e 100% do previsto.
+> - Em **Budget scope → Advanced options → Charge types**, marque **Crédito excluído** (*Credit* desmarcado). Sem isso o orçamento desconta os créditos e o gasto aparece sempre como US$ 0, e o alerta nunca dispara.
+> - O *Zero spend budget* não serve para contas com créditos pelo mesmo motivo.
+> - Lembre que o RDS e o Elastic IP cobram mesmo com a EC2 parada. Quando os créditos ou o prazo deles acabam, o acesso aos serviços termina.
 
 ---
 
@@ -36,7 +39,7 @@ Arquivos desta pasta:
    - **Por quê:** EC2 e RDS custam bem menos em Ohio do que em São Paulo (`sa-east-1`, uma das regiões mais caras da AWS), o que faz os créditos do TCC durarem mais.
    - **O que se perde:** latência maior para usuários no Brasil (algo como 120–150 ms por requisição, contra ~10–30 ms em São Paulo) e os dados dos devedores ficam fora do país. A LGPD permite transferência internacional com salvaguardas (art. 33). Para o TCC usamos só **dados fictícios**; em produção real com a Consulth, o recomendado é migrar para `sa-east-1`. Basta recriar os recursos lá, porque nada no código depende da região.
 3. **Domínio**. Precisa de um nome apontando para a EC2 (o Let's Encrypt não emite para o IP padrão da AWS). Opções:
-   - Grátis: [DuckDNS](https://www.duckdns.org) → crie, por exemplo, `cobranca-tcc.duckdns.org` (o IP você preenche no passo 3).
+   - Grátis: [DuckDNS](https://www.duckdns.org) → crie, por exemplo, `cobranca-tcc.duckdns.org` (o IP você preenche no passo 3). Deixe o campo **IPv6 vazio**: a EC2 não tem IPv6 e, se houver um registro AAAA, o Let's Encrypt tenta validar por ele e o certificado falha.
    - Domínio próprio (Registro.br, Route 53…): um registro **A** apontando para o Elastic IP.
 
 ## 1. Rede (Security Groups)
@@ -57,16 +60,18 @@ Console **RDS → Create database**:
 | Campo | Valor |
 |---|---|
 | Método | Standard create |
-| Engine | PostgreSQL **15** (mesma versão do CI) |
+| Engine | PostgreSQL **15** (mesma versão do CI; em produção, 15.19) |
 | Template | Free tier (ou Dev/Test) |
 | Identificador | `cobranca-db` |
 | Usuário master | `cobranca_app` · senha forte (sem `@ : / ? #` para não precisar codificar na URL) |
 | Classe | `db.t4g.micro` |
 | Storage | gp3, 20 GB, autoscaling desligado |
 | Conectividade | VPC padrão · **Public access: No** · security group `cobranca-rds` (remova o `default`) |
-| Additional configuration | Initial database name: `cobranca_db` · backups automáticos 7 dias · encryption ligada |
+| Additional configuration | Initial database name: `cobranca_db` · backups automáticos **1 dia** · encryption ligada · grupo de parâmetros `default.postgres15` |
 
 Anote o **Endpoint** (ex.: `cobranca-db.xxxx.us-east-2.rds.amazonaws.com`). O PostgreSQL 15 do RDS já exige TLS; a API também recusa subir sem `?sslmode=require`.
+
+> **Retenção de backup:** no plano gratuito, o RDS recusa retenção maior que **1 dia** (o erro aparece só ao clicar em *Create database*). Por isso, antes de qualquer mudança arriscada (migração nova, véspera da banca), tire um **snapshot manual** (RDS → Ações → Tirar snapshot); o snapshot manual não expira.
 
 ## 3. Servidor: EC2
 
@@ -77,6 +82,7 @@ Console **EC2 → Launch instance**:
 | Nome | `cobranca` |
 | AMI | **Ubuntu Server 24.04 LTS** (x86_64) |
 | Tipo | **t3.small** (2 GB; a t3.micro, com 1 GB, não aguenta RabbitMQ + Celery + API) |
+| Advanced → Credit specification | **Standard (Padrão)**. No modo *Unlimited* a AWS cobra à parte quando a CPU passa da linha de base; no Padrão não há cobrança extra, a CPU só fica mais lenta quando os créditos de CPU acabam (atenção em testes de carga). |
 | Key pair | Create new → `cobranca-ec2`, tipo ED25519, formato `.pem` → **guarde o arquivo** |
 | Rede | VPC padrão · Auto-assign public IP: Enable · security group `cobranca-ec2` |
 | Storage | 20 GB gp3 |
@@ -90,8 +96,10 @@ Depois:
 
    ```powershell
    icacls .\cobranca-ec2.pem /inheritance:r /grant:r "$($env:USERNAME):(R)"
-   ssh -i .\cobranca-ec2.pem ubuntu@SEU_ELASTIC_IP
+   ssh -o ServerAliveInterval=60 -i .\cobranca-ec2.pem ubuntu@SEU_ELASTIC_IP
    ```
+
+   Sem o `-o ServerAliveInterval=60`, a conexão cai sozinha quando fica alguns minutos ociosa. Depois que o domínio estiver apontando para a EC2, use o domínio no lugar do IP (ex.: `ubuntu@cobranca-tcc.duckdns.org`). Dica: guarde o `.pem` em `$env:USERPROFILE\.ssh\`, fora do repositório.
 
 4. Se não usou o *User data*, rode a preparação (do PowerShell, na raiz do repositório):
 
@@ -136,17 +144,21 @@ A `ADMIN_SENHA_INICIAL` precisa de 8+ caracteres com letra e número (e não pod
 
    | Segredo | Valor |
    |---|---|
-   | `EC2_HOST` | o Elastic IP (ou o domínio) |
+   | `EC2_HOST` | o domínio (ex.: `cobranca-tcc.duckdns.org`) ou o Elastic IP |
    | `EC2_USUARIO` | `ubuntu` |
    | `EC2_CHAVE_SSH` | o conteúdo **inteiro** do `cobranca-ec2.pem` (incluindo as linhas `-----BEGIN/END`) |
-   | `EC2_KNOWN_HOSTS` | a saída de `ssh-keyscan -t ed25519 SEU_ELASTIC_IP` (rode no PowerShell) |
+   | `EC2_KNOWN_HOSTS` | a linha da chave do servidor para o mesmo nome do `EC2_HOST` (veja abaixo) |
 
    E em **Environment variables**: `DOMINIO` = `cobranca-tcc.duckdns.org` (o seu).
 
-   > Use o mesmo valor no `EC2_HOST` e no `ssh-keyscan` (IP com IP, domínio com domínio), senão a verificação da chave do servidor falha.
+   > Use o mesmo nome no `EC2_HOST` e no `EC2_KNOWN_HOSTS` (IP com IP, domínio com domínio), senão a verificação da chave do servidor falha.
 
-3. **Pacotes do GHCR**: o primeiro deploy cria `cobranca-api` e `cobranca-web` como **privados**. Depois dele, em github.com → seu perfil → **Packages** → cada pacote → *Package settings* → *Change visibility* → **Public** (o repositório já é público e as imagens não têm segredos). Sem isso a EC2 não consegue baixar.
-   - Se preferir mantê-los privados: na EC2, `docker login ghcr.io -u MarieleV` com um *Personal access token (classic)* só com `read:packages`.
+   **Como obter o `EC2_KNOWN_HOSTS`.** O `ssh-keyscan` do Windows falha com `choose_kex: unsupported KEX method sntrup761x25519-sha512@openssh.com` (o OpenSSH do Windows é mais antigo que o do Ubuntu 24.04). Use uma destas opções:
+   - **Do seu PC:** depois de conectar uma vez por SSH usando o domínio, copie a linha correspondente de `$env:USERPROFILE\.ssh\known_hosts` (a que começa com `cobranca-tcc.duckdns.org ssh-ed25519`).
+   - **Na própria EC2:** `ssh-keyscan -t ed25519 cobranca-tcc.duckdns.org` e copie a linha que **não** começa com `#`.
+
+3. **Pacotes do GHCR**: como as imagens são publicadas pelo workflow do próprio repositório (público), `cobranca-api` e `cobranca-web` **herdam a visibilidade pública** e a EC2 baixa sem login. Nada a fazer.
+   - Se um dia o repositório ficar privado, os pacotes também ficam: torne-os públicos em github.com → seu perfil → **Packages** → cada pacote → *Package settings* → *Change visibility*, ou, na EC2, `docker login ghcr.io -u MarieleV` com um *Personal access token (classic)* só com `read:packages`.
 
 ## 6. Primeiro deploy
 
@@ -155,7 +167,8 @@ A `ADMIN_SENHA_INICIAL` precisa de 8+ caracteres com letra e número (e não pod
    2. copia o `docker-compose.prod.yml` para a EC2;
    3. `docker compose pull` + `up -d --wait` (a API aplica as migrações no RDS ao subir);
    4. testa `https://DOMINIO/health`.
-2. **No primeiro deploy** o passo 3 falha porque os pacotes ainda são privados: torne-os públicos (passo 5.3) e clique em **Re-run failed jobs**.
+   Com o ambiente `producao` exigindo aprovação, o job fica em **Aguardando**: clique em **Revisar implantações → Aprovar e implantar**.
+2. Se o passo 3 falhar com erro de permissão no `pull`, confira a visibilidade dos pacotes (passo 5.3) e clique em **Re-run failed jobs**.
 3. Crie o administrador (uma vez):
 
    ```bash
@@ -178,7 +191,8 @@ docker stats --no-stream                  # memória/CPU por container
 
 - **Atualizar segredos**: edite `~/cobranca/.env` e rode `docker compose up -d` (recria só o que mudou).
 - **Envio real**: só depois do teste dos provedores (`ENVIO_SIMULADO=false` + chaves do SendGrid/Twilio no `.env`). Teste: `docker compose exec api python -m app.testar_provedores email voce@exemplo.com`.
-- **Backup**: o RDS faz backup diário automático (7 dias). Antes de algo arriscado, tire um snapshot manual (RDS → Actions → Take snapshot).
+- **Backup**: o RDS faz backup diário automático, com retenção de 1 dia (limite do plano gratuito). Antes de algo arriscado, tire um snapshot manual (RDS → Ações → Tirar snapshot).
+- **Créditos**: confira o saldo no Faturamento uma vez por semana.
 - **Memória**: se `docker stats` mostrar a máquina no limite, reduza `--workers` da API ou `--concurrency` do worker no `docker-compose.prod.yml`, ou suba para `t3.medium`.
 - **Desligar para não gastar**: pare a EC2 e o RDS (o RDS religa sozinho após 7 dias). Para encerrar de vez: apague a EC2, o RDS (com snapshot final, se quiser), e **libere o Elastic IP**.
 
