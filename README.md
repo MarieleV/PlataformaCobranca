@@ -321,13 +321,13 @@ flowchart LR
 | Categoria | Ferramenta / Escopo | Situação |
 |---|---|---|
 | **CI** | GitHub Actions a cada PR e na `main` | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
-| **Testes (back-end)** | `pytest` — 783 testes, ~97% de cobertura (mínimo: 80%) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
+| **Testes (back-end)** | `pytest` — 789 testes, ~97% de cobertura (mínimo: 80%) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
 | **Testes (front-end)** | Vitest + Testing Library (cliente da API e contexto de autenticação) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
 | **Lint e tipos (front-end)** | ESLint + `tsc --noEmit` | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
 | **Migrações** | Alembic aplicado em PostgreSQL 15 real | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
 | **Build** | Imagens Docker da API e do front (Vite + Caddy) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
 | **Análise estática** | SonarCloud com Quality Gate (PRs e `main`) | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
-| **Deploy** | AWS (EC2 + RDS): imagens no GHCR e `docker compose` na EC2 via SSH ([`deploy/README.md`](./deploy/README.md)) | ![Em andamento](https://img.shields.io/badge/em_andamento-64748B?style=flat-square) |
+| **Deploy** | AWS (EC2 + RDS): imagens no GHCR e `docker compose` na EC2 via SSH, com aprovação manual ([`deploy/README.md`](./deploy/README.md)) | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
 
 **Fluxo de trabalho:** git-flow (`feature/*` → `develop` → PR para `main`) e commits no padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/). A `main` é protegida e só recebe código via Pull Request com todos os checks aprovados.
 
@@ -419,7 +419,7 @@ Prometheus em http://localhost:9090 e Grafana em http://localhost:3000.
 | Usuários e auditoria | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
 | CI/CD com Quality Gate | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
 | Validação com provedores reais (SendGrid/Twilio) | ![Em andamento](https://img.shields.io/badge/em_andamento-64748B?style=flat-square) |
-| Deploy em nuvem (AWS) | ![Em andamento](https://img.shields.io/badge/em_andamento-64748B?style=flat-square) |
+| Deploy em nuvem (AWS), em https://cobranca-tcc.duckdns.org | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
 | Webhooks de confirmação de entrega | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
 | Templates aprovados do WhatsApp (produção) | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
 
@@ -446,6 +446,8 @@ Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE
 | [`front-end/README.md`](./front-end/README.md) | Front-end: como rodar, validar e convenções |
 | [`front-end/ROTEIRO_TESTES.md`](./front-end/ROTEIRO_TESTES.md) | Roteiro de teste manual das telas |
 | [`back-end/DOC.md`](./back-end/DOC.md) | Execução, testes, CI/CD, métricas, regras e limitações conhecidas |
+| [`carga/README.md`](./carga/README.md) | Teste de carga dos RNF01/RNF02 (k6, 100 usuários, P95 < 300 ms) e lote de 50.000 registros (RNF03) |
+| [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Implantação em produção: arquitetura, recursos AWS, escolha da região, CI/CD, segurança e desvios em relação ao RFC |
 | [`deploy/README.md`](./deploy/README.md) | Deploy na AWS (EC2 + RDS PostgreSQL), segredos e operação em produção |
 | `http://localhost:8000/docs` | Referência interativa de todos os endpoints (OpenAPI) |
 
