@@ -31,7 +31,7 @@ O back-end é construído com **Python 3.14**, **FastAPI** e orquestrado via **D
 
 ### ⏳ Pendente
 - [ ] **Teste real dos provedores** (SendGrid e Twilio) e autenticação de domínio do remetente.
-- [ ] **Deploy na AWS** (RDS PostgreSQL, EC2) e o passo de deploy do CI.
+- [ ] **Deploy na AWS** (RDS PostgreSQL, EC2): arquivos e passo de deploy do CI prontos (`deploy/`); falta provisionar a AWS seguindo `deploy/README.md`.
 - [ ] **Webhooks de status de entrega** (SendGrid/Twilio) para registrar `entregue`.
 - [ ] **Templates aprovados do WhatsApp** (em produção, mensagens iniciadas pela empresa exigem templates).
 
@@ -114,8 +114,9 @@ O fluxo está em `.github/workflows/ci.yml` e roda a cada push e pull request pa
 |---|---|
 | **Testes e SonarCloud** | roda os testes (falha abaixo de 80% de cobertura) e envia a análise ao SonarCloud, esperando o Quality Gate |
 | **Migrações no PostgreSQL** | aplica as migrações em um PostgreSQL 15 real, confere se os modelos e as migrações estão em sincronia (`alembic check`) e testa desfazer/refazer |
-| **Build da imagem Docker** | garante que o `Dockerfile` continua construindo |
-| **Deploy** | só roda na `main` e **só se os três anteriores passarem** (RNF07) |
+| **Build da imagem Docker** | garante que as imagens da API e do front (`front-end/Dockerfile`) continuam construindo e que o `Caddyfile` e o `deploy/docker-compose.prod.yml` são válidos |
+| **Front-end (lint, tipos, testes e build)** | lint, tipos, testes do front com cobertura mínima de 80% e build |
+| **Deploy** | só roda na `main` e **só se os quatro anteriores passarem** (RNF07): publica as imagens no GHCR, atualiza os containers na EC2 por SSH e testa `https://DOMINIO/health`. Passo a passo da AWS em [`deploy/README.md`](../deploy/README.md) |
 
 **Configuração necessária (uma vez):**
 1. SonarCloud → *My Account → Security* → gerar um token.

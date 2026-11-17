@@ -1,0 +1,5 @@
+# Arquivos que rodam em Linux (EC2, containers) ficam sempre com LF,
+# mesmo com core.autocrlf=true no Windows.
+*.sh       text eol=lf
+Caddyfile  text eol=lf
+*.yml      text eol=lf

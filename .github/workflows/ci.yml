@@ -2,8 +2,8 @@
 #
 #  testes + SonarCloud ─┐
 #  migrações (Postgres) ─┤
-#  build do Docker ─────┼─> deploy (só na main, e só se tudo acima passar)
-#  front-end ───────────┘
+#  build do Docker ─────┼─> deploy (só na main, e só se tudo acima passar):
+#  front-end ───────────┘   imagens no GHCR + SSH na EC2 (docker compose up)
 #
 # RNF06: cobertura mínima de 80% (o pytest e o Vitest falham abaixo disso).
 # RNF07: se um teste falhar ou o Quality Gate do SonarCloud reprovar, o job
@@ -16,10 +16,11 @@ on:
   pull_request:
     branches: [main, develop]
 
-# Cancela execuções antigas da mesma branch quando chega um push novo
+# Cancela execuções antigas da mesma branch quando chega um push novo.
+# Na main não cancela: um deploy pela metade é pior do que esperar.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -111,6 +112,16 @@ jobs:
       - uses: actions/checkout@v6
       - name: Construir a imagem da API
         run: docker build --tag cobranca-api:ci back-end
+      - name: Construir a imagem do front-end (Vite + Caddy)
+        run: docker build --tag cobranca-web:ci front-end
+      - name: O Caddyfile é válido?
+        run: docker run --rm cobranca-web:ci caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: O docker-compose de produção é válido?
+        working-directory: deploy
+        run: |
+          cp .env.example .env
+          sed -i 's/^RABBITMQ_PASSWORD=$/RABBITMQ_PASSWORD=ci/' .env
+          docker compose -f docker-compose.prod.yml config --quiet
 
   front-end:
     name: Front-end (lint, tipos, testes e build)
@@ -142,9 +153,67 @@ jobs:
     needs: [testes-e-qualidade, migracoes, build-docker, front-end]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: producao # permite exigir aprovação manual nas configurações do GitHub
+    environment:
+      name: producao # segredos do deploy ficam neste ambiente (Settings > Environments)
+      url: https://${{ vars.DOMINIO }}
+    permissions:
+      contents: read
+      packages: write # publicar as imagens no GitHub Container Registry
+    env:
+      IMAGE_TAG: ${{ github.sha }}
     steps:
-      - name: Deploy (a implementar na etapa da AWS)
+      - uses: actions/checkout@v6
+
+      - name: Nome do registro (o GHCR exige minúsculas)
+        run: echo "REGISTRO=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
+      - name: Login no GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build e push das imagens (tag = commit e latest)
         run: |
-          echo "Testes, Quality Gate e migrações passaram."
-          echo "Aqui entra o deploy na AWS (ex.: SSH no EC2 + docker compose pull/up)."
+          for servico in api:back-end web:front-end; do
+            nome="${servico%%:*}"; pasta="${servico#*:}"
+            imagem="$REGISTRO/cobranca-$nome"
+            docker build \
+              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+              --label "org.opencontainers.image.revision=${{ github.sha }}" \
+              --tag "$imagem:$IMAGE_TAG" --tag "$imagem:latest" "$pasta"
+            docker push "$imagem:$IMAGE_TAG"
+            docker push "$imagem:latest"
+          done
+
+      # Segredos via variáveis de ambiente (nunca interpolados direto no script)
+      - name: Configurar o SSH da EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USUARIO: ${{ secrets.EC2_USUARIO }}
+          EC2_CHAVE_SSH: ${{ secrets.EC2_CHAVE_SSH }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_CHAVE_SSH" > ~/.ssh/ec2
+          chmod 600 ~/.ssh/ec2
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host ec2\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/ec2\n  StrictHostKeyChecking yes\n' \
+            "$EC2_HOST" "$EC2_USUARIO" > ~/.ssh/config
+
+      # Sobe as imagens do commit atual. Para voltar a uma versão anterior, na EC2:
+      #   cd ~/cobranca && IMAGE_TAG=<sha antigo> docker compose up -d
+      - name: Atualizar os containers na EC2
+        run: |
+          scp deploy/docker-compose.prod.yml ec2:cobranca/docker-compose.yml
+          # REGISTRO e IMAGE_TAG são expandidos aqui no runner, de propósito
+          # shellcheck disable=SC2029
+          ssh ec2 "cd cobranca \
+            && export REGISTRO=$REGISTRO IMAGE_TAG=$IMAGE_TAG \
+            && docker compose pull --quiet \
+            && docker compose up -d --remove-orphans --wait --wait-timeout 300 \
+            && docker image prune -f"
+
+      - name: Teste de fumaça (HTTPS + /health)
+        env:
+          DOMINIO: ${{ vars.DOMINIO }}
+        run: |
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors \
+            "https://$DOMINIO/health"
