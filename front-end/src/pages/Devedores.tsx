@@ -16,7 +16,7 @@ import {
 import { useApi } from "../hooks/useApi"
 import { useDebounce } from "../hooks/useDebounce"
 import * as fmt from "../lib/formatos"
-import type { Devedor, Pagina, StatusDevedor } from "../lib/tipos"
+import type { Canal, Devedor, Pagina, StatusDevedor } from "../lib/tipos"
 
 const POR_PAGINA = 50
 const BUSCA_MINIMA = 2 // a API exige pelo menos 2 caracteres
@@ -31,6 +31,7 @@ const FILTROS_ATRASO = [
 ]
 
 const STATUS: StatusDevedor[] = ["ativo", "comunicado", "negociando", "quitado", "inativo"]
+const CANAIS: Canal[] = ["email", "sms", "whatsapp"]
 
 interface DevedoresProps {
   onAbrirLote?: (loteId: string) => void
@@ -40,6 +41,7 @@ export default function Devedores({ onAbrirLote }: DevedoresProps) {
   const [busca, setBusca] = useState("")
   const [status, setStatus] = useState<StatusDevedor | "">("")
   const [atraso, setAtraso] = useState("")
+  const [canal, setCanal] = useState<Canal | "">("")
   const [pagina, setPagina] = useState(0)
   const [selecionado, setSelecionado] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -50,12 +52,13 @@ export default function Devedores({ onAbrirLote }: DevedoresProps) {
   const query = new URLSearchParams({ skip: String(pagina * POR_PAGINA), limit: String(POR_PAGINA) })
   if (status) query.set("status", status)
   if (atraso) query.set("atraso_minimo", atraso)
+  if (canal) query.set("canal", canal)
   if (buscaAtrasada.length >= BUSCA_MINIMA) query.set("busca", buscaAtrasada)
 
   const consulta = useApi<Pagina<Devedor>>(`/devedores/?${query}`)
   const dados = consulta.dados
   const totalPaginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA)) : 1
-  const filtrando = Boolean(status || atraso || buscaAtrasada.length >= BUSCA_MINIMA)
+  const filtrando = Boolean(status || atraso || canal || buscaAtrasada.length >= BUSCA_MINIMA)
 
   // Qualquer filtro novo volta para a primeira página
   const comFiltro = <T,>(setter: (v: T) => void) => (v: T) => {
@@ -67,6 +70,7 @@ export default function Devedores({ onAbrirLote }: DevedoresProps) {
     setBusca("")
     setStatus("")
     setAtraso("")
+    setCanal("")
     setPagina(0)
   }
 
@@ -126,6 +130,16 @@ export default function Devedores({ onAbrirLote }: DevedoresProps) {
               className="w-full sm:w-56"
             >
               {FILTROS_ATRASO.map((o) => <option key={o.valor} value={o.valor}>{o.texto}</option>)}
+            </Selecao>
+            {/* RF05: só quem tem o contato do canal (e-mail, telefone para SMS ou WhatsApp) */}
+            <Selecao
+              value={canal}
+              onChange={(e) => comFiltro((v: string) => setCanal(v as Canal | ""))(e.target.value)}
+              aria-label="Filtrar por canal"
+              className="w-full sm:w-52"
+            >
+              <option value="">Todos os canais</option>
+              {CANAIS.map((c) => <option key={c} value={c}>Com {fmt.NOME_CANAL[c]}</option>)}
             </Selecao>
 
             {filtrando && (
