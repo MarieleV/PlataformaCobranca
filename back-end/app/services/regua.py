@@ -2,9 +2,9 @@
 pelo job de disparo."""
 from datetime import date, timedelta
 
-from sqlalchemy import exists, func, select
+from sqlalchemy import and_, exists, func, select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import Select
+from sqlalchemy.sql import ColumnElement, Select
 
 from app.core.datas import hoje, inicio_do_dia_utc
 from app.models.domain import (
@@ -22,6 +22,19 @@ STATUS_COBRAVEIS = (StatusDevedorEnum.ativo, StatusDevedorEnum.comunicado)
 _STATUS_COM_SUCESSO = (StatusComunicacaoEnum.enviado, StatusComunicacaoEnum.entregue)
 
 
+def tem_contato_do_canal(canal: CanalEnum) -> ColumnElement[bool]:
+    """Critério SQL: o devedor tem o contato do canal (e-mail, telefone ou WhatsApp) preenchido.
+
+    Usado na elegibilidade da régua e no filtro por canal da lista de devedores (RF05).
+    """
+    contato = {
+        CanalEnum.email: Devedor.email,
+        CanalEnum.sms: Devedor.telefone,
+        CanalEnum.whatsapp: Devedor.whatsapp,
+    }[canal]
+    return and_(contato.is_not(None), contato != "")
+
+
 def consulta_elegiveis(regra: RegraCobranca, dia: date | None = None) -> Select:
     """Devedores que a regra deve contatar no dia.
 
@@ -31,11 +44,6 @@ def consulta_elegiveis(regra: RegraCobranca, dia: date | None = None) -> Select:
     - RN03: ainda não recebeu comunicação bem-sucedida do mesmo canal no dia.
     """
     dia = dia or hoje()
-    contato = {
-        CanalEnum.email: Devedor.email,
-        CanalEnum.sms: Devedor.telefone,
-        CanalEnum.whatsapp: Devedor.whatsapp,
-    }[regra.canal]
 
     ja_recebeu_hoje = exists().where(
         Comunicacao.devedor_id == Devedor.id,
@@ -50,8 +58,7 @@ def consulta_elegiveis(regra: RegraCobranca, dia: date | None = None) -> Select:
         .where(
             Devedor.data_vencimento == dia - timedelta(days=regra.dias_atraso),
             Devedor.status.in_(STATUS_COBRAVEIS),
-            contato.is_not(None),
-            contato != "",
+            tem_contato_do_canal(regra.canal),
             ~ja_recebeu_hoje,
         )
         .order_by(Devedor.nome, Devedor.id)

@@ -67,7 +67,8 @@ Arquivos de exemplo usados abaixo (gere outros com a "planilha modelo" da tela d
 
 - [ ] Lista com total, ordenada do vencimento mais antigo; CPF/CNPJ mascarado.
 - [ ] Busca por nome, por CPF só com dígitos e por CPF com pontuação (ex.: `104.332`). Com 1 caractere aparece a dica "pelo menos 2".
-- [ ] Filtros de status e de atraso (combinados), "Limpar filtros" e paginação (com mais de 50 devedores).
+- [ ] Filtros de status, de atraso e de canal (combinados), "Limpar filtros" e paginação (com mais de 50 devedores).
+- [ ] Filtro de canal (RF05): "Com SMS" só traz quem tem telefone cadastrado, "Com WhatsApp" só quem tem WhatsApp, "Com E-mail" só quem tem e-mail (confira pela coluna "Contatos": o canal escolhido nunca aparece riscado).
 - [ ] Coluna "Contatos" risca os canais sem contato cadastrado.
 - [ ] Coluna "Atraso": D+N com uma pequena régua; a marca fica cinza até D+29, âmbar de D+30 a D+59 e vermelha a partir de D+60 (o texto D+N acompanha a cor). "A vencer" sem régua.
 - [ ] Sem resultados com filtro: "Nenhum devedor encontrado" com o botão "Limpar filtros".

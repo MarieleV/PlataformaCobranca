@@ -46,7 +46,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
 - Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123` (o seed recusa a senha padrão em produção; lá ele usa `ADMIN_EMAIL`/`ADMIN_SENHA_INICIAL` do `.env`, e a senha do admin de produção já foi trocada).
 - Máquina com pouca RAM: o RabbitMQ pode demorar a ficar *healthy* (alarme `system_memory_high_watermark` nos logs) e o `up` falhar com "dependency rabbitmq failed to start", deixando api/worker/beat em "Created". Não é defeito: rode `docker compose up -d` de novo (sem `--build`) e, se precisar, pare o monitoramento (`docker stop back-end-grafana-1 back-end-prometheus-1`).
-- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`, dentro de `back-end/`), `pytest` em `back-end/` (783 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
+- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`, dentro de `back-end/`), `pytest` em `back-end/` (789 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
 - Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Teste dos provedores reais: `docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`.
 - Produção (`ENVIRONMENT=production` em `app/core/config.py`): exige `COOKIE_SECURE=true` (HTTPS) e senha do admin diferente da padrão; `COOKIE_SAMESITE` (`lax` padrão) e `CORS_ORIGINS` precisam refletir o domínio real do front.
 
@@ -62,7 +62,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 |---|---|---|
 | Auth | `POST /auth/login`, `POST /auth/refresh`, `DELETE /auth/logout`, `GET /auth/me`, `PUT /auth/senha` | login público; demais autenticados |
 | Lotes | `POST /lotes/upload` (multipart, campo `file`; 422 formato/vazio, 413 grande), `GET /lotes/`, `GET /lotes/{id}`, `GET /lotes/{id}/erros`, `GET /lotes/{id}/erros/csv` | todos os perfis |
-| Devedores | `GET /devedores/` (query: `status`, `atraso_minimo`, `busca` [nome ou CPF/CNPJ, mín. 2 caracteres], `skip`, `limit` ≤ 200), `GET /devedores/{id}`, `GET /devedores/{id}/comunicacoes`, `PATCH /devedores/{id}/status`, `DELETE /devedores/{id}` (LGPD) | leitura: todos; **excluir: só administrador**; **marcar `quitado`: só gestor/administrador**; quitado não reabre (409) |
+| Devedores | `GET /devedores/` (query: `status`, `atraso_minimo`, `canal` [`email`/`sms`/`whatsapp` = tem o contato do canal, RF05], `busca` [nome ou CPF/CNPJ, mín. 2 caracteres], `skip`, `limit` ≤ 200), `GET /devedores/{id}`, `GET /devedores/{id}/comunicacoes`, `PATCH /devedores/{id}/status`, `DELETE /devedores/{id}` (LGPD) | leitura: todos; **excluir: só administrador**; **marcar `quitado`: só gestor/administrador**; quitado não reabre (409) |
 | Usuários | `GET/POST /usuarios/`, `GET/PATCH/DELETE /usuarios/{id}`, `POST /usuarios/{id}/ativar`, `/desativar`, `/redefinir-senha` | gestor (só gerencia operadores) e administrador (todos); operador não acessa |
 | Auditoria | `GET /auditoria/` (filtros `usuario_id`, `acao`, `entidade`, `de`, `ate`) | só administrador |
 | Régua | `GET/POST /regras/`, `GET/PATCH/DELETE /regras/{id}`, `POST /regras/{id}/ativar` e `/desativar`, `GET /regras/status`, `GET /regras/variaveis`, `POST /regras/preview`, `GET /regras/{id}/elegiveis`, `POST /regras/{id}/executar` (202) | gestor e administrador (listar/consultar: todos) |
@@ -103,7 +103,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 
 ### Desvios do protótipo/RFC já combinados (cada um por falta de endpoint ou por LGPD)
 - Dashboard: painel "Alertas" virou "Distribuição por canal" + conversão.
-- Devedores: sem filtro por canal (a API não filtra), sem "último contato" e sem "Exportar CSV" (LGPD); a coluna "Contatos" mostra os canais possíveis. **Atenção: o RF05 do RFC pede filtro por canal** (ver Pendências).
+- Devedores: sem "último contato" e sem "Exportar CSV" (LGPD); a coluna "Contatos" mostra os canais possíveis. O filtro por canal (RF05) foi implementado em nov/2026 e significa "tem o contato do canal" (mesmo critério da elegibilidade da régua, `tem_contato_do_canal` em `app/services/regua.py`).
 - Régua: cards sem métricas por regra. Monitoramento: o "console de logs" fictício virou saúde dos serviços + janela de disparo + jobs.
 - Login: "Esqueceu a senha?" virou "Fale com o administrador".
 
@@ -120,13 +120,11 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 
 ## Pendências do projeto (próxima fase)
 Ordem sugerida:
-1. **Ajustar o `deploy/README.md` ao que aconteceu no provisionamento**: retenção de backup do RDS de 1 dia no plano gratuito (o guia diz 7), pacotes do GHCR já nascendo públicos (o guia diz que o 1º deploy falha no `pull`), contorno do `ssh-keyscan` no Windows, `ServerAliveInterval` no SSH, especificação de crédito Padrão na `t3.small`, orçamento sem créditos e campo IPv6 do DuckDNS vazio.
-2. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
-3. **RF05 — filtro de devedores por canal**: implementar no back (`GET /devedores/?canal=` = tem contato para o canal) e no front, ou registrar o desvio no RFC.
-4. **Registrar o deploy na documentação do TCC**: URL, arquitetura, prints (console da EC2 e do RDS, Actions verde, site com cadeado) e a justificativa da região.
-5. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana). Se rodar contra produção, cuidado com o crédito da `t3.small` (modo Padrão: a CPU fica lenta quando os créditos de CPU acabam).
-6. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
-7. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
+1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
+2. **Registrar o deploy na documentação do TCC**: URL, arquitetura, prints (console da EC2 e do RDS, Actions verde, site com cadeado) e a justificativa da região.
+3. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana). Se rodar contra produção, cuidado com o crédito da `t3.small` (modo Padrão: a CPU fica lenta quando os créditos de CPU acabam).
+4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
+5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
 Rotina de produção: acompanhar os créditos no Faturamento uma vez por semana; snapshot manual do RDS antes de mudanças arriscadas; no fim do TCC, desabilitar a proteção contra exclusão (se ligada), apagar EC2 e RDS e **liberar o Elastic IP**.
 
