@@ -32,7 +32,9 @@ Arquivos desta pasta:
 ## 0. Antes de começar
 
 1. **Conta AWS** com MFA no usuário root. Para o dia a dia, use um usuário IAM com MFA (não o root).
-2. **Região**: `sa-east-1` (São Paulo) — dados de devedores ficam no Brasil (LGPD) e a latência é menor. Use a mesma região para tudo.
+2. **Região**: `us-east-2` (Ohio). Use a mesma região para tudo (EC2, RDS, Elastic IP).
+   - **Por quê:** EC2 e RDS custam bem menos em Ohio do que em São Paulo (`sa-east-1`, uma das regiões mais caras da AWS), o que faz os créditos do TCC durarem mais.
+   - **O que se perde:** latência maior para usuários no Brasil (algo como 120–150 ms por requisição, contra ~10–30 ms em São Paulo) e os dados dos devedores ficam fora do país. A LGPD permite transferência internacional com salvaguardas (art. 33). Para o TCC usamos só **dados fictícios**; em produção real com a Consulth, o recomendado é migrar para `sa-east-1`. Basta recriar os recursos lá, porque nada no código depende da região.
 3. **Domínio**. Precisa de um nome apontando para a EC2 (o Let's Encrypt não emite para o IP padrão da AWS). Opções:
    - Grátis: [DuckDNS](https://www.duckdns.org) → crie, por exemplo, `cobranca-tcc.duckdns.org` (o IP você preenche no passo 3).
    - Domínio próprio (Registro.br, Route 53…): um registro **A** apontando para o Elastic IP.
@@ -64,7 +66,7 @@ Console **RDS → Create database**:
 | Conectividade | VPC padrão · **Public access: No** · security group `cobranca-rds` (remova o `default`) |
 | Additional configuration | Initial database name: `cobranca_db` · backups automáticos 7 dias · encryption ligada |
 
-Anote o **Endpoint** (ex.: `cobranca-db.xxxx.sa-east-1.rds.amazonaws.com`). O PostgreSQL 15 do RDS já exige TLS; a API também recusa subir sem `?sslmode=require`.
+Anote o **Endpoint** (ex.: `cobranca-db.xxxx.us-east-2.rds.amazonaws.com`). O PostgreSQL 15 do RDS já exige TLS; a API também recusa subir sem `?sslmode=require`.
 
 ## 3. Servidor: EC2
 
