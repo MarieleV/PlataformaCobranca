@@ -11,7 +11,56 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - **Back-end concluído** e na `main`.
 - **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. Não há mais mocks nas telas.
 - **Deploy na AWS concluído (17/11/2026)**: a `feature/deploy-aws` entrou na `main` pelo PR #38 e o primeiro deploy pelo CI passou de primeira. Produção no ar em **https://cobranca-tcc.duckdns.org** (detalhes em "Produção (`deploy/`)"). Testado em produção: login, dashboard, upload de lotes com polling e erros por linha, troca de senha, logout/login.
-- **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo), começando pelo teste real dos provedores.
+- **`develop` à frente da `main` (e já no GitHub), aguardando teste local antes do PR**: filtro de devedores por canal (RF05, back + front), `deploy/README.md` ajustado, `docs/DEPLOY.md` (registro do deploy para o TCC) e o teste de carga em `carga/`. A Mariele **não** quis abrir o PR para a `main` antes de testar no PC de casa, que tem Docker (o PC do trabalho não tem Docker rodando). O roteiro está na seção abaixo.
+- **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo). Os provedores reais (SendGrid/Twilio) ficaram para depois, por decisão da Mariele.
+
+## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
+Quando a Mariele voltar a falar disto, retome por aqui. Pergunte o que ela já fez e peça a saída de qualquer passo que falhou. Comandos em PowerShell, a partir da raiz do repositório.
+
+**0. Atualizar a máquina**
+```powershell
+git switch develop
+git pull
+cd front-end; npm install; cd ..
+```
+O `back-end/venv` desta máquina (se existir) precisa das dependências atuais: `back-end\venv\Scripts\python -m pip install -r back-end\requirements-dev.txt`.
+
+**1. Subir o back-end igual à produção** (API com 2 processos, sem `--reload`; ver `carga/docker-compose.carga.yml`)
+```powershell
+cd back-end
+docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml up -d --build
+docker compose ps
+docker exec -it cobranca_api python -m app.seed   # se o admin ainda não existir
+cd ..
+```
+Se o RabbitMQ atrasar ("dependency rabbitmq failed to start"), rode o `up -d` de novo, sem `--build`.
+
+**2. Testar o RF05 (filtro por canal)**, que ainda não foi testado com a API rodando, só pelo pytest:
+- Front (`cd front-end; npm run dev`, <http://localhost:8443>): na tela Devedores, o seletor "Com E-mail/SMS/WhatsApp" só traz quem não tem o canal riscado na coluna Contatos; combina com status/atraso; "Limpar filtros" zera (itens novos no `ROTEIRO_TESTES.md`, seção 4).
+- API: em <http://localhost:8000/docs>, `GET /devedores/` com `canal=sms`; `canal=fax` deve dar 422.
+
+**3. Teste de carga RNF01/RNF02** (passo a passo completo em `carga/README.md`). **O script nunca foi executado de verdade**: só passou por checagem de sintaxe e simulação da lógica no Node. Na primeira execução, qualquer erro é provavelmente do script, não da API; corrija com base na saída.
+```powershell
+python carga/gerar_massa.py          # carga/massa-5000.csv; importar pela tela "Importar lote" (5.000 novos, 0 rejeitados)
+cd carga
+docker run --rm -v "${PWD}:/scripts" -w /scripts -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
+cd ..
+```
+- Aprovado = ✓ em `http_req_duration{tipo:api} p(95)<300` (RNF02), `http_req_failed{tipo:api} rate<0.01` (RNF01) e `checks`. O resumo fica em `carga/resultados/*.txt` (fora do git).
+- Pontos que podem falhar na 1ª execução: o `import` do `textSummary` vem de `jslib.k6.io` (precisa de internet); `host.docker.internal` precisa resolver (Docker Desktop resolve); a pasta `carga/resultados/` precisa existir (tem `.gitkeep`).
+- Guardar para o TCC: print do resumo, o `.txt`, a configuração da máquina e o tamanho da base.
+
+**4. RNF03 (lote de 50.000)**, depois do teste de carga: `python carga/gerar_massa.py --quantidade 50000`, importar e capturar o Relatório de validação ("Enviado em" → "processado em", 50.000 novos). O gerador já foi validado: as 50.000 linhas passam no `validar_linha` do back-end.
+
+**5. Opcional: Grafana durante o teste** (`docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml -f docker-compose.monitoring.yml up -d` na pasta `back-end`; a consulta PromQL está no `carga/README.md`).
+
+**6. Voltar ao modo de desenvolvimento:** `cd back-end; docker compose up -d; cd ..`
+
+**7. Registrar os números** que a Mariele trouxer: P95, taxa de erro, requisições/s, usuários, tamanho da base, máquina, tempo do lote de 50.000. Lugar: uma seção "Resultados" no `carga/README.md` e a linha RNF01/RNF02/RNF03 da tabela de rastreabilidade do `docs/DEPLOY.md` (seção 8). Em seguida, atualizar a pendência 3 deste arquivo.
+
+**8. PR `develop` → `main`.** Leva o RF05 + docs + `carga/`. **Dispara deploy em produção** (aprovar em "Revisar implantações"). Risco baixo: sem migração, sem mudança no `.env`, no Caddyfile ou no compose de produção. Depois do deploy, conferir o filtro por canal em https://cobranca-tcc.duckdns.org. Só então, se quiser, o k6 contra a produção (patamar curto, `-e DURACAO=1m`; ver "Contra a produção" no `carga/README.md`).
+
+**9. Prints do deploy** para o TCC: a lista está na seção 10 do `docs/DEPLOY.md` (site com cadeado, Actions verde com o job Deploy, aprovação do ambiente, Ruleset, EC2, RDS, security group, `docker compose ps`, Packages e orçamento). Não precisam de Docker local.
 
 ## Como trabalhar com a Mariele
 - Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\silva\Repositórios GitHub\tcc-cobranca\PlataformaCobranca` ou `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
@@ -122,7 +171,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 Ordem sugerida:
 1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
 2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
-3. **Evidência dos RNF01/RNF02/RNF03**: o teste está pronto em `carga/` (k6 via Docker com os limites do RFC como *thresholds*, gerador de massa com CPFs válidos validado contra `validar_linha`, override do Compose com a API igual à de produção). **Falta a Mariele rodar** no PC com Docker (passo a passo em `carga/README.md`) e capturar as evidências. O script nunca foi executado de fato: só passou por checagem de sintaxe e simulação da lógica no Node (baixar o k6 foi bloqueado na sessão). Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
+3. **Evidência dos RNF01/RNF02/RNF03**: o teste está pronto em `carga/` (k6 via Docker com os limites do RFC como *thresholds*, gerador de massa com CPFs válidos validado contra `validar_linha`, override do Compose com a API igual à de produção). **Falta a Mariele rodar** no PC com Docker (ver "Próxima sessão: checklist no PC com Docker", passos 3 e 4) e capturar as evidências. O script nunca foi executado de fato: só passou por checagem de sintaxe e simulação da lógica no Node (baixar o k6 foi bloqueado na sessão). Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
 4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
