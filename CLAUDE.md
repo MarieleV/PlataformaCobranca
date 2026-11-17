@@ -121,8 +121,8 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 ## Pendências do projeto (próxima fase)
 Ordem sugerida:
 1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
-2. **Registrar o deploy na documentação do TCC**: URL, arquitetura, prints (console da EC2 e do RDS, Actions verde, site com cadeado) e a justificativa da região.
-3. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana). Se rodar contra produção, cuidado com o crédito da `t3.small` (modo Padrão: a CPU fica lenta quando os créditos de CPU acabam).
+2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
+3. **Evidência dos RNF01/RNF02/RNF03**: o teste está pronto em `carga/` (k6 via Docker com os limites do RFC como *thresholds*, gerador de massa com CPFs válidos validado contra `validar_linha`, override do Compose com a API igual à de produção). **Falta a Mariele rodar** no PC com Docker (passo a passo em `carga/README.md`) e capturar as evidências. O script nunca foi executado de fato: só passou por checagem de sintaxe e simulação da lógica no Node (baixar o k6 foi bloqueado na sessão). Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
 4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
@@ -132,6 +132,8 @@ Rotina de produção: acompanhar os créditos no Faturamento uma vez por semana;
 - `README.md`: visão geral, como rodar, status do projeto.
 - `back-end/DOC.md`: execução, testes, CI/CD, métricas, regras e limitações conhecidas.
 - `front-end/README.md` e `front-end/ROTEIRO_TESTES.md`: front e roteiro de teste manual.
-- `deploy/README.md`: arquitetura de produção e passo a passo da AWS.
+- `deploy/README.md`: arquitetura de produção e passo a passo da AWS (guia operacional).
+- `carga/README.md`: teste de carga (RNF01/RNF02 com k6) e lote de 50.000 registros (RNF03).
+- `docs/DEPLOY.md`: registro da implantação para o TCC (decisões, justificativa da região, rastreabilidade com o RFC e lista de capturas).
 - `docs/RFC.md`: requisitos (RF/RN/RNF), v1.1 — o texto da proposta; a stack citada nele (ex.: "React 18") é a da época e não foi reescrita.
 - `docs/RFC-v1.0.md`: proposta original; a v1.1 remete a ela para os diagramas de casos de uso, mockups e C4.
