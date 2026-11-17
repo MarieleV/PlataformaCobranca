@@ -1,12 +1,21 @@
-# Implantação em Produção — Plataforma de Cobrança Automatizada
+<div align="center">
 
-**Complemento ao [RFC v1.1](./RFC.md) · Marco M6 (Deploy e Documentação)**
+# Implantação em produção
+
+**Registro das decisões de deploy para o TCC · complemento ao RFC, marco M6**
+
+<img src="https://img.shields.io/badge/AWS-EC2_+_RDS-59636e?logo=amazonwebservices&logoColor=white" alt="AWS EC2 e RDS" />
+<img src="https://img.shields.io/badge/primeiro_deploy-17%2F11%2F2026-1a7f37" alt="Primeiro deploy em 17/11/2026" />
+
+<sub>[README](../README.md) · [RFC](./RFC.md) · [Back-end](../back-end/DOC.md) · [Front-end](../front-end/README.md) · [Deploy](../deploy/README.md) · **Registro do deploy**</sub>
+
+</div>
 
 | Campo | Valor |
 |---|---|
 | **Autora** | Mariele Vieira da Silva |
 | **Ambiente** | Produção (AWS) |
-| **Endereço** | https://cobranca-tcc.duckdns.org |
+| **Endereço** | <https://cobranca-tcc.duckdns.org> |
 | **Primeiro deploy** | 17/11/2026, pelo pipeline de CI/CD (PR #38) |
 | **Guia operacional** | [`deploy/README.md`](../deploy/README.md) (passo a passo de provisionamento e operação) |
 
@@ -38,7 +47,7 @@ Funcionalidades verificadas no ambiente de produção após o primeiro deploy: l
                                                                  RDS PostgreSQL 15 (rede privada)
 ```
 
-*Figura 1 — Arquitetura de produção. Sugestão: refazer no mesmo estilo dos diagramas C4 da v1.0 (nível de containers).*
+*Figura 1 — Arquitetura de produção. O diagrama C4 de containers está no [RFC, seção 5.1](./RFC.md#51-modelo-c4).*
 
 **Containers em produção** (o RFC, seção 5.1, lista os containers lógicos; aqui está onde cada um roda):
 

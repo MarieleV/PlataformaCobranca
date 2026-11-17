@@ -1,4 +1,15 @@
-# Teste de carga (RNF01, RNF02 e RNF03)
+<div align="center">
+
+# Teste de carga
+
+**Evidência dos requisitos de desempenho: 100 usuários simultâneos, P95 < 300 ms e lotes de 50.000 registros**
+
+<img src="https://img.shields.io/badge/k6-1.0-59636e?logo=k6&logoColor=white" alt="k6" />
+<img src="https://img.shields.io/badge/RNF01_·_RNF02_·_RNF03-59636e" alt="RNF01, RNF02 e RNF03" />
+
+<sub>[README](../README.md) · [RFC](../docs/RFC.md) · [Back-end](../back-end/DOC.md) · [Front-end](../front-end/README.md) · [Deploy](../deploy/README.md) · **Teste de carga**</sub>
+
+</div>
 
 Evidência dos requisitos não funcionais de desempenho do [RFC](../docs/RFC.md#24-requisitos-não-funcionais):
 
