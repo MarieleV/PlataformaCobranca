@@ -1,48 +1,61 @@
-# RFC — Plataforma de Cobrança Automatizada
+<div align="center">
 
-**Proposta Técnica de Projeto de Portfólio · Engenharia de Software · Católica SC**
+# RFC · Plataforma de Cobrança Automatizada
 
-| Campo | Valor |
+**Proposta técnica e especificação de requisitos**
+
+<img src="https://img.shields.io/badge/versão-1.2-0969da" alt="Versão 1.2" />
+<img src="https://img.shields.io/badge/situação-implementado-1a7f37" alt="Implementado" />
+<img src="https://img.shields.io/badge/linha-Web_·_Dados_·_Automação-59636e" alt="Linha" />
+<img src="https://img.shields.io/badge/parceira-Consulth_Soluções-59636e" alt="Empresa parceira" />
+
+<sub>[README](../README.md) · **RFC** · [Back-end](../back-end/DOC.md) · [Front-end](../front-end/README.md) · [Deploy](../deploy/README.md) · [Registro do deploy](./DEPLOY.md)</sub>
+
+</div>
+
+| | |
 |---|---|
 | **Autora** | Mariele Vieira da Silva |
-| **Linha** | Web / Dados / Automação |
-| **Proposta original** | 12/04/2026 |
-| **Versão** | 1.1 (atualizada em 06/11/2026) |
-| **Versão anterior** | [RFC v1.0](./RFC-v1.0.md) (diagramas, mockups e C4 citados como "os da v1.0") |
+| **Curso** | Engenharia de Software · Católica SC |
+| **Empresa parceira** | Consulth Soluções Empresariais |
+| **Proposta original** | v1.0, 12/04/2026 |
+| **Versão atual** | v1.2, 17/11/2026 (documento único, consolidado) |
+
+> [!NOTE]
+> Este é o único documento de requisitos do projeto. A v1.2 reúne a proposta original (v1.0), a revisão de escopo (v1.1) e o que mudou durante a implementação ([seção 8](#8-implementação-e-desvios)). As versões anteriores continuam no histórico do Git.
 
 ---
 
 ## Sumário
 
-1. [Visão do Produto e Impacto](#1-visão-do-produto-e-impacto)
-2. [Engenharia de Requisitos](#2-engenharia-de-requisitos)
-3. [Fluxos e Comportamento do Sistema](#3-fluxos-e-comportamento-do-sistema)
-4. [Mockups e Experiência do Usuário (UX)](#4-mockups-e-experiência-do-usuário-ux)
-5. [Arquitetura do Sistema](#5-arquitetura-do-sistema)
-6. [Segurança e Privacidade](#6-segurança-e-privacidade)
-7. [Planejamento do Projeto](#7-planejamento-do-projeto)
-8. [Referências](#8-referências)
+1. [Visão do produto e impacto](#1-visão-do-produto-e-impacto)
+2. [Engenharia de requisitos](#2-engenharia-de-requisitos)
+3. [Fluxos e comportamento do sistema](#3-fluxos-e-comportamento-do-sistema)
+4. [Experiência do usuário](#4-experiência-do-usuário)
+5. [Arquitetura do sistema](#5-arquitetura-do-sistema)
+6. [Segurança e privacidade](#6-segurança-e-privacidade)
+7. [Planejamento](#7-planejamento)
+8. [Implementação e desvios](#8-implementação-e-desvios)
+9. [Referências](#9-referências)
+10. [Parecer do comitê de avaliação](#10-parecer-do-comitê-de-avaliação)
+
+<details>
+<summary><b>Histórico de versões</b></summary>
+<br/>
+
+| Versão | Data | Alterações |
+|---|---|---|
+| **1.0** | 12/04/2026 | Proposta original: problema, requisitos, fluxos, mockups, C4 e planejamento. |
+| **1.1** | 06/11/2026 | Gestor passa a gerenciar **operadores** (RN06/UC07); formatos `.csv`, `.xlsx` e `.xls`; **WhatsApp** como terceiro canal; reenvio padronizado (RN07/RN08); modelo de dados em português, `snake_case`; Python 3.14; casos de uso renumerados. |
+| **1.2** | 17/11/2026 | Documento único: diagramas da v1.0 trazidos para cá e atualizados (casos de uso, fluxos, navegação, C4, modelo de dados); stack e arquitetura de produção como implementadas; seção de desvios; RF05 concluído (filtro por canal). |
+
+</details>
 
 ---
 
-## Histórico de alterações (v1.0 → v1.1)
+## 1. Visão do produto e impacto
 
-| Item | Alteração |
-|---|---|
-| RN06 / UC07 | Gestor passa a criar, editar, ativar/desativar e redefinir senha de **operadores**. Administrador mantém acesso total e exclusividade do log de auditoria. |
-| RF01 / Tela 3 | Formatos aceitos: `.csv`, `.xlsx` e `.xls`. |
-| WhatsApp | Incluído como terceiro canal de disparo (cliente próprio, via API do Twilio para WhatsApp). |
-| Reenvio | Padronizado: 1 envio inicial + até 3 reenvios (máx. 4 tentativas), intervalo de 30 min, configurável. |
-| Modelo de dados | Padronizado em português, `snake_case`, tabelas no plural. Corrigidas duplicidades e lacunas (ver [seção 5.2](#52-modelo-de-dados-padronizado)). |
-| Stack | Python atualizado para 3.14 (validar compatibilidade das bibliotecas; fallback 3.12/3.13). |
-| Casos de uso | Numeração e descrição dos atores corrigidas; «dashboard de acordos fechados» removido por contrariar o escopo (sem módulo de negociação). |
-| Estrutura | Seção «Parecer do Comitê» renumerada para 9. Referência CRISP-DM removida (não utilizada). |
-
----
-
-## 1. Visão do Produto e Impacto
-
-### 1.1 Contexto e Problema
+### 1.1 Contexto e problema
 
 A inadimplência é um desafio estrutural para empresas de diversos segmentos no Brasil. Segundo dados do Serasa Experian, o país ultrapassa 70 milhões de pessoas físicas inadimplentes, e empresas de médio porte perdem, em média, entre 3% e 8% da receita bruta anual em decorrência de cobranças mal executadas ou não realizadas.
 
@@ -56,16 +69,19 @@ O processo tradicional é majoritariamente manual: analistas exportam planilhas 
 
 Este projeto propõe uma plataforma web integrada que automatiza a ingestão de dados de inadimplentes, aplica regras de cobrança configuráveis e executa disparos multicanal (e-mail, SMS e WhatsApp) de forma programada e monitorada.
 
-### 1.2 Origem da Demanda e Evidências
+### 1.2 Origem da demanda e evidências
 
 Foram realizadas entrevistas exploratórias com 5 profissionais da área financeira e 15 da área de cobrança da empresa parceira. Principais resultados:
 
-- **100%** relatam que o envio de comunicações de cobrança é manual.
-- **80%** afirmam não ter rastreabilidade sobre quais devedores receberam qual comunicação.
-- **100%** apontam dificuldade de manter uma régua padronizada entre analistas.
-- A empresa não usa solução dedicada: combina planilhas Excel, e-mail corporativo e sistemas legados.
+| Achado | Resultado |
+|---|:---:|
+| Relatam que o envio de comunicações de cobrança é manual | **100%** |
+| Não têm rastreabilidade sobre quais devedores receberam qual comunicação | **80%** |
+| Apontam dificuldade de manter uma régua padronizada entre analistas | **100%** |
 
-### 1.3 Análise de Soluções Existentes (Benchmark)
+A empresa não usa solução dedicada: combina planilhas Excel, e-mail corporativo e sistemas legados.
+
+### 1.3 Análise de soluções existentes
 
 | Solução | Público-alvo | Pontos fortes | Limitações |
 |---|---|---|---|
@@ -74,12 +90,10 @@ Foram realizadas entrevistas exploratórias com 5 profissionais da área finance
 | Iugu / Vindi | E-commerce e SaaS | Plataforma de pagamentos robusta | Foco em recorrência, não em carteira |
 | Planilha + disparador de e-mail | Qualquer empresa | Baixo custo, familiar | Sem automação, rastreabilidade ou escala |
 
-> **Diferencial:** nenhuma das soluções oferece simultaneamente
-> (1) importação flexível de lotes via CSV/Excel com validação automatizada;
-> (2) configuração visual da régua por perfil de devedor;
-> (3) jobs programados com monitoramento em tempo real via dashboard, em arquitetura moderna, open source e auditável.
+> [!IMPORTANT]
+> **Diferencial.** Nenhuma das soluções oferece, ao mesmo tempo: (1) importação flexível de lotes via CSV/Excel com validação automatizada; (2) configuração visual da régua por perfil de devedor; (3) jobs programados com monitoramento em tempo real, em arquitetura moderna, aberta e auditável.
 
-### 1.4 Público-Alvo
+### 1.4 Público-alvo
 
 Empresas de médio porte (cooperativas, varejistas, clínicas e prestadoras de serviço) que gerenciam internamente suas carteiras de inadimplentes.
 
@@ -100,39 +114,72 @@ O projeto é desenvolvido em parceria com a **Consulth Soluções Empresariais**
 - Dashboard com métricas de execução, taxa de entrega e taxa de conversão.
 - Qualidade de código com TDD, CI/CD automatizado e análise estática via SonarCloud.
 
-### 1.6 Métricas de Sucesso (KPIs)
+### 1.6 Métricas de sucesso
 
-| KPI | Meta |
-|---|---|
-| Tempo de resposta da API (P95) | < 300 ms |
-| Throughput de processamento de lote | > 10.000 registros/minuto |
-| Cobertura de testes (backend) | ≥ 80% |
-| Cobertura de testes (frontend) | ≥ 25% |
-| Disponibilidade do serviço | ≥ 99% |
-| Taxa de sucesso nos disparos de e-mail | > 95% |
-| Quality Gate SonarCloud | Aprovado (sem *blockers*/*criticals*) |
+| KPI | Meta | Como é verificado |
+|---|---|---|
+| Tempo de resposta da API (P95) | < 300 ms | Teste de carga com k6 ([`carga/`](../carga/README.md)) |
+| Throughput de processamento de lote | > 10.000 registros/min | Lote de 50.000 registros (RNF03) |
+| Cobertura de testes (back-end) | ≥ 80% | pytest no CI (hoje ~97%) |
+| Cobertura de testes (front-end) | ≥ 25% | Vitest no CI (exigido 80%; hoje ~91% na lógica) |
+| Disponibilidade do serviço | ≥ 99% | Teste de `/health` a cada deploy |
+| Taxa de sucesso nos disparos de e-mail | > 95% | Meta exibida no dashboard |
+| Quality Gate SonarCloud | Aprovado | Check obrigatório no merge para a `main` |
 
 ---
 
-## 2. Engenharia de Requisitos
+## 2. Engenharia de requisitos
 
 ### 2.1 Personas
 
-**Heloizi Vargas — Analista de Cobrança**
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Heloizi Vargas** · Analista de Cobrança
 
 Trabalha em uma cooperativa de crédito e cobrança e gerencia uma carteira de 2.000 devedores por mês.
 
 - **Objetivo:** enviar cobranças sem fazê-lo manualmente, uma a uma.
 - **Dores:** perde horas exportando planilhas do ERP e enviando e-mails; erra ao filtrar devedores por prazo, gerando cobrança indevida com risco de processos.
 
-**Fellipe Junkes — Gestor Financeiro**
+</td>
+<td width="50%" valign="top">
+
+**Fellipe Junkes** · Gestor Financeiro
 
 Responsável pela estratégia de recuperação de crédito B2B.
 
 - **Objetivo:** acompanhar em tempo real o desempenho das campanhas e ajustar a régua conforme o perfil dos devedores.
 - **Dores:** sem visibilidade sobre as ações tomadas e sem como mensurar o retorno das comunicações.
 
-### 2.2 Casos de Uso
+</td>
+</tr>
+</table>
+
+### 2.2 Casos de uso
+
+```mermaid
+flowchart LR
+    AN(["👤 Analista<br/>(operador)"])
+    GE(["👤 Gestor"])
+    AD(["👤 Administrador"])
+
+    subgraph S["Plataforma de Cobrança"]
+        UC01["UC01 · Importar lote"]
+        UC02["UC02 · Ver relatório de validação"]
+        UC03["UC03 · Configurar régua"]
+        UC04["UC04 · Listar devedores"]
+        UC05["UC05 · Monitorar jobs"]
+        UC06["UC06 · Histórico do devedor"]
+        UC07["UC07 · Gerenciar usuários"]
+    end
+
+    AN --- UC01 & UC02 & UC04 & UC06
+    GE --- UC03 & UC04 & UC05 & UC06
+    GE -. "só operadores" .- UC07
+    AD --- UC07
+```
 
 | Código | Caso de uso | Atores |
 |---|---|---|
@@ -144,7 +191,11 @@ Responsável pela estratégia de recuperação de crédito B2B.
 | UC06 | Consultar histórico de comunicações por devedor | Analista, Gestor |
 | UC07 | Gerenciar usuários e permissões de acesso | Gestor (escopo limitado), Administrador |
 
-#### UC07 — escopo do Gestor (somente perfil Operador)
+<details>
+<summary><b>UC07: escopo do gestor e do administrador</b></summary>
+<br/>
+
+**Gestor (somente perfil operador)**
 
 | Ação | Descrição |
 |---|---|
@@ -153,9 +204,9 @@ Responsável pela estratégia de recuperação de crédito B2B.
 | G3 | Ativar/desativar operador |
 | G4 | Visualizar lista de usuários |
 
-> O gestor **não** cria, edita nem promove gestores ou administradores.
+O gestor **não** cria, edita nem promove gestores ou administradores.
 
-#### UC07 — escopo do Administrador (acesso total)
+**Administrador (acesso total)**
 
 | Ação | Descrição |
 |---|---|
@@ -166,40 +217,40 @@ Responsável pela estratégia de recuperação de crédito B2B.
 | A5 | Visualizar log de auditoria (**exclusivo**) |
 | A6 | Visualizar lista completa de usuários |
 
-> *Os diagramas de caso de uso (Diagramas 1 e 2) permanecem os da v1.0; a única correção de conteúdo é o escopo do gestor descrito acima, e a numeração dos casos de uso deve ser alinhada à tabela.*
+</details>
 
-### 2.3 Requisitos Funcionais
+### 2.3 Requisitos funcionais
 
-| ID | Requisito |
-|---|---|
-| **RF01** | Permitir upload de arquivos CSV e Excel (`.xlsx` e `.xls`) com dados de devedores. |
-| **RF02** | Processar o arquivo de forma assíncrona e exibir o progresso em tempo real. |
-| **RF03** | Validar cada linha conforme as regras de negócio e exibir relatório detalhado de erros por linha, com download em CSV. |
-| **RF04** | Permitir configurar a régua de cobrança: canais (e-mail, SMS, WhatsApp), prazo de atraso, horário e template de mensagem. |
-| **RF05** | Listar devedores com filtros por status, prazo e canal. |
-| **RF06** | Executar jobs programados que disparam comunicações aos devedores elegíveis conforme a régua ativa. |
-| **RF07** | Registrar o resultado de cada tentativa de disparo (sucesso, falha, bounce), com número da tentativa e código de erro. |
-| **RF08** | Exibir dashboard com total de disparos, taxa de entrega e taxa de conversão. |
-| **RF09** | Autenticar usuários com controle de perfis (operador, gestor, administrador). |
-| **RF10** | Permitir o gerenciamento de usuários e permissões, conforme o escopo de cada perfil (UC07). |
-| **RF11** | Permitir ao administrador consultar o log de auditoria de acessos e ações. |
-| **RF12** | Disponibilizar endpoint de exclusão de todos os dados de um devedor (LGPD, art. 18). |
+| ID | Requisito | Situação |
+|---|---|:---:|
+| **RF01** | Permitir upload de arquivos CSV e Excel (`.xlsx` e `.xls`) com dados de devedores. | ✅ |
+| **RF02** | Processar o arquivo de forma assíncrona e exibir o progresso em tempo real. | ✅ |
+| **RF03** | Validar cada linha conforme as regras de negócio e exibir relatório detalhado de erros por linha, com download em CSV. | ✅ |
+| **RF04** | Permitir configurar a régua de cobrança: canais (e-mail, SMS, WhatsApp), prazo de atraso, horário e template de mensagem. | ✅ |
+| **RF05** | Listar devedores com filtros por status, prazo e canal. | ✅ |
+| **RF06** | Executar jobs programados que disparam comunicações aos devedores elegíveis conforme a régua ativa. | ✅ |
+| **RF07** | Registrar o resultado de cada tentativa de disparo (sucesso, falha, bounce), com número da tentativa e código de erro. | ✅ |
+| **RF08** | Exibir dashboard com total de disparos, taxa de entrega e taxa de conversão. | ✅ |
+| **RF09** | Autenticar usuários com controle de perfis (operador, gestor, administrador). | ✅ |
+| **RF10** | Permitir o gerenciamento de usuários e permissões, conforme o escopo de cada perfil (UC07). | ✅ |
+| **RF11** | Permitir ao administrador consultar o log de auditoria de acessos e ações. | ✅ |
+| **RF12** | Disponibilizar endpoint de exclusão de todos os dados de um devedor (LGPD, art. 18). | ✅ |
 
-### 2.4 Requisitos Não Funcionais
+### 2.4 Requisitos não funcionais
 
-| ID | Requisito |
-|---|---|
-| **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. |
-| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. |
-| **RNF03** | Processar arquivos de até 50.000 registros. |
-| **RNF04** | Autenticação JWT com tokens de curta duração e refresh token. |
-| **RNF05** | Dados sensíveis armazenados com criptografia em repouso. |
-| **RNF06** | Cobertura mínima de 80% nos testes do backend (pytest). |
-| **RNF07** | O CI/CD deve bloquear o deploy se os testes falharem ou o Quality Gate do SonarCloud não for aprovado. |
-| **RNF08** | Expor métricas no formato Prometheus para Grafana. |
-| **RNF09** | Todos os serviços conteinerizados com Docker e orquestrados via Docker Compose. |
+| ID | Requisito | Situação |
+|---|---|:---:|
+| **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. | 🧪 teste pronto em [`carga/`](../carga/README.md) |
+| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | 🧪 teste pronto em [`carga/`](../carga/README.md) |
+| **RNF03** | Processar arquivos de até 50.000 registros. | ✅ limite aplicado; 🧪 evidência em [`carga/`](../carga/README.md) |
+| **RNF04** | Autenticação JWT com tokens de curta duração e refresh token. | ✅ |
+| **RNF05** | Dados sensíveis armazenados com criptografia em repouso. | ✅ |
+| **RNF06** | Cobertura mínima de 80% nos testes do backend (pytest). | ✅ ~97% |
+| **RNF07** | O CI/CD deve bloquear o deploy se os testes falharem ou o Quality Gate do SonarCloud não for aprovado. | ✅ |
+| **RNF08** | Expor métricas no formato Prometheus para Grafana. | ✅ |
+| **RNF09** | Todos os serviços conteinerizados com Docker e orquestrados via Docker Compose. | ✅ |
 
-### 2.5 Regras de Negócio
+### 2.5 Regras de negócio
 
 | ID | Regra |
 |---|---|
@@ -208,11 +259,11 @@ Responsável pela estratégia de recuperação de crédito B2B.
 | **RN03** | Um devedor não pode receber mais de uma comunicação **bem-sucedida** do mesmo canal no mesmo dia. Tentativas com falha não contam para o limite, permitindo o reenvio. |
 | **RN04** | Linhas com CPF/CNPJ inválido são rejeitadas e não ingressam na base. |
 | **RN05** | Jobs de disparo executam apenas em dias úteis, entre 08h00 e 20h00 (horário de Brasília). Reenvios fora da janela são reagendados para a próxima janela válida. |
-| **RN06** *(revisada)* | O administrador pode criar, editar, ativar/desativar, excluir e alterar o perfil de qualquer usuário. O gestor pode criar, editar, ativar/desativar e redefinir a senha **apenas de usuários com perfil operador**. O operador não gerencia usuários. O log de auditoria é exclusivo do administrador. |
-| **RN07** *(nova)* | Cada comunicação admite 1 envio inicial e até 3 reenvios (máximo de 4 tentativas), com intervalo mínimo de 30 minutos (valores configuráveis por variável de ambiente). Esgotadas as tentativas, a falha é registrada como definitiva. |
-| **RN08** *(nova)* | Bounce permanente (e-mail inexistente, número inválido) não é reenviado e é registrado como falha definitiva imediatamente. |
+| **RN06** | O administrador pode criar, editar, ativar/desativar, excluir e alterar o perfil de qualquer usuário. O gestor pode criar, editar, ativar/desativar e redefinir a senha **apenas de usuários com perfil operador**. O operador não gerencia usuários. O log de auditoria é exclusivo do administrador. |
+| **RN07** | Cada comunicação admite 1 envio inicial e até 3 reenvios (máximo de 4 tentativas), com intervalo mínimo de 30 minutos (valores configuráveis por variável de ambiente). Esgotadas as tentativas, a falha é registrada como definitiva. |
+| **RN08** | Bounce permanente (e-mail inexistente, número inválido) não é reenviado e é registrado como falha definitiva imediatamente. |
 
-### 2.6 Fora do Escopo
+### 2.6 Fora do escopo
 
 - Integração direta com sistemas de pagamento ou emissão de boletos.
 - Portal de autoatendimento para o devedor final.
@@ -223,130 +274,283 @@ Responsável pela estratégia de recuperação de crédito B2B.
 
 ---
 
-## 3. Fluxos e Comportamento do Sistema
+## 3. Fluxos e comportamento do sistema
 
-### 3.1 Fluxo Principal — Ingestão e Validação de Lotes
+### 3.1 Fluxo principal: ingestão e validação de lotes
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant F as Front-end
+    participant A as API (FastAPI)
+    participant Q as RabbitMQ
+    participant W as Worker (Celery + pandas)
+    participant DB as PostgreSQL
+
+    U->>F: Envia a planilha (.csv, .xlsx, .xls)
+    F->>A: POST /lotes/upload
+    A->>A: Valida formato e tamanho
+    alt Formato inválido ou arquivo vazio
+        A-->>F: HTTP 422
+    else Arquivo grande demais
+        A-->>F: HTTP 413
+    else Fila indisponível
+        A-->>F: HTTP 503 (mensagem orientativa)
+    else Arquivo aceito
+        A->>DB: Lote "pendente"
+        A->>Q: Publica o lote
+        A-->>F: HTTP 202 + id do lote
+    end
+    F->>U: Barra de progresso (polling em GET /lotes/{id})
+    Q->>W: Consome a mensagem
+    loop Blocos de 1.000 linhas
+        W->>W: Valida CPF/CNPJ, campos, datas, valor, e-mail e telefone
+        W->>DB: Devedores válidos (novos ou atualizados)
+        W->>DB: Erros por linha em erros_lote + progresso
+    end
+    W->>DB: Lote "concluído" (ou "erro", se a falha for estrutural)
+    F->>U: Relatório de validação
+```
 
 | Etapa | Ator | Descrição |
 |:---:|---|---|
-| 1 | Usuário | Acessa o portal e seleciona «Importar Lote». |
+| 1 | Usuário | Acessa o portal e seleciona «Importar lote». |
 | 2 | Usuário | Faz upload do arquivo (`.csv`, `.xlsx` ou `.xls`). |
 | 3 | API | Valida o formato, registra o lote como `pendente` e publica mensagem na fila RabbitMQ. |
 | 4 | Worker | Consome a mensagem e lê o arquivo com pandas (`xlrd` para `.xls`, `openpyxl` para `.xlsx`). |
 | 5 | Worker | Valida CPF/CNPJ, campos obrigatórios, formatos de data, valor, e-mail e telefone. |
 | 6 | Worker | Persiste registros válidos no PostgreSQL e erros em `erros_lote`. |
-| 7 | API | Atualiza o status e os contadores do lote. |
-| 8 | Frontend | Exibe o relatório: importados, rejeitados e erros por linha. |
+| 7 | Worker | Atualiza o status e os contadores do lote. |
+| 8 | Front-end | Exibe o relatório: importados, atualizados, rejeitados e erros por linha. |
 
-### 3.2 Fluxo Secundário — Execução da Régua de Cobrança
+### 3.2 Fluxo secundário: execução da régua de cobrança
 
-1. O scheduler (Celery Beat) aciona o job no horário configurado, respeitando a **RN05**.
-2. O worker consulta os devedores elegíveis conforme as regras ativas e aplica a **RN03**.
-3. Para cada devedor elegível, o worker chama o cliente do canal: e-mail (SendGrid/AWS SES), SMS (Twilio/AWS SNS) ou WhatsApp (API do Twilio).
+```mermaid
+flowchart TD
+    B["Celery Beat<br/>a cada 5 min"] --> J{"Dia útil, sem feriado<br/>e dentro da janela? (RN05)"}
+    J -- não --> FIM(["Aguarda o próximo ciclo"])
+    J -- sim --> E["Para cada regra ativa:<br/>devedores com atraso exato,<br/>status cobrável e contato (RN03)"]
+    E --> JOB["Cria o job do dia<br/>(idempotente: um por regra e dia)"]
+    JOB --> C["Envia pelo canal:<br/>SendGrid (e-mail) · Twilio (SMS, WhatsApp)"]
+    C --> R{"Resultado"}
+    R -- sucesso --> OK["Comunicação 'enviado'"]
+    R -- "bounce (contato inválido)" --> BO["Falha definitiva (RN08)"]
+    R -- falha temporária --> T{"Tentativas < 4?"}
+    T -- sim --> RE["Reenvio em 30 min,<br/>na próxima janela válida (RN07)"]
+    RE --> C
+    T -- não --> FD["Falha definitiva"]
+    OK & BO & FD --> D["Contadores do job<br/>e métricas do dashboard"]
+```
+
+1. O agendador (Celery Beat) aciona o ciclo respeitando a **RN05**, incluindo feriados nacionais e os configurados.
+2. O worker consulta os devedores elegíveis de cada regra ativa e aplica a **RN03**.
+3. Para cada devedor elegível, chama o cliente do canal: e-mail (SendGrid), SMS ou WhatsApp (Twilio).
 4. O resultado de cada chamada (sucesso, falha, bounce) é gravado em `comunicacoes`, com tentativa e código de erro.
 5. Em falha temporária, o reenvio é agendado (**RN07**). Em bounce permanente, a falha é definitiva (**RN08**).
-6. Os contadores do job e as métricas do dashboard são atualizados.
+6. O job fica `executando` enquanto houver reenvio pendente e termina `concluido` ou `falhou`.
 
-### 3.3 Fluxos Alternativos e Exceções
+### 3.3 Fluxos alternativos e exceções
 
 | Situação | Comportamento |
 |---|---|
-| Arquivo inválido | Formato fora de CSV/XLSX/XLS retorna **HTTP 422** sem enfileirar. |
-| Fila indisponível | API retorna **HTTP 503** com mensagem orientativa. |
+| Arquivo inválido | Formato fora de CSV/XLSX/XLS ou arquivo vazio retorna **HTTP 422** sem enfileirar; arquivo acima do limite, **HTTP 413**. |
+| Falha estrutural | Arquivo ilegível ou sem coluna obrigatória: o lote termina com status `erro` e o motivo aparece no relatório. |
+| Fila indisponível | A API retorna **HTTP 503** com mensagem orientativa. |
 | Falha no disparo externo | Erro registrado com código; reenvio após 30 minutos, até 3 reenvios (RN07). |
-| Usuário não autenticado | Rota protegida retorna **HTTP 401** e redireciona para o login. |
+| Sistema fora do ar no horário | O job daquele dia pode ser criado manualmente (`POST /regras/{id}/executar`), até 7 dias para trás. |
+| Usuário não autenticado | Rota protegida retorna **HTTP 401**; o front tenta renovar a sessão uma vez e, se falhar, volta ao login. |
 | Sem permissão | Ação fora do perfil retorna **HTTP 403** (por exemplo, gestor tentando criar outro gestor). |
+| Conflito de regra | Ativar uma segunda regra para o mesmo canal e dia de atraso retorna **HTTP 409**. |
 
 ---
 
-## 4. Mockups e Experiência do Usuário (UX)
+## 4. Experiência do usuário
 
-### 4.1 Fluxo de Navegação
+### 4.1 Fluxo de navegação
 
-**Login → Dashboard** (ponto de partida dos três fluxos):
+```mermaid
+flowchart TD
+    L["Login"] --> D["Dashboard"]
+    D --> I["Importar lote"] --> P["Processando<br/>(fila + worker)"] --> RV["Relatório de validação"]
+    D --> RG["Régua de cobrança"] --> CR["Configurar regra"] --> EL["Elegíveis do dia"]
+    D --> M["Monitoramento"] --> DJ["Detalhe do job"] --> HD["Histórico do devedor"]
+    D --> DV["Devedores"] --> HD
+    D --> U["Usuários · Auditoria<br/>(conforme o perfil)"]
+```
 
-| Fluxo | Percurso |
+Protótipo de baixa fidelidade no [Figma](https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada). A interface implementada evoluiu a partir dele (ver [seção 8](#8-implementação-e-desvios)).
+
+### 4.2 Telas principais
+
+| Tela | Conteúdo |
 |---|---|
-| **Fluxo 1 — Importação** | Importar Lote → Processando (fila + worker) → Relatório de Validação |
-| **Fluxo 2 — Régua** | Régua de Cobrança → Configurar Regra → Lista de Devedores |
-| **Fluxo 3 — Monitoramento** | Monitoramento → Detalhe do Job → Histórico do Devedor |
+| **Login** | E-mail e senha, mensagens de erro claras e orientação para recuperar o acesso com o administrador. |
+| **Dashboard** | Devedores na base, disparos do dia, taxa de entrega × meta, falhas, conversão, volume diário (7/15/30 dias), distribuição por canal, últimos lotes e jobs. |
+| **Importar lote** | Área de arrastar e soltar (`.csv`, `.xlsx`, `.xls`, até 50.000 registros), colunas obrigatórias e opcionais, planilha modelo e progresso em etapas. |
+| **Relatório de validação** | Totais (novos, atualizados, rejeitados), distribuição do lote, erros agrupados por linha (campo e regra violada) e exportação em CSV. |
+| **Devedores** | Busca, filtros por status, atraso e canal, marcador visual do atraso e painel com dados, troca de status, histórico e exclusão (LGPD). |
+| **Régua de cobrança** | Linha do tempo das regras por canal (D+N), cards com ativação, editor com variáveis e pré-visualização, elegíveis do dia e execução manual. |
+| **Monitoramento** | Saúde dos serviços, janela de disparo, jobs com progresso e o resultado de cada comunicação. |
+| **Usuários e auditoria** | Gestão conforme o perfil e trilha de auditoria filtrável (só administrador). |
 
-Após cada fluxo, o usuário retorna ao Dashboard. Os mockups e diagramas de navegação permanecem os da v1.0.
+Colunas da planilha: obrigatórias `cpf_cnpj`, `nome`, `email`, `valor_divida`, `data_vencimento`; opcionais `telefone`, `whatsapp`.
 
-### 4.2 Telas Principais
-
-1. **Login:** e-mail e senha, feedback de erro para credenciais inválidas e recuperação de senha. Autenticação via JWT.
-2. **Dashboard:** KPIs consolidados (devedores na base, disparos do dia, taxa de entrega, falhas), distribuição por canal, timeline de 7 dias, últimos lotes e atalhos.
-3. **Importar Lote:** upload com drag-and-drop (`.csv`, `.xlsx`, `.xls`, até 50.000 registros), instruções de colunas, planilha modelo e progresso em tempo real.
-   - Colunas obrigatórias: `cpf_cnpj`, `nome`, `email`, `valor_divida`, `data_vencimento`
-   - Colunas opcionais: `telefone`, `whatsapp`
-4. **Relatório de Validação:** totais, tempo de processamento, tabela de erros por linha (campo e regra violada) e download em CSV.
-5. **Régua de Cobrança:** regras por prazo de atraso (ex.: 5, 15 e 30 dias) com canal, template e horário, preview do template e lista de devedores elegíveis do dia.
-6. **Monitoramento de Jobs:** jobs em execução, concluídos e com falha, disparos por hora, log em tempo real e histórico por devedor.
-7. **Gestão de Usuários** *(nova)*: lista, criação e edição de usuários conforme o perfil logado (gestor vê e gerencia operadores; administrador vê todos e acessa o log de auditoria).
-
-### 4.3 Fluxo de Interação — Importação de Lote
-
-1. Usuário acessa «Importar Lote» pelo menu.
-2. Arrasta ou seleciona o arquivo.
-3. O sistema exibe a barra de progresso durante o envio.
-4. A API enfileira o processamento e retorna o ID do job.
-5. O frontend consulta o status periodicamente (polling ou WebSocket).
-6. Ao concluir, redireciona para o relatório de validação.
-7. O usuário revisa os erros, corrige o arquivo original e pode reimportar.
+<p align="center">
+  <img src="./imagens/regua.png" alt="Tela da régua de cobrança" width="49%" />
+  <img src="./imagens/relatorio.png" alt="Relatório de validação" width="49%" />
+</p>
 
 ---
 
-## 5. Arquitetura do Sistema
+## 5. Arquitetura do sistema
 
-### 5.1 Diagrama C4
+### 5.1 Modelo C4
 
-Os diagramas C4 de Contexto (nível 1), Containers (nível 2) e Componentes (nível 3) permanecem os da v1.0, com duas atualizações:
+**Nível 1: contexto**
 
-- incluir o **WhatsApp (API do Twilio)** como sistema externo;
-- incluir o **WhatsAppClient** na camada de clients.
+```mermaid
+flowchart TB
+    AN(["👤 Analista / Gestor"]) -- "usa pelo navegador" --> SIS["Plataforma de Cobrança Automatizada"]
+    AD(["👤 Administrador"]) -- "gerencia usuários e auditoria" --> SIS
+    SIS -- "e-mail" --> SG["SendGrid"]
+    SIS -- "SMS e WhatsApp" --> TW["Twilio"]
+    SIS -. "métricas" .-> OBS["Prometheus + Grafana"]
+    GH["GitHub Actions + SonarCloud"] -- "testa, analisa e implanta" --> SIS
+```
 
-**Contexto — sistemas externos:**
+**Nível 2: containers**
 
-| Sistema | Finalidade |
-|---|---|
-| SendGrid / AWS SES | E-mail |
-| Twilio / AWS SNS | SMS |
-| Twilio WhatsApp API | WhatsApp |
-| Prometheus + Grafana | Observabilidade |
-| SonarCloud | Análise estática |
-| GitHub Actions | CI/CD |
-
-**Containers:**
+```mermaid
+flowchart LR
+    U(["👤 Usuários"]) -- HTTPS --> WEB["Proxy web<br/>Caddy · TLS"]
+    WEB --> FE["Front-end SPA<br/>React 19 + TypeScript"]
+    WEB --> API["API REST<br/>Python 3.14 · FastAPI"]
+    API --> DB[("PostgreSQL 15")]
+    API -- "publica lotes" --> MQ[["RabbitMQ"]]
+    API --> R[("Redis<br/>sessões revogadas")]
+    BEAT["Agendador<br/>Celery Beat"] --> MQ
+    MQ --> W["Worker<br/>Celery + pandas"]
+    W --> DB
+    W --> SG["SendGrid"]
+    W --> TW["Twilio"]
+```
 
 | Container | Tecnologia | Responsabilidade |
 |---|---|---|
-| Frontend (SPA) | React 18 + Vite | Interface web; consome a REST API. |
-| API / Backend | Python 3.14 + FastAPI | Rotas REST, autenticação JWT e publicação de mensagens na fila. |
-| Worker de Processamento | Python (Celery) | Consome a fila, processa arquivos com pandas, persiste dados e executa disparos. |
-| Scheduler | Celery Beat | Agenda os jobs recorrentes da régua. |
-| Broker de Mensagens | RabbitMQ | Desacopla upload e processamento; garante durabilidade. |
-| Banco de Dados | PostgreSQL 15 | Devedores, regras, jobs, comunicações e auditoria. |
-| Cache / Session Store | Redis | Sessões JWT e resultados temporários de jobs. |
-| Observabilidade | Prometheus + Grafana | Métricas e dashboards. |
+| Proxy web | Caddy | HTTPS automático, arquivos do front-end e encaminhamento das rotas da API. |
+| Front-end (SPA) | React 19 + Vite + TypeScript | Interface web; consome a API REST. |
+| API | Python 3.14 + FastAPI | Rotas REST, autenticação, autorização e publicação de mensagens na fila. |
+| Worker | Celery + pandas | Processa lotes e executa os disparos. |
+| Agendador | Celery Beat | Aciona o ciclo da régua a cada 5 minutos. |
+| Broker | RabbitMQ | Desacopla o upload do processamento, com filas duráveis. |
+| Banco de dados | PostgreSQL 15 | Usuários, lotes, devedores, regras, jobs, comunicações e auditoria. |
+| Cache | Redis | Sessões revogadas, limite de tentativas de login e resultados temporários. |
 
-**Componentes do backend (arquitetura em camadas):**
+**Nível 3: componentes do back-end**
 
-| Camada | Componentes | Responsabilidade |
+| Pacote | Conteúdo | Responsabilidade |
 |---|---|---|
-| Routers | `BatchRouter`, `RulesRouter`, `JobsRouter`, `AuthRouter`, `UsersRouter`, `DebtorsRouter` | Recebem e validam requisições HTTP e delegam aos serviços. |
-| Services | `BatchService`, `NotificationService`, `AuthService`, `JobService`, `UserService` | Lógica de negócio; orquestram repositórios e clients. |
-| Repositories | `BatchRepository`, `DebtorRepository`, `CommunicationRepository`, `UserRepository`, `RuleRepository`, `AuditRepository` | Acesso ao banco via SQLAlchemy. |
-| Clients | `EmailClient`, `SMSClient`, `WhatsAppClient`, `BrokerClient` | Encapsulam APIs externas (SendGrid, Twilio, RabbitMQ). |
-| Models / Schemas | Pydantic Models, SQLAlchemy Models | Contratos de validação e persistência. |
+| `app/api` | `auth`, `lotes`, `devedores`, `regras`, `jobs`, `dashboard`, `usuarios`, `auditoria` | Rotas HTTP: validam a entrada (Pydantic), checam o perfil e delegam. |
+| `app/services` | `regua`, `disparo`, `dashboard` | Regras de negócio: elegibilidade, criação de jobs, reenvios e indicadores. |
+| `app/worker` | `tasks`, `disparo_tasks`, `validadores` | Tarefas Celery: importação de lotes e ciclo de disparo. |
+| `app/clients` | `sendgrid`, `twilio`, `simulado` | Clientes dos provedores, com um simulado para desenvolvimento. |
+| `app/core` | `security`, `crypto`, `feriados`, `janela`, `rate_limit`, `metricas`… | Infraestrutura transversal: autenticação, criptografia, calendário e métricas. |
+| `app/models` · `app/schemas` | SQLAlchemy · Pydantic | Persistência e contratos da API. |
 
-### 5.2 Modelo de Dados (padronizado)
+### 5.2 Modelo de dados
 
-**Convenções:** nomes em português, `snake_case`, tabelas no plural, chaves primárias UUID nativas do PostgreSQL, datas com fuso (`TIMESTAMPTZ`).
+```mermaid
+erDiagram
+    usuarios ||--o{ lotes : "importa"
+    usuarios ||--o{ regras_cobranca : "cria"
+    usuarios ||--o{ logs_auditoria : "gera"
+    lotes ||--o{ erros_lote : "tem"
+    lotes ||--o{ devedores : "importa"
+    regras_cobranca ||--o{ jobs : "aciona"
+    jobs ||--o{ comunicacoes : "origina"
+    devedores ||--o{ comunicacoes : "recebe"
 
-**Tipos enumerados:**
+    usuarios {
+        uuid id PK
+        string nome
+        string email UK
+        string senha_hash
+        enum cargo
+        bool ativo
+        uuid criado_por FK
+    }
+    lotes {
+        uuid id PK
+        uuid usuario_id FK
+        string nome_arquivo
+        enum status
+        int total_registros
+        int total_importados
+        int total_atualizados
+        int total_rejeitados
+    }
+    erros_lote {
+        uuid id PK
+        uuid lote_id FK
+        int numero_linha
+        string campo
+        string regra_violada
+        string valor_informado
+    }
+    devedores {
+        uuid id PK
+        uuid lote_id FK
+        string cpf_cnpj UK
+        string nome
+        string email
+        string telefone
+        string whatsapp
+        bytes valor_divida_enc "criptografado"
+        date data_vencimento
+        enum status
+    }
+    regras_cobranca {
+        uuid id PK
+        uuid usuario_id FK
+        string nome
+        int dias_atraso
+        enum canal
+        text template_mensagem
+        time horario_disparo
+        bool ativa
+    }
+    jobs {
+        uuid id PK
+        uuid regra_id FK
+        date dia_referencia "único com regra_id"
+        enum status
+        int total_alvos
+        int total_sucesso
+        int total_falhas
+    }
+    comunicacoes {
+        uuid id PK
+        uuid devedor_id FK
+        uuid job_id FK
+        enum canal
+        enum status
+        int tentativas
+        timestamptz proxima_tentativa_em
+        string codigo_erro
+    }
+    logs_auditoria {
+        uuid id PK
+        uuid usuario_id FK
+        string acao
+        string entidade
+        uuid entidade_id
+        string ip
+    }
+```
 
-| Tipo | Valores |
+**Convenções:** nomes em português, `snake_case`, tabelas no plural, chaves primárias UUID, datas com fuso (`TIMESTAMPTZ`), migrações versionadas com Alembic.
+
+| Tipo enumerado | Valores |
 |---|---|
 | `cargo_usuario` | `operador`, `gestor`, `administrador` |
 | `canal_disparo` | `email`, `sms`, `whatsapp` |
@@ -355,100 +559,152 @@ Os diagramas C4 de Contexto (nível 1), Containers (nível 2) e Componentes (ní
 | `status_job` | `agendado`, `executando`, `concluido`, `falhou` |
 | `status_comunicacao` | `pendente`, `enviado`, `entregue`, `falha`, `bounce` |
 
-**Tabelas:**
-
-| Tabela | Principais colunas |
-|---|---|
-| `usuarios` | `id`, `nome`, `email` (único), `senha_hash`, `cargo`, `ativo`, `criado_por` (FK `usuarios`), `criado_em`, `atualizado_em` |
-| `lotes` | `id`, `usuario_id` (FK), `nome_arquivo`, `status`, `total_registros`, `total_importados`, `total_rejeitados`, `iniciado_em`, `finalizado_em`, `criado_em` |
-| `erros_lote` | `id`, `lote_id` (FK, cascade), `numero_linha`, `campo`, `regra_violada`, `valor_informado`. Índice (`lote_id`, `numero_linha`) |
-| `devedores` | `id`, `lote_id` (FK), `cpf_cnpj` (único), `nome`, `email`, `telefone`, `whatsapp`, `valor_divida_enc` (criptografado), `data_vencimento`, `status`, `criado_em`, `atualizado_em`. Índice (`status`, `data_vencimento`) |
-| `regras_cobranca` | `id`, `usuario_id` (FK), `nome`, `dias_atraso` (> 0), `canal`, `template_mensagem`, `horario_disparo` (padrão 09:00), `ativa`, `criado_em` |
-| `jobs` | `id`, `regra_id` (FK), `lote_id` (FK, opcional), `status`, `total_alvos`, `total_sucesso`, `total_falhas`, `inicio_em`, `fim_em`, `criado_em` |
-| `comunicacoes` | `id`, `devedor_id` (FK), `job_id` (FK), `canal`, `status`, `tentativas`, `proxima_tentativa_em`, `codigo_erro`, `mensagem_erro`, `id_externo`, `enviado_em`, `criado_em`. Índice (`devedor_id`, `criado_em` desc) |
-| `logs_auditoria` | `id`, `usuario_id` (FK), `acao`, `entidade`, `entidade_id`, `ip`, `criado_em` |
-
-**Relacionamentos:**
-
-- usuário cria lotes e regras;
-- lote gera erros e importa devedores;
-- regra aciona jobs;
-- job origina comunicações;
-- devedor recebe comunicações.
-
 **Decisões de modelagem:**
 
-- O valor da dívida é criptografado em nível de aplicação, o que impede somas diretas em SQL; totais financeiros são calculados na aplicação.
+- O valor da dívida é criptografado em nível de aplicação, o que impede somas diretas em SQL; o dashboard trabalha com contagens e taxas.
 - `data_vencimento` permanece em claro para permitir o cálculo de atraso com índice.
 - Contadores em `lotes` e `jobs` evitam `COUNT(*)` pesado no dashboard.
-- `logs_auditoria` sustenta o UC07-A5 e o requisito RF11.
+- A restrição única (`regra_id`, `dia_referencia`) em `jobs` garante um job por regra e dia, mesmo com vários workers.
+- `logs_auditoria` sustenta o UC07-A5 e o RF11.
 
-### 5.3 Stack Tecnológica
+### 5.3 Stack tecnológica
 
 | Tecnologia | Uso | Justificativa |
 |---|---|---|
-| Python 3.14 + FastAPI | Backend e workers | Produtividade, tipagem com Pydantic, async/await e ecossistema rico para dados. *Validar suporte de todas as dependências; fallback 3.12/3.13.* |
-| React 18 + Vite | Frontend (SPA) | Biblioteca madura, build performática, suporte a PWA. |
-| PostgreSQL 15 | Banco relacional | Robusto, transacional, ACID. |
-| RabbitMQ | Message broker | Filas duráveis; protocolo AMQP amplamente suportado. |
-| Redis | Cache e sessões | Alta performance in-memory. |
-| Celery + Celery Beat | Tasks e scheduler | Execução assíncrona e agendamento recorrente. |
+| Python 3.14 + FastAPI | API e workers | Produtividade, tipagem com Pydantic e documentação OpenAPI automática. |
+| SQLAlchemy 2 + Alembic | ORM e migrações | Consultas parametrizadas e esquema versionado. |
+| React 19 + Vite + TypeScript | Front-end (SPA) | Biblioteca madura, build rápido e tipagem dos contratos da API. |
+| Tailwind CSS v4 | Estilo | Sistema visual consistente sem CSS solto. |
+| PostgreSQL 15 | Banco relacional | Robusto, transacional (ACID). |
+| RabbitMQ | Broker de mensagens | Filas duráveis; protocolo AMQP amplamente suportado. |
+| Redis | Cache e sessões | Alta performance em memória. |
+| Celery + Celery Beat | Tarefas e agendamento | Execução assíncrona e agendamento recorrente. |
 | pandas + openpyxl + xlrd | Leitura de planilhas | Suporte a `.csv`, `.xlsx` e `.xls`. |
-| Docker + Docker Compose | Conteinerização | Ambiente reproduzível em dev, CI e produção. |
-| GitHub Actions | CI/CD | Integração nativa com o GitHub. |
-| Pytest | Testes de backend | Padrão do ecossistema Python. |
-| Jest + Testing Library | Testes de frontend | Padrão para componentes React. |
-| SonarCloud | Análise estática | Quality Gate automatizado. |
-| Prometheus + Grafana | Observabilidade | Stack open source de referência. |
+| Docker + Docker Compose | Conteinerização | Ambiente reproduzível em desenvolvimento, CI e produção. |
+| Caddy | Proxy e HTTPS | Certificados emitidos e renovados automaticamente. |
+| GitHub Actions + SonarCloud | CI/CD e análise estática | Integração nativa com o GitHub; Quality Gate automatizado. |
+| pytest · Vitest + Testing Library | Testes | Padrões dos ecossistemas Python e React/Vite. |
+| Prometheus + Grafana | Observabilidade | Stack aberta de referência. |
+| AWS (EC2 + RDS) | Hospedagem | Créditos acadêmicos; banco gerenciado com backup e criptografia. |
 
 ---
 
-## 6. Segurança e Privacidade
+## 6. Segurança e privacidade
 
-### 6.1 Controles de Segurança
+### 6.1 Controles de segurança
 
-- Autenticação via JWT: *access token* de 15 minutos e *refresh token* de 7 dias em cookie `httpOnly`.
-- Autorização baseada em perfis (RBAC): operador, gestor e administrador, conforme a RN06.
-- Proteção contra OWASP Top 10: validação com Pydantic, ORM parametrizado contra SQL Injection e headers de segurança (HSTS, CSP, X-Frame-Options).
-- Rate limiting nas rotas de autenticação contra força bruta.
-- HTTPS obrigatório em produção (TLS via Nginx reverse proxy).
-- Senhas com hash bcrypt (custo 12).
-- Segredos fora do repositório (GitHub Secrets e `.env` não versionado).
-- Análise de vulnerabilidades no CI/CD via SonarCloud e Dependabot.
+| Área | Controle |
+|---|---|
+| Autenticação | JWT com *access token* de 15 minutos e *refresh token* de 7 dias (com rotação) em cookies `httpOnly`, `Secure` e `SameSite=Lax`; revogação no logout, na troca de senha e na desativação da conta. |
+| Autorização | RBAC com operador, gestor e administrador (RN06), verificado em cada rota. |
+| OWASP Top 10 | Validação de entrada com Pydantic; ORM parametrizado contra SQL Injection; cabeçalhos HSTS, `X-Frame-Options`, `X-Content-Type-Options` e `Referrer-Policy`. |
+| Força bruta | Limite de tentativas de login por IP e e-mail (HTTP 429). |
+| Transporte | HTTPS obrigatório em produção (Caddy + Let's Encrypt); TLS obrigatório na conexão com o banco. |
+| Senhas | Hash bcrypt com custo 12; 8 a 128 caracteres com letra e número. |
+| Segredos | Fora do repositório (`.env` não versionado no servidor e segredos do ambiente de produção no GitHub). |
+| Análise | SonarCloud com Quality Gate obrigatório no merge. |
 
 ### 6.2 Privacidade e LGPD
 
-- Os dados vêm exclusivamente das empresas parceiras (controladoras), responsáveis pela base legal de tratamento.
-- Dados sensíveis (valor da dívida, histórico de comunicações) com criptografia em nível de aplicação.
-- Logs de acesso e auditoria mantidos por 90 dias e anonimizados depois.
-- Endpoint de exclusão de todos os dados de um devedor (art. 18, LGPD).
-- Sem compartilhamento com terceiros além das APIs de disparo (SendGrid e Twilio), com acordos de processamento de dados em vigor.
+| Exigência | Implementação |
+|---|---|
+| Base legal | Os dados vêm das empresas parceiras (controladoras); a plataforma atua como operadora. |
+| Proteção de dados | Valor da dívida criptografado em nível de aplicação; disco e banco criptografados em produção; CPF/CNPJ mascarado nas listas. |
+| Direito de exclusão (art. 18) | Exclusão permanente de um devedor e de todo o seu histórico, restrita ao administrador e registrada na auditoria. |
+| Auditoria | Registro das ações sensíveis com usuário, entidade, IP e data. |
+| Compartilhamento | Apenas com os provedores de disparo (SendGrid e Twilio). |
+| Transferência internacional (art. 33) | O ambiente do TCC fica nos EUA e usa somente dados fictícios; para uso real, a recomendação é a região de São Paulo ([`DEPLOY.md`](./DEPLOY.md#4-escolha-da-região-us-east-2-ohio)). |
 
 ---
 
-## 7. Planejamento do Projeto
+## 7. Planejamento
 
-| Marco | Descrição | Prazo |
+```mermaid
+gantt
+    title Marcos do projeto (semanas)
+    dateFormat X
+    axisFormat %s
+    section Base
+    M1 · Setup e fundação           :done, m1, 0, 2
+    M2 · Ingestão e validação       :done, m2, 2, 5
+    section Régua
+    M3 · Régua, devedores e RBAC    :done, m3, 5, 7
+    M4 · Jobs e monitoramento       :done, m4, 7, 10
+    section Entrega
+    M5 · Qualidade e observabilidade :done, m5, 10, 12
+    M6 · Deploy e documentação      :done, m6, 12, 14
+```
+
+| Marco | Descrição | Prazo | Situação |
+|---|---|---|:---:|
+| **M1** · Setup e fundação | Repositório, Docker Compose, base FastAPI e React, CI/CD inicial com GitHub Actions e SonarCloud. | Semanas 1–2 | ✅ |
+| **M2** · Ingestão e validação | Upload (CSV/XLSX/XLS), RabbitMQ, worker com pandas, validações de negócio e relatório de erros. TDD nas regras de validação. | Semanas 3–5 | ✅ |
+| **M3** · Régua de cobrança | CRUD de regras, interface de configuração, devedores e status, autenticação, RBAC e gestão de usuários. | Semanas 6–7 | ✅ |
+| **M4** · Jobs e monitoramento | Celery Beat, integração com e-mail, SMS e WhatsApp, política de reenvio, dashboard e métricas Prometheus. | Semanas 8–10 | ✅ |
+| **M5** · Qualidade e observabilidade | Metas de cobertura, Quality Gate e dashboards Grafana. | Semanas 11–12 | ✅ |
+| **M6** · Deploy e documentação | Deploy com Docker e HTTPS, documentação final e apresentação. | Semanas 13–14 | ✅ |
+
+---
+
+## 8. Implementação e desvios
+
+O sistema foi implementado conforme este documento, com as diferenças abaixo. Cada uma tem um motivo registrado.
+
+### 8.1 Infraestrutura
+
+| A proposta previa | O que foi feito | Por quê |
 |---|---|---|
-| **M1** — Setup e Fundação | Repositório, Docker Compose, base FastAPI e React, CI/CD inicial com GitHub Actions e SonarCloud. | Semanas 1–2 |
-| **M2** — Ingestão e Validação | Upload (CSV/XLSX/XLS), RabbitMQ, worker com pandas, validações de negócio e relatório de erros. TDD nas regras de validação. | Semanas 3–5 |
-| **M3** — Régua de Cobrança | CRUD de regras, interface de configuração, devedores e status, autenticação, RBAC e gestão de usuários. Testes de integração das rotas. | Semanas 6–7 |
-| **M4** — Jobs e Monitoramento | Celery Beat, integração com e-mail, SMS e WhatsApp, política de reenvio, dashboard e métricas Prometheus. | Semanas 8–10 |
-| **M5** — Qualidade e Observabilidade | Metas de cobertura (80% backend, 25% frontend), Quality Gate e dashboards Grafana. | Semanas 11–12 |
-| **M6** — Deploy e Documentação | Deploy em VPS com Docker, HTTPS, documentação final (OpenAPI/Swagger, README, RFC) e apresentação. | Semanas 13–14 |
+| Deploy em VPS com Docker (M6) | AWS: EC2 com Docker Compose + RDS para o banco | Créditos acadêmicos; banco gerenciado com backup e criptografia |
+| TLS via Nginx | Caddy | Emite e renova o certificado HTTPS sozinho, com configuração bem menor |
+| PostgreSQL em contêiner | RDS em produção (contêiner no desenvolvimento e no CI) | Dados persistentes num serviço gerenciado |
+| AWS SES / SNS como alternativas | SendGrid (e-mail) e Twilio (SMS e WhatsApp) | Um provedor por canal, com cliente simulado para desenvolvimento |
+| Testes de front-end com Jest | Vitest + Testing Library | Integração nativa com o Vite; mesma API do Jest |
+
+Detalhes da produção em [`DEPLOY.md`](./DEPLOY.md).
+
+### 8.2 Interface
+
+| A proposta previa | O que foi feito | Por quê |
+|---|---|---|
+| Painel de "alertas" no dashboard | Distribuição por canal + taxa de conversão | Os alertas relevantes já aparecem nos indicadores e no monitoramento |
+| "Último contato" e exportação CSV na lista de devedores | Coluna de canais possíveis; sem exportação | A exportação em arquivo solto de dados pessoais conflita com a LGPD |
+| Log "estilo terminal" no monitoramento | Saúde dos serviços + janela de disparo + resultado de cada comunicação | Informação acionável no lugar de um log bruto |
+| "Esqueceu a senha?" com recuperação por e-mail | "Fale com o administrador" | Não há envio de e-mail transacional de recuperação; o administrador redefine a senha |
+| Métricas por regra nos cards da régua | Linha do tempo D+N e elegíveis do dia | Não há endpoint de métricas por regra |
+
+### 8.3 Pendências conhecidas
+
+- [ ] **Provedores reais:** validar SendGrid e Twilio com chaves reais (o sistema roda em modo simulado).
+- [ ] **RNF01/RNF02/RNF03:** executar o teste de carga e registrar os resultados ([`carga/`](../carga/README.md)).
+- [ ] **Retenção da auditoria:** a proposta previa logs por 90 dias com anonimização posterior; hoje os registros são mantidos sem expurgo automático.
+- [ ] **CSP e Dependabot:** o cabeçalho `Content-Security-Policy` e a atualização automática de dependências não foram configurados.
+- [ ] **Status `entregue`:** depende de webhooks dos provedores; hoje "enviado" significa aceito pelo provedor.
+- [ ] **WhatsApp em produção:** exige templates aprovados pela Meta para mensagens iniciadas pela empresa.
 
 ---
 
-## 8. Referências
+## 9. Referências
 
-- [FastAPI](https://fastapi.tiangolo.com)
-- [Celery](https://docs.celeryq.dev)
-- [RabbitMQ](https://www.rabbitmq.com/documentation.html)
-- [Prometheus Python Client](https://github.com/prometheus/client_python)
-- [SonarCloud](https://docs.sonarcloud.io)
+- [FastAPI](https://fastapi.tiangolo.com) · [Celery](https://docs.celeryq.dev) · [RabbitMQ](https://www.rabbitmq.com/documentation.html) · [PostgreSQL 15](https://www.postgresql.org/docs/15/)
+- [Prometheus Python Client](https://github.com/prometheus/client_python) · [SonarCloud](https://docs.sonarcloud.io) · [GitHub Actions](https://docs.github.com/actions) · [Docker](https://docs.docker.com)
 - [OWASP Top 10 (2021)](https://owasp.org/www-project-top-ten)
 - [LGPD, Lei nº 13.709/2018](http://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm)
 - [C4 Model, Simon Brown](https://c4model.com)
-- [GitHub Actions](https://docs.github.com/actions)
-- [Docker](https://docs.docker.com)
-- [PostgreSQL 15](https://www.postgresql.org/docs/15/)
+
+---
+
+## 10. Parecer do comitê de avaliação
+
+> *A ser preenchido pelos professores avaliadores.*
+
+| | Avaliador 1 | Avaliador 2 |
+|---|---|---|
+| **Nome** | | |
+| **Situação** | ☐ Aprovado &nbsp; ☐ Ajustar | ☐ Aprovado &nbsp; ☐ Ajustar |
+| **Observações** | | |
+
+---
+
+<div align="center">
+<sub>Plataforma de Cobrança Automatizada · Mariele Vieira da Silva · Engenharia de Software · Católica SC · 2026</sub>
+</div>

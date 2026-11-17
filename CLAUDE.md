@@ -17,6 +17,8 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 ## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
 Quando a Mariele voltar a falar disto, retome por aqui. Pergunte o que ela já fez e peça a saída de qualquer passo que falhou. Comandos em PowerShell, a partir da raiz do repositório.
 
+**Primeiro: a produção estava fora do ar em 17/11/2026 (tarde).** `https://cobranca-tcc.duckdns.org` não respondia (porta 443 sem resposta; o DuckDNS resolvia para o Elastic IP 3.134.59.65; o shields.io também via o site "down", então não era só a rede do trabalho). Conferir com a Mariele seguindo "Diagnóstico: o site não abre" no `deploy/README.md` (instância ligada? créditos/conta? `docker compose ps`? certificado?).
+
 **0. Atualizar a máquina**
 ```powershell
 git switch develop
@@ -184,5 +186,6 @@ Rotina de produção: acompanhar os créditos no Faturamento uma vez por semana;
 - `deploy/README.md`: arquitetura de produção e passo a passo da AWS (guia operacional).
 - `carga/README.md`: teste de carga (RNF01/RNF02 com k6) e lote de 50.000 registros (RNF03).
 - `docs/DEPLOY.md`: registro da implantação para o TCC (decisões, justificativa da região, rastreabilidade com o RFC e lista de capturas).
-- `docs/RFC.md`: requisitos (RF/RN/RNF), v1.1 — o texto da proposta; a stack citada nele (ex.: "React 18") é a da época e não foi reescrita.
-- `docs/RFC-v1.0.md`: proposta original; a v1.1 remete a ela para os diagramas de casos de uso, mockups e C4.
+- `docs/RFC.md`: **documento único de requisitos**, v1.2 (17/11/2026). Consolida a v1.0 (proposta) e a v1.1 (revisão): diagramas Mermaid (casos de uso, fluxos, navegação, C4, ER, Gantt), situação de cada RF/RNF e a seção 8 "Implementação e desvios" (inclui o que **não** foi implementado: retenção de 90 dias da auditoria, CSP, Dependabot). O `RFC-v1.0.md` foi apagado (fica no histórico do git). Ao concluir uma pendência, atualize a situação no RFC (tabelas 2.3/2.4 e seção 8.3).
+- `docs/imagens/`: capturas das telas usadas nos READMEs (1440×900, dados fictícios). Foram geradas com Playwright e a API simulada no navegador (rotas `localhost:8000` interceptadas), sem banco. Se a interface mudar visivelmente, refaça as capturas do mesmo jeito.
+- **Padrão visual da documentação** (para recrutadores, "nativo do GitHub"): cabeçalho centralizado com título, subtítulo em negrito, selos `img.shields.io` na paleta do GitHub (`59636e` cinza para tecnologias, `0969da` azul para links, `1a7f37` verde para estado bom) e a barra de navegação `<sub>` entre os documentos (README · RFC · Back-end · Front-end · Deploy…); alertas `> [!NOTE]/[!TIP]/[!IMPORTANT]/[!WARNING]/[!CAUTION]`; `<details>` para conteúdo longo; diagramas Mermaid **sem cores customizadas** (adaptam ao tema claro/escuro) e sem `<sub>` dentro deles. Nada de serviços externos decorativos (animação de digitação, ondas). O README da raiz tem selos dinâmicos do CI e do SonarCloud; não use selo de "site no ar" (mostraria "down" se a EC2 estiver parada).

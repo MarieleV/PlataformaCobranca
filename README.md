@@ -1,478 +1,376 @@
-<h1 align="center">
-  <img src="https://readme-typing-svg.herokuapp.com/?font=JetBrains+Mono&weight=600&size=30&duration=3500&pause=1200&color=475569&center=true&vCenter=true&width=700&height=60&lines=Plataforma+de+Cobran%C3%A7a;R%C3%A9gua+de+Cobran%C3%A7a+Multicanal;FastAPI+%2B+React+%2B+Celery" alt="Plataforma de Cobrança Automatizada" />
-</h1>
+<div align="center">
 
-<p align="center">
-  SaaS B2B de cobrança automatizada: importação em lote, régua de cobrança e disparo por e-mail, SMS e WhatsApp.<br/>
-  Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC
-</p>
+# Plataforma de Cobrança Automatizada
 
-<p align="center">
-  <a href="./docs/RFC.md">
-    <img src="https://img.shields.io/badge/RFC_v1.1-334155?style=for-the-badge&logo=readthedocs&logoColor=white" alt="RFC" />
-  </a>
-  <a href="./back-end/DOC.md">
-    <img src="https://img.shields.io/badge/Documenta%C3%A7%C3%A3o-475569?style=for-the-badge&logo=bookstack&logoColor=white" alt="Documentação" />
-  </a>
-  <a href="https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada" target="_blank">
-    <img src="https://img.shields.io/badge/Figma-64748B?style=for-the-badge&logo=figma&logoColor=white" alt="Figma" />
-  </a>
-</p>
+**Importa carteiras de devedores, aplica uma régua de cobrança configurável e dispara mensagens<br/>por e-mail, SMS e WhatsApp, com reenvios, auditoria e conformidade com a LGPD.**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/TypeScript-334155?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/React_19-334155?style=flat-square&logo=react&logoColor=white" alt="React" />
-  <img src="https://img.shields.io/badge/Tailwind-334155?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Vite_8-334155?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/Python_3.14-334155?style=flat-square&logo=python&logoColor=white" alt="Python" />
-  <img src="https://img.shields.io/badge/FastAPI-334155?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/PostgreSQL_15-334155?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/RabbitMQ-334155?style=flat-square&logo=rabbitmq&logoColor=white" alt="RabbitMQ" />
-  <img src="https://img.shields.io/badge/Celery-334155?style=flat-square&logo=celery&logoColor=white" alt="Celery" />
-  <img src="https://img.shields.io/badge/Docker-334155?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
-</p>
-<p align="center">
-  <img src="https://img.shields.io/badge/testes_back--end-783-64748B?style=flat-square" alt="783 testes" />
-  <img src="https://img.shields.io/badge/cobertura-~97%25-64748B?style=flat-square" alt="Cobertura ~97%" />
-  <img src="https://img.shields.io/badge/SonarCloud-Quality_Gate-64748B?style=flat-square&logo=sonarcloud&logoColor=white" alt="SonarCloud" />
-  <img src="https://img.shields.io/badge/GitHub_Actions-CI-64748B?style=flat-square&logo=githubactions&logoColor=white" alt="GitHub Actions" />
-</p>
+<a href="https://cobranca-tcc.duckdns.org"><img src="https://img.shields.io/badge/Produção-cobranca--tcc.duckdns.org-1a7f37?style=for-the-badge&logo=amazonwebservices&logoColor=white" alt="Produção na AWS" /></a>
+<a href="./docs/RFC.md"><img src="https://img.shields.io/badge/RFC-requisitos-0969da?style=for-the-badge&logo=readthedocs&logoColor=white" alt="RFC" /></a>
+<a href="#documentação"><img src="https://img.shields.io/badge/Documentação-técnica-59636e?style=for-the-badge&logo=gitbook&logoColor=white" alt="Documentação" /></a>
 
----
+<a href="https://github.com/MarieleV/PlataformaCobranca/actions/workflows/ci.yml"><img src="https://github.com/MarieleV/PlataformaCobranca/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+<a href="https://sonarcloud.io/summary/new_code?id=MarieleV_PlataformaCobranca"><img src="https://sonarcloud.io/api/project_badges/measure?project=MarieleV_PlataformaCobranca&metric=alert_status" alt="Quality Gate" /></a>
+<a href="https://sonarcloud.io/summary/new_code?id=MarieleV_PlataformaCobranca"><img src="https://sonarcloud.io/api/project_badges/measure?project=MarieleV_PlataformaCobranca&metric=coverage" alt="Cobertura" /></a>
+<img src="https://img.shields.io/badge/testes-789_back--end_·_72_front--end-59636e" alt="Testes" />
 
-<p align="center">
-  <a href="#-sobre-o-projeto">Sobre</a> ·
-  <a href="#-destaques-técnicos">Destaques</a> ·
-  <a href="#-arquitetura">Arquitetura</a> ·
-  <a href="#-funcionalidades">Funcionalidades</a> ·
-  <a href="#-regras-de-negócio">Regras de Negócio</a> ·
-  <a href="#-tech-stack">Stack</a>
-  <br/>
-  <a href="#-segurança-e-lgpd">Segurança e LGPD</a> ·
-  <a href="#-qualidade-e-cicd">Qualidade e CI/CD</a> ·
-  <a href="#-como-executar">Como Executar</a> ·
-  <a href="#-status-do-projeto">Status</a> ·
-  <a href="#-design-system">Design System</a> ·
-  <a href="#-documentação">Documentação</a>
-</p>
-
----
-
-##  → Sobre o Projeto
-
-Empresas B2B que operam carteiras de cobrança ainda dependem, em boa parte, de planilhas soltas e disparos manuais para tratar a inadimplência. O processo é lento, sujeito a erro humano e não escala.
-
-A **Plataforma de Cobrança Automatizada** resolve isso com um pipeline auditável de ponta a ponta:
-
-1. **Importa** lotes de devedores (CSV, XLSX, XLS) e valida cada linha;
-2. **Aplica** uma régua de cobrança configurável (dias de atraso × canal × horário × template);
-3. **Dispara** mensagens por **e-mail (SendGrid)**, **SMS** e **WhatsApp (Twilio)**, com reenvios automáticos;
-4. **Acompanha** tudo em um dashboard com taxas de entrega e conversão.
-
-O projeto foi construído como um produto SaaS de verdade: arquitetura orientada a filas, controle de acesso por perfil, trilha de auditoria, conformidade com a LGPD, testes automatizados e pipeline de CI com Quality Gate.
+<sub>Trabalho de Conclusão de Curso · Engenharia de Software · Católica SC · em parceria com a Consulth Soluções</sub>
 
 <br/>
 
-##  → Destaques Técnicos
+<img src="./docs/imagens/dashboard.png" alt="Dashboard da plataforma: indicadores de disparos, taxa de entrega, gráfico de volume por dia e distribuição por canal" width="100%" />
 
-- **Processamento assíncrono** — importação e disparos rodam em workers Celery via RabbitMQ; a API responde na hora e o front acompanha o progresso por polling.
-- **Agendamento com regras de negócio** — o Celery Beat avalia a régua a cada 5 minutos, apenas em dias úteis e dentro da janela comercial (08h–19h, horário de Brasília).
-- **Resiliência no envio** — até 4 tentativas com intervalo de 30 min; contatos inválidos são marcados como `bounce` e não são reenviados.
-- **Autenticação segura** — tokens em **cookies httpOnly** (o JavaScript nunca vê o token), com refresh rotativo, bloqueio por excesso de tentativas (HTTP 429) e CORS restrito por origem.
-- **RBAC + auditoria** — três perfis (administrador, gestor, operador) aplicados na API e refletidos na interface; ações sensíveis ficam registradas.
-- **LGPD por design** — valor da dívida criptografado no banco, exclusão de titular sob demanda e cuidado para não expor CPF/CNPJ em logs.
-- **Qualidade garantida no merge** — `main` protegida por Ruleset: exige PR e aprovação dos checks de testes, SonarCloud, migrações em PostgreSQL, build Docker e front-end.
+</div>
 
-<br/>
+---
 
-##  → Arquitetura
+## Visão geral
+
+Empresas que cobram a própria carteira de inadimplentes costumam fazer isso com planilhas e e-mails enviados um a um: o processo é lento, cada analista aplica uma régua diferente e ninguém sabe ao certo quem recebeu o quê. Na empresa parceira, **100% dos entrevistados** relataram envio manual e **80%** disseram não ter rastreabilidade das comunicações.
+
+Esta plataforma automatiza o ciclo inteiro, como um produto SaaS B2B:
 
 ```mermaid
 flowchart LR
-    FE["Front-end<br/>React + TS"] -- "HTTPS · cookies httpOnly" --> API["API<br/>FastAPI"]
-    API --> DB[("PostgreSQL")]
-    API -- "enfileira" --> MQ["RabbitMQ"]
-    MQ --> W["Workers<br/>Celery"]
-    BEAT["Celery Beat<br/>a cada 5 min · dias úteis"] --> MQ
-    W --> DB
-    W --> R[("Redis")]
-    W -- "e-mail" --> SG["SendGrid"]
-    W -- "SMS · WhatsApp" --> TW["Twilio"]
-    API -. "/metrics" .-> PROM["Prometheus + Grafana<br/>(opcional)"]
-
-    classDef core fill:#334155,stroke:#334155,color:#F8FAFC;
-    classDef infra fill:#64748B,stroke:#64748B,color:#F8FAFC;
-    classDef ext fill:#F1F5F9,stroke:#94A3B8,color:#334155;
-    class FE,API,W,BEAT core;
-    class DB,MQ,R infra;
-    class SG,TW,PROM ext;
+    A["Importar lote<br/>CSV · XLSX · XLS"] --> B["Validar linha a linha<br/>CPF/CNPJ, datas, contatos"]
+    B --> C["Régua de cobrança<br/>dias de atraso × canal × horário"]
+    C --> D["Disparar<br/>e-mail · SMS · WhatsApp"]
+    D --> E["Acompanhar<br/>entrega, conversão, auditoria"]
 ```
 
-**Fluxo de dados**
+| | |
+|---|---|
+| **Em produção** | AWS (EC2 + RDS), HTTPS e deploy contínuo com aprovação manual |
+| **41 endpoints REST** | FastAPI com OpenAPI, RBAC em 3 perfis e auditoria de ações sensíveis |
+| **789 testes no back-end** | ~97% de cobertura (pytest); mínimo de 80% exigido no CI |
+| **72 testes no front-end** | ~91% de cobertura na lógica (Vitest); lint e tipos sem avisos |
+| **5 checks obrigatórios** | Nenhum código chega à `main` sem testes, migrações, build e Quality Gate aprovados |
 
-1. **Ingestão** — o usuário envia a planilha pelo portal (`POST /lotes/upload`).
-2. **Mensageria** — o lote é enfileirado no RabbitMQ, sem bloquear a API.
-3. **Processamento** — workers validam linha a linha (CPF/CNPJ, valores, datas, contatos) e gravam no PostgreSQL. Reimportar um CPF/CNPJ existente **atualiza** o cadastro.
-4. **Orquestração** — o Celery Beat identifica os devedores elegíveis para cada regra ativa da régua.
-5. **Disparo** — as mensagens são interpoladas com os dados do devedor e enviadas pelos provedores; falhas temporárias entram na fila de reenvio.
-6. **Acompanhamento** — jobs, comunicações e indicadores ficam disponíveis no dashboard e no console de monitoramento.
+---
 
-<br/>
+## Telas
 
-##  → Funcionalidades
-
-<table align="center" width="100%">
+<table>
   <tr>
-    <td width="50%" valign="top">
-      <h3>Autenticação e sessão</h3>
-      <ul>
-        <li>Sessão em cookies httpOnly, com renovação automática do token (refresh em caso de 401) e logout.</li>
-        <li>Rotas protegidas por perfil e troca da própria senha.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>Dashboard</h3>
-      <ul>
-        <li>KPIs: devedores na base, disparos, taxa de entrega (meta de 95%), taxa de conversão e falhas.</li>
-        <li>Linha do tempo de 7 dias, distribuição por canal e últimos lotes.</li>
-        <li>Indicadores sem base de cálculo aparecem como "—" em vez de valores enganosos.</li>
-      </ul>
-    </td>
+    <td width="50%"><img src="./docs/imagens/regua.png" alt="Régua de cobrança com a linha do tempo D+N por canal" /></td>
+    <td width="50%"><img src="./docs/imagens/devedores.png" alt="Lista de devedores com filtros e marcador de atraso" /></td>
   </tr>
   <tr>
-    <td width="50%" valign="top">
-      <h3>Importação de lotes</h3>
-      <ul>
-        <li>Upload de CSV, XLSX e XLS com progresso em tempo real.</li>
-        <li>Relatório de validação por linha, com a regra violada, e download do CSV de erros.</li>
-        <li>Contadores de registros importados, atualizados e rejeitados.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>Devedores</h3>
-      <ul>
-        <li>Busca por nome ou CPF/CNPJ, filtros por status e atraso mínimo, e paginação.</li>
-        <li>Detalhe com histórico completo de comunicações.</li>
-        <li>Troca de status (<strong>quitado</strong> só para gestor/administrador) e exclusão LGPD (só administrador).</li>
-      </ul>
-    </td>
+    <td><sub><b>Régua de cobrança.</b> Cada regra aparece no seu dia de atraso (D+N), por canal; a marca cheia indica regra ativa.</sub></td>
+    <td><sub><b>Devedores.</b> Busca por nome ou CPF/CNPJ, filtros por status, atraso e canal; CPF mascarado (LGPD).</sub></td>
   </tr>
   <tr>
-    <td width="50%" valign="top">
-      <h3>Régua de cobrança</h3>
-      <ul>
-        <li>CRUD de regras por canal, dias de atraso, horário de disparo e template.</li>
-        <li>Variáveis dinâmicas (<code>{nome}</code>, <code>{primeiro_nome}</code>, <code>{valor}</code>, <code>{data_vencimento}</code>, <code>{dias_atraso}</code>) com pré-visualização da mensagem.</li>
-        <li>Ativação com tratamento de conflito, consulta de elegíveis e execução manual.</li>
-      </ul>
-    </td>
-    <td width="50%" valign="top">
-      <h3>Monitoramento</h3>
-      <ul>
-        <li>Jobs de disparo e comunicações geradas, com atualização por polling.</li>
-        <li>Métricas em <code>/metrics</code> (Prometheus) e saúde dos serviços em <code>/health</code>.</li>
-      </ul>
-    </td>
+    <td width="50%"><img src="./docs/imagens/relatorio.png" alt="Relatório de validação do lote com erros agrupados por linha" /></td>
+    <td width="50%"><img src="./docs/imagens/monitoramento.png" alt="Painel de um job com o resultado de cada comunicação e os reenvios" /></td>
   </tr>
   <tr>
-    <td colspan="2" valign="top">
-      <h3>Usuários e auditoria</h3>
-      <ul>
-        <li>CRUD de usuários, ativação/desativação e redefinição de senha. Gestores administram operadores; administradores administram todos.</li>
-        <li>Trilha de auditoria filtrável por usuário, ação, entidade e período (só administrador).</li>
-      </ul>
-    </td>
+    <td><sub><b>Relatório de validação.</b> Totais do lote e cada linha rejeitada com o campo e a regra violada; exporta CSV.</sub></td>
+    <td><sub><b>Monitoramento.</b> Resultado de cada comunicação do job: enviada, reenvio agendado, bounce ou falha definitiva.</sub></td>
   </tr>
 </table>
 
+<details>
+<summary><b>Mais telas</b> (login e versão para celular)</summary>
 <br/>
+<p align="center">
+  <img src="./docs/imagens/login.png" alt="Tela de login" width="68%" />
+  &nbsp;
+  <img src="./docs/imagens/celular.png" alt="Dashboard no celular" width="23%" />
+</p>
+</details>
 
-##  → Regras de Negócio
+> [!NOTE]
+> As capturas usam dados fictícios. O ambiente de produção exige login; o envio real de mensagens fica desligado (modo simulado) até a validação dos provedores.
 
-| Regra | Descrição |
-|---|---|
-| Janela de disparo | Seg–sex, 08h–19h (Brasília); horário de cada regra entre 08:00 e 20:00 |
-| Elegibilidade | Atraso exatamente igual ao da regra, devedor `ativo` ou `comunicado` e contato válido para o canal |
-| Limite diário | No máximo uma comunicação bem-sucedida por canal, por devedor, por dia |
-| Reenvio | Até 4 tentativas, com 30 min de intervalo |
-| Bounce | E-mail ou telefone inválido encerra as tentativas para aquele contato |
-| Unicidade da régua | Uma regra ativa por combinação de canal e dias de atraso; toda regra nasce inativa |
-| Limite de template | SMS 480 · WhatsApp 1.024 · e-mail 5.000 caracteres |
-| Quitação | Devedor quitado não é reaberto nem reimportado |
+---
 
-**Status do devedor:** `ativo` · `comunicado` · `negociando` · `quitado` · `inativo`<br/>
-**Status da comunicação:** `pendente` · `enviado` · `entregue` · `falha` · `bounce`
+## Arquitetura
 
-<br/>
+```mermaid
+flowchart LR
+    U(["Navegador"]) -- "HTTPS<br/>cookies httpOnly" --> WEB["Caddy<br/>TLS + proxy reverso"]
+    WEB -- "SPA estática" --> FE["Front-end<br/>React 19 + TypeScript"]
+    WEB -- "/auth, /lotes, /devedores…" --> API["API REST<br/>FastAPI"]
+    API --> DB[("PostgreSQL 15<br/>RDS")]
+    API -- "publica lote" --> MQ[["RabbitMQ"]]
+    BEAT["Celery Beat<br/>a cada 5 min, dias úteis"] --> MQ
+    MQ --> W["Workers Celery<br/>importação e disparos"]
+    W --> DB
+    API & W --> R[("Redis<br/>sessões revogadas")]
+    W -- "e-mail" --> SG["SendGrid"]
+    W -- "SMS · WhatsApp" --> TW["Twilio"]
+```
 
-##  → Tech Stack
-
-<div align="center">
-  <table align="center" cellspacing="10" cellpadding="10">
-    <!-- Front-end -->
-    <tr>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/typescript/CBD5E1" width="40" height="40" alt="TypeScript"/><br/>TypeScript
-      </td>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/react/CBD5E1" width="40" height="40" alt="React"/><br/>React 19
-      </td>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/vite/CBD5E1" width="40" height="40" alt="Vite"/><br/>Vite 8
-      </td>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/tailwindcss/CBD5E1" width="40" height="40" alt="Tailwind"/><br/>Tailwind
-      </td>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/vitest/CBD5E1" width="40" height="40" alt="Vitest"/><br/>Vitest
-      </td>
-      <td align="center" width="16%">
-        <img src="https://cdn.simpleicons.org/eslint/CBD5E1" width="40" height="40" alt="ESLint"/><br/>ESLint
-      </td>
-    </tr>
-    <!-- Back-end & Dados -->
-    <tr>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/python/CBD5E1" width="40" height="40" alt="Python"/><br/>Python 3.14
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/fastapi/CBD5E1" width="40" height="40" alt="FastAPI"/><br/>FastAPI
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/sqlalchemy/CBD5E1" width="40" height="40" alt="SQLAlchemy"/><br/>SQLAlchemy
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/pandas/CBD5E1" width="40" height="40" alt="Pandas"/><br/>Pandas
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/postgresql/CBD5E1" width="40" height="40" alt="PostgreSQL"/><br/>PostgreSQL
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/pytest/CBD5E1" width="40" height="40" alt="pytest"/><br/>pytest
-      </td>
-    </tr>
-    <!-- Mensageria, Infra & Observabilidade -->
-    <tr>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/rabbitmq/CBD5E1" width="40" height="40" alt="RabbitMQ"/><br/>RabbitMQ
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/celery/CBD5E1" width="40" height="40" alt="Celery"/><br/>Celery
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/redis/CBD5E1" width="40" height="40" alt="Redis"/><br/>Redis
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/docker/CBD5E1" width="40" height="40" alt="Docker"/><br/>Docker
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/prometheus/CBD5E1" width="40" height="40" alt="Prometheus"/><br/>Prometheus
-      </td>
-      <td align="center">
-        <img src="https://cdn.simpleicons.org/githubactions/CBD5E1" width="40" height="40" alt="GitHub Actions"/><br/>GitHub Actions
-      </td>
-    </tr>
-  </table>
-</div>
+1. **Ingestão.** O upload devolve na hora; o lote vai para a fila e o front acompanha o progresso por *polling*.
+2. **Validação.** O worker lê a planilha com pandas em blocos de 1.000 linhas, valida cada uma (CPF/CNPJ com dígito verificador, datas, valores, e-mail, telefone) e grava os erros por linha. Reimportar um CPF/CNPJ existente **atualiza** o cadastro.
+3. **Régua.** A cada 5 minutos, em dias úteis e fora de feriados, o Beat cria os jobs das regras ativas com os devedores elegíveis do dia.
+4. **Disparo.** O worker interpola o template com os dados do devedor e envia pelo provedor do canal; falhas temporárias entram em reenvio.
+5. **Acompanhamento.** Dashboard, monitoramento de jobs, histórico por devedor, auditoria e métricas Prometheus.
 
 <details>
-<summary><strong>Papel de cada tecnologia</strong></summary>
+<summary><b>Sequência da importação de um lote</b></summary>
 <br/>
 
-**Front-end**
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant F as Front-end
+    participant A as API
+    participant Q as RabbitMQ
+    participant W as Worker
+    participant DB as PostgreSQL
 
-| Camada | Tecnologia | Papel |
-|---|---|---|
-| Build & Framework | React 19 + Vite 8 | SPA com HMR e bundle otimizado |
-| Linguagem | TypeScript (strict) | Tipagem dos modelos e das respostas da API |
-| Estilo | Tailwind CSS | Design system corporativo |
-| Sessão | Context API + cookies httpOnly | Rotas protegidas e refresh automático |
-| Qualidade | ESLint · `tsc --noEmit` · Vitest + Testing Library | Lint, checagem de tipos e testes |
-
-**Back-end**
-
-| Camada | Tecnologia | Papel |
-|---|---|---|
-| API | FastAPI (Python 3.14) | REST com documentação OpenAPI autogerada |
-| ORM & Migrações | SQLAlchemy 2.1 + Alembic | Modelagem e versionamento do banco |
-| Processamento | Pandas | Validação de lotes de importação |
-| Filas & Agendamento | RabbitMQ + Celery (worker e beat) + Redis | Execução assíncrona e tarefas periódicas |
-| Persistência | PostgreSQL 15 | Banco relacional principal |
-| Provedores | SendGrid · Twilio | E-mail, SMS e WhatsApp |
-| Observabilidade | Prometheus + Grafana | Métricas da aplicação (opcional) |
-| Infraestrutura | Docker + Docker Compose | Ambiente reproduzível |
+    U->>F: Arrasta a planilha
+    F->>A: POST /lotes/upload
+    A->>A: Valida formato e tamanho
+    A->>DB: Lote "pendente"
+    A->>Q: Publica o lote
+    A-->>F: 202 + id do lote
+    loop a cada 2 s
+        F->>A: GET /lotes/{id}
+        A-->>F: status e progresso
+    end
+    Q->>W: Consome o lote
+    loop blocos de 1.000 linhas
+        W->>W: Valida cada linha
+        W->>DB: Devedores válidos + erros por linha + progresso
+    end
+    W->>DB: Lote "concluído" (ou "erro" estrutural)
+    F->>U: Relatório de validação
+```
 
 </details>
 
+---
+
+## Decisões técnicas
+
+As escolhas abaixo são as que mais influenciaram o sistema. Cada uma tem uma alternativa mais simples que foi descartada de propósito.
+
+<details open>
+<summary><b>Sessão em cookies <code>httpOnly</code>, não em <code>localStorage</code></b></summary>
+
+- **Decisão:** o back-end grava o *access token* (15 min) e o *refresh token* (7 dias, com rotação) em cookies `httpOnly`; o JavaScript nunca vê o token. Em 401, o front faz **um único** refresh compartilhado entre as requisições simultâneas.
+- **Por quê:** um token em `localStorage` é legível por qualquer script injetado (XSS). O logout e a troca de senha revogam as sessões no Redis, o que um JWT puro não permitiria.
+- **Consequência assumida:** o cookie de refresh tem `path=/auth`; por isso a API é servida **no mesmo domínio e sem prefixo** (`/auth`, não `/api/auth`). Um prefixo faria o navegador deixar de enviar o cookie.
+
+</details>
+
+<details>
+<summary><b>Fila e workers em vez de processamento na requisição</b></summary>
+
+- **Decisão:** upload e disparos rodam em workers Celery via RabbitMQ, com `acks_late` e `prefetch=1`.
+- **Por quê:** um lote de 50.000 linhas não pode prender uma requisição HTTP. Com `acks_late`, se um worker cair no meio do lote, a mensagem volta para a fila; com `prefetch=1`, lotes longos não ficam "reservados" para um worker ocupado.
+
+</details>
+
+<details>
+<summary><b>Disparo idempotente e seguro para vários workers</b></summary>
+
+- **Decisão:** a criação do job trava a regra (`SELECT … FOR UPDATE`) e o banco tem restrição única por regra e dia; cada comunicação é reservada com `FOR UPDATE SKIP LOCKED`.
+- **Por quê:** com vários workers e o agendador rodando a cada 5 minutos, a mesma mensagem não pode sair duas vezes para o mesmo devedor. A regra de negócio "no máximo uma comunicação bem-sucedida por canal por dia" é garantida no banco, não só no código.
+
+</details>
+
+<details>
+<summary><b>Criptografia do valor da dívida na aplicação</b></summary>
+
+- **Decisão:** o valor é cifrado com Fernet antes de ir ao banco, além da criptografia do disco/RDS.
+- **Por quê:** quem tiver acesso ao banco (backup, *dump*, consulta direta) não lê valores financeiros.
+- **Consequência assumida:** não há somas em R$ no dashboard, porque o SQL não enxerga os valores. Os indicadores usam contagens e taxas.
+
+</details>
+
+<details>
+<summary><b>Banco gerenciado, fila e cache em contêiner</b></summary>
+
+- **Decisão:** em produção, PostgreSQL no RDS (backup, criptografia, sem acesso público) e RabbitMQ/Redis em contêiner na EC2.
+- **Por quê:** o banco guarda o que não pode ser perdido; fila e cache guardam dados transitórios. Os equivalentes gerenciados (Amazon MQ, ElastiCache) multiplicariam o custo sem ganho proporcional.
+- **Região:** `us-east-2` (Ohio) por custo; o trade-off de latência e LGPD está justificado em [`docs/DEPLOY.md`](./docs/DEPLOY.md#4-escolha-da-região-us-east-2-ohio).
+
+</details>
+
+<details>
+<summary><b>Interface: cor só para estado</b></summary>
+
+- **Decisão:** a interface é preto, branco e cinza; a cor aparece só para dizer algo sobre a cobrança (atraso, entrega, falha, quitação). Nos gráficos, sucesso é grafite e falha é vermelho.
+- **Por quê:** quem bate o olho vê primeiro o que precisa de atenção. Verde × vermelho empilhados é indistinguível para daltonismo (deuteranopia); a paleta foi verificada com um validador de contraste e de visão de cores.
+
+</details>
+
+---
+
+## Funcionalidades
+
+| Módulo | O que faz |
+|---|---|
+| **Importação de lotes** | CSV, XLSX e XLS até 50.000 linhas e 20 MB; progresso em tempo real; relatório de erros por linha com download em CSV; reimportação atualiza devedores |
+| **Devedores** | Busca por nome ou CPF/CNPJ; filtros por status, atraso e canal; histórico de comunicações; troca de status; exclusão a pedido do titular (LGPD) |
+| **Régua de cobrança** | Regras por canal, dias de atraso, horário e template com variáveis (`{primeiro_nome}`, `{valor}`, `{dias_atraso}`…); pré-visualização; elegíveis do dia; execução manual |
+| **Disparos** | E-mail (SendGrid), SMS e WhatsApp (Twilio); até 4 tentativas a cada 30 min; *bounce* encerra as tentativas; modo simulado para desenvolvimento |
+| **Dashboard** | Devedores na base, disparos do dia, taxa de entrega × meta de 95%, falhas, conversão, volume diário e distribuição por canal |
+| **Monitoramento** | Saúde dos serviços, janela de disparo, jobs e o resultado de cada comunicação |
+| **Usuários e auditoria** | Três perfis (administrador, gestor, operador); gestor administra só operadores; trilha de auditoria filtrável |
+
+<details>
+<summary><b>Principais regras de negócio</b></summary>
 <br/>
 
-##  → Segurança e LGPD
+| Regra | Como funciona |
+|---|---|
+| Elegibilidade | Atraso **exatamente** igual ao da regra, devedor `ativo` ou `comunicado` e contato para o canal |
+| Janela de disparo | Segunda a sexta, 8h às 19h55 (Brasília), exceto feriados nacionais e configurados |
+| Limite diário | No máximo uma comunicação bem-sucedida por devedor, canal e dia |
+| Reenvio | 1 envio + até 3 reenvios, a cada 30 minutos; e-mail/telefone inválido é falha definitiva |
+| Régua | Toda regra nasce inativa; só uma regra ativa por canal e dia de atraso |
+| Quitação | Só gestor e administrador marcam `quitado`; devedor quitado não é reaberto nem reimportado |
 
-- Tokens de acesso (15 min) e refresh (7 dias, com rotação) em cookies httpOnly.
-- Senhas de 8 a 128 caracteres, com ao menos uma letra e um número; bloqueio temporário após 5 tentativas de login malsucedidas.
-- CORS restrito às origens configuradas, com credenciais habilitadas.
-- Valor da dívida armazenado de forma criptografada.
-- Exclusão de dados do titular (LGPD) restrita ao administrador e registrada na auditoria.
+A especificação completa está no [RFC](./docs/RFC.md).
+</details>
 
-<br/>
+---
 
-##  → Qualidade e CI/CD
+## Qualidade e entrega contínua
 
-| Categoria | Ferramenta / Escopo | Situação |
-|---|---|---|
-| **CI** | GitHub Actions a cada PR e na `main` | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
-| **Testes (back-end)** | `pytest` — 789 testes, ~97% de cobertura (mínimo: 80%) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
-| **Testes (front-end)** | Vitest + Testing Library (cliente da API e contexto de autenticação) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
-| **Lint e tipos (front-end)** | ESLint + `tsc --noEmit` | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
-| **Migrações** | Alembic aplicado em PostgreSQL 15 real | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
-| **Build** | Imagens Docker da API e do front (Vite + Caddy) | ![No CI](https://img.shields.io/badge/no_CI-334155?style=flat-square) |
-| **Análise estática** | SonarCloud com Quality Gate (PRs e `main`) | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
-| **Deploy** | AWS (EC2 + RDS): imagens no GHCR e `docker compose` na EC2 via SSH, com aprovação manual ([`deploy/README.md`](./deploy/README.md)) | ![Ativo](https://img.shields.io/badge/ativo-334155?style=flat-square) |
+```mermaid
+flowchart LR
+    PR["Pull request<br/>develop → main"] --> T["Testes e SonarCloud<br/>pytest ≥ 80% + Quality Gate"]
+    PR --> M["Migrações no PostgreSQL<br/>aplica, compara modelos, desfaz"]
+    PR --> B["Build da imagem Docker<br/>API, front, Caddyfile, compose"]
+    PR --> F["Front-end<br/>lint, tipos, Vitest ≥ 80%, build"]
+    T & M & B & F --> D{"Aprovação<br/>manual"}
+    D --> P["Deploy na AWS<br/>GHCR → EC2 → teste de /health"]
+```
 
-**Fluxo de trabalho:** git-flow (`feature/*` → `develop` → PR para `main`) e commits no padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/). A `main` é protegida e só recebe código via Pull Request com todos os checks aprovados.
+- **`main` protegida por Ruleset:** só recebe código por pull request, com os quatro checks aprovados.
+- **Deploy sem acesso manual ao servidor:** o pipeline publica as imagens no GitHub Container Registry (tag = commit), atualiza os contêineres na EC2 por SSH, espera todos ficarem saudáveis e testa o domínio público. Voltar uma versão é subir a tag de um commit anterior.
+- **Migrações testadas de verdade:** o CI aplica as migrações num PostgreSQL 15 real, confere se os modelos e o esquema estão em sincronia e testa desfazer/refazer a última.
+- **Fluxo de trabalho:** git-flow (`feature/*` → `develop` → PR para `main`) e [Conventional Commits](https://www.conventionalcommits.org/pt-br/).
+- **Desempenho:** teste de carga com k6 em [`carga/`](./carga/README.md) (100 usuários simultâneos, P95 < 300 ms como critério automático).
 
-<br/>
+---
 
-##  → Como Executar
+## Segurança e LGPD
 
-**Pré-requisitos:** Docker e Docker Compose, Node.js (LTS) e Git.
+| Camada | Controle |
+|---|---|
+| Sessão | Cookies `httpOnly` + `Secure` + `SameSite=Lax`; refresh com rotação; revogação no logout, na troca de senha e na desativação |
+| Senhas | bcrypt (custo 12); 8 a 128 caracteres com letra e número; bloqueio após 5 tentativas (HTTP 429) |
+| Autorização | RBAC verificado em cada rota da API e refletido na interface |
+| Dados | Valor da dívida cifrado (Fernet); CPF/CNPJ mascarado nas listas; exclusão a pedido do titular (LGPD, art. 18) registrada na auditoria |
+| Transporte | HTTPS com HSTS; conexão TLS obrigatória com o banco; a API se recusa a subir em produção sem `COOKIE_SECURE` e `sslmode=require` |
+| Rede | Banco sem acesso público; só o proxy fica exposto; `/docs` e `/metrics` não são publicados |
 
-### 1. Back-end
+---
+
+## Stack
+
+| Camada | Tecnologias |
+|---|---|
+| **Front-end** | ![React](https://img.shields.io/badge/React_19-59636e?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-59636e?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite_8-59636e?logo=vite&logoColor=white) ![Tailwind](https://img.shields.io/badge/Tailwind_v4-59636e?logo=tailwindcss&logoColor=white) ![Recharts](https://img.shields.io/badge/Recharts-59636e) |
+| **Back-end** | ![Python](https://img.shields.io/badge/Python_3.14-59636e?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-59636e?logo=fastapi&logoColor=white) ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy_2-59636e?logo=sqlalchemy&logoColor=white) ![Alembic](https://img.shields.io/badge/Alembic-59636e) ![Pandas](https://img.shields.io/badge/pandas-59636e?logo=pandas&logoColor=white) |
+| **Dados e mensageria** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL_15-59636e?logo=postgresql&logoColor=white) ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-59636e?logo=rabbitmq&logoColor=white) ![Celery](https://img.shields.io/badge/Celery-59636e?logo=celery&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-59636e?logo=redis&logoColor=white) |
+| **Infraestrutura** | ![AWS](https://img.shields.io/badge/AWS_EC2_+_RDS-59636e?logo=amazonwebservices&logoColor=white) ![Docker](https://img.shields.io/badge/Docker_Compose-59636e?logo=docker&logoColor=white) ![Caddy](https://img.shields.io/badge/Caddy-59636e?logo=caddy&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-59636e?logo=githubactions&logoColor=white) |
+| **Qualidade e observabilidade** | ![pytest](https://img.shields.io/badge/pytest-59636e?logo=pytest&logoColor=white) ![Vitest](https://img.shields.io/badge/Vitest-59636e?logo=vitest&logoColor=white) ![SonarCloud](https://img.shields.io/badge/SonarCloud-59636e?logo=sonarcloud&logoColor=white) ![k6](https://img.shields.io/badge/k6-59636e?logo=k6&logoColor=white) ![Prometheus](https://img.shields.io/badge/Prometheus-59636e?logo=prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/Grafana-59636e?logo=grafana&logoColor=white) |
+| **Integrações** | ![SendGrid](https://img.shields.io/badge/SendGrid-59636e?logo=twilio&logoColor=white) ![Twilio](https://img.shields.io/badge/Twilio_SMS_+_WhatsApp-59636e?logo=twilio&logoColor=white) |
+
+---
+
+## Como executar
+
+**Pré-requisitos:** Docker Desktop, Node.js 22 LTS e Git.
 
 ```bash
 git clone https://github.com/MarieleV/PlataformaCobranca.git
 cd PlataformaCobranca/back-end
-cp .env.example .env              # no PowerShell: Copy-Item .env.example .env
-docker compose up -d --build
-```
-
-As migrações são aplicadas automaticamente ao subir a API. Para criar o usuário administrador de desenvolvimento:
-
-```bash
+cp .env.example .env                       # PowerShell: Copy-Item .env.example .env
+docker compose up -d --build               # API, worker, beat, PostgreSQL, Redis e RabbitMQ
 docker exec -it cobranca_api python -m app.seed
-```
 
-> Login de desenvolvimento: `admin@consulth.com.br` / `admin123` — **apenas para ambiente local.**
-
-### 2. Front-end
-
-```bash
 cd ../front-end
+cp .env.example .env
 npm install
 npm run dev
 ```
 
 | Serviço | Endereço |
 |---|---|
-| Front-end | http://localhost:5173 |
-| API | http://localhost:8000 |
-| Documentação interativa (Swagger) | http://localhost:8000/docs |
-| Saúde dos serviços | http://localhost:8000/health |
+| Aplicação | <http://localhost:8443> · `admin@consulth.com.br` / `admin123` (só local) |
+| API e documentação interativa | <http://localhost:8000/docs> |
+| Saúde dos serviços | <http://localhost:8000/health> |
 
-### Modo de demonstração
+> [!TIP]
+> O envio real vem **desligado** (`ENVIO_SIMULADO=true`). O simulador responde conforme o contato: e-mail começando com `bounce` ou telefone terminando em `0000` gera *bounce*; e-mail começando com `falha` ou telefone terminando em `9999` gera falha temporária (e reenvio). Dá para ver o fluxo completo sem custo com provedores.
 
-Por padrão o envio real fica **desligado** (`ENVIO_SIMULADO=true`), então é possível explorar todo o fluxo sem custo com provedores. O simulador reage ao contato informado:
-
-| Contato | Resultado simulado |
-|---|---|
-| E-mail iniciado por `bounce` ou telefone terminado em `0000` | `bounce` |
-| E-mail iniciado por `falha` ou telefone terminado em `9999` | Falha temporária (entra em reenvio) |
-| Qualquer outro | `enviado` |
-
-### Testes
+<details>
+<summary><b>Testes, validação e monitoramento</b></summary>
+<br/>
 
 ```bash
-# Back-end (com o ambiente virtual ativado)
-cd back-end
+# Back-end (pasta back-end, com o ambiente virtual ativo)
 pip install -r requirements-dev.txt
-pytest
+pytest --cov=app
 
-# Front-end
-cd front-end
-npm run lint
-npx tsc --noEmit
-npm test
-```
+# Front-end (pasta front-end): lint, tipos, testes com cobertura e build, igual ao CI
+npm run verificar
 
-### Monitoramento (opcional)
-
-```bash
-cd back-end
+# Prometheus (:9090) e Grafana (:3000), opcional
 docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
 ```
 
-Prometheus em http://localhost:9090 e Grafana em http://localhost:3000.
-
-<br/>
-
-##  → Status do Projeto
-
-| Módulo | Status |
-|---|---|
-| Autenticação, sessão e RBAC | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Importação e validação de lotes | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Gestão de devedores (incl. LGPD) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Régua de cobrança (motor de regras) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Disparo multicanal com reenvios (modo simulado por padrão) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Dashboard e indicadores | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Console de monitoramento (dados reais da API) | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Usuários e auditoria | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| CI/CD com Quality Gate | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Validação com provedores reais (SendGrid/Twilio) | ![Em andamento](https://img.shields.io/badge/em_andamento-64748B?style=flat-square) |
-| Deploy em nuvem (AWS), em https://cobranca-tcc.duckdns.org | ![Concluído](https://img.shields.io/badge/conclu%C3%ADdo-334155?style=flat-square) |
-| Webhooks de confirmação de entrega | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
-| Templates aprovados do WhatsApp (produção) | ![Planejado](https://img.shields.io/badge/planejado-94A3B8?style=flat-square) |
-
-<br/>
-
-##  → Design System
-
-A interface segue um padrão **SaaS corporativo**, inspirado em ferramentas como Vercel e Stripe.
-
-- **UI limpa e monocromática** — paleta em tons de slate (`slate-50` nos fundos, preto nos botões primários e painéis de destaque).
-- **Menos carga cognitiva** — cores vivas (azul, verde, roxo, vermelho) aparecem só em tons pastéis, reservadas a status e canais (e-mail, SMS, WhatsApp).
-- **Componentes consistentes** — cantos arredondados (`rounded-2xl`/`rounded-3xl`), sombras suaves (`shadow-black/10`) e tipografia `Inter`.
-
-Wireframes e protótipos no [Figma do projeto](https://www.figma.com/design/aTgE91sZyzbxTrB8kh5clh/Plataforma-de-Cobran%C3%A7a-Automatizada).
-
-<br/>
-
-##  → Documentação
-
-| Documento | Conteúdo |
-|---|---|
-| [`docs/RFC.md`](./docs/RFC.md) | Requisitos funcionais, regras de negócio e requisitos não funcionais (RFC v1.1) |
-| [`docs/RFC-v1.0.md`](./docs/RFC-v1.0.md) | Proposta original (RFC v1.0), com os diagramas de casos de uso, mockups e C4 mantidos na v1.1 |
-| [`front-end/README.md`](./front-end/README.md) | Front-end: como rodar, validar e convenções |
-| [`front-end/ROTEIRO_TESTES.md`](./front-end/ROTEIRO_TESTES.md) | Roteiro de teste manual das telas |
-| [`back-end/DOC.md`](./back-end/DOC.md) | Execução, testes, CI/CD, métricas, regras e limitações conhecidas |
-| [`carga/README.md`](./carga/README.md) | Teste de carga dos RNF01/RNF02 (k6, 100 usuários, P95 < 300 ms) e lote de 50.000 registros (RNF03) |
-| [`docs/DEPLOY.md`](./docs/DEPLOY.md) | Implantação em produção: arquitetura, recursos AWS, escolha da região, CI/CD, segurança e desvios em relação ao RFC |
-| [`deploy/README.md`](./deploy/README.md) | Deploy na AWS (EC2 + RDS PostgreSQL), segredos e operação em produção |
-| `http://localhost:8000/docs` | Referência interativa de todos os endpoints (OpenAPI) |
+Detalhes em [`back-end/DOC.md`](./back-end/DOC.md) e [`front-end/README.md`](./front-end/README.md).
+</details>
 
 ---
 
-<p align="center">
-  <img src="https://files.engaged.com.br/5db0810e95b4f900077e887e/account/5db0810e95b4f900077e887e/xMCS8NFKTMqwhefy8WLd_catolica-horizontal.png" alt="Católica SC" width="160"/>
-</p>
+## Estrutura do repositório
 
-<p align="center">
-  <sub>Desenvolvido por <strong>Mariele Vieira</strong> como Trabalho de Conclusão de Curso - Engenharia de Software, Católica SC, em parceria com a Consulth · 2026</sub>
-</p>
+```text
+PlataformaCobranca/
+├── back-end/          API FastAPI, workers Celery, migrações Alembic e testes (pytest)
+├── front-end/         SPA React + TypeScript, testes (Vitest) e imagem Docker com Caddy
+├── deploy/            Compose de produção, preparação da EC2 e guia da AWS
+├── carga/             Teste de carga (k6) e gerador de massa de dados
+├── docs/              RFC (requisitos), registro do deploy e imagens
+└── .github/workflows/ Pipeline de CI/CD
+```
 
-<p align="center">
-  <a href="https://github.com/MarieleV">← Voltar ao perfil</a> ·
-  <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
-  <a href="mailto:silvamariele797@gmail.com">E-mail</a>
-</p>
+---
 
-<p align="center">
-  <a href="https://github.com/MarieleV">← Voltar ao perfil</a> ·
-  <a href="https://www.linkedin.com/in/mariele-vieira" target="_blank">LinkedIn</a> ·
-  <a href="mailto:silvamariele797@gmail.com">E-mail</a>
-</p>
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [**RFC**](./docs/RFC.md) | Problema, personas, requisitos funcionais e não funcionais, regras de negócio, arquitetura (C4) e modelo de dados |
+| [**Back-end**](./back-end/DOC.md) | Execução, configuração, testes, CI/CD, métricas, regras e limitações conhecidas |
+| [**Front-end**](./front-end/README.md) | Arquitetura da SPA, integração com a API, sistema visual e testes |
+| [**Deploy (guia operacional)**](./deploy/README.md) | Passo a passo da AWS (EC2 + RDS), segredos e operação |
+| [**Deploy (registro para o TCC)**](./docs/DEPLOY.md) | Decisões de produção, justificativa da região, segurança e rastreabilidade com o RFC |
+| [**Teste de carga**](./carga/README.md) | RNF01/RNF02 com k6 e lote de 50.000 registros (RNF03) |
+| [**Roteiro de testes**](./front-end/ROTEIRO_TESTES.md) | Testes manuais de todas as telas |
+
+---
+
+## Roadmap
+
+- [x] Importação e validação assíncrona de lotes
+- [x] Régua de cobrança com agendamento, feriados e reenvios
+- [x] Autenticação, RBAC, auditoria e LGPD
+- [x] Dashboard, monitoramento e métricas Prometheus
+- [x] CI/CD com Quality Gate e deploy na AWS
+- [ ] Validação com os provedores reais (SendGrid e Twilio)
+- [ ] Evidência dos requisitos de desempenho com o teste de carga
+- [ ] Webhooks de confirmação de entrega (`entregue`)
+- [ ] Templates aprovados do WhatsApp Business
+
+---
 
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:334155,100:64748B&height=100&section=footer" width="100%"/>
+
+**Mariele Vieira da Silva**<br/>
+<sub>Engenharia de Software · Católica SC</sub>
+
+<a href="https://www.linkedin.com/in/mariele-vieira"><img src="https://img.shields.io/badge/LinkedIn-0969da?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+<a href="https://github.com/MarieleV"><img src="https://img.shields.io/badge/GitHub-59636e?style=flat&logo=github&logoColor=white" alt="GitHub" /></a>
+<a href="mailto:silvamariele797@gmail.com"><img src="https://img.shields.io/badge/E--mail-59636e?style=flat&logo=gmail&logoColor=white" alt="E-mail" /></a>
+
 </div>
