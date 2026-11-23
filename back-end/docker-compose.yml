@@ -64,6 +64,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      # Desliga o "busy-wait" dos agendadores do Erlang: sem isso o RabbitMQ ocioso
+      # chega a ~1 núcleo de CPU em contêiner, roubando CPU da API (teste de carga).
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+sbwt none +sbwtdcpu none +sbwtdio none"
     ports:
       - "127.0.0.1:5672:5672" # AMQP
       - "127.0.0.1:15672:15672" # painel web

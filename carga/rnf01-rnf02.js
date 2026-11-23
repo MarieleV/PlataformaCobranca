@@ -14,6 +14,14 @@
 //   SENHA     senha desse usuário (obrigatória; nunca é impressa)
 //   VUS       usuários simultâneos no patamar (padrão: 100)
 //   DURACAO   tempo no patamar (padrão: 3m; máximo de 12m, pois o token de acesso vale 15 min)
+//   PAUSA_MIN, PAUSA_MAX  pausa entre as ações de cada usuário, em segundos (padrão: 5 a 15)
+//
+// Ritmo dos usuários: "100 usuários simultâneos" (RNF01) são 100 pessoas com o painel
+// aberto ao mesmo tempo, que leem a tabela ou o gráfico entre um clique e outro. A pausa
+// padrão de 5 a 15 s (média de 10 s) é mais agressiva que a atualização automática do
+// próprio front (Dashboard a cada 60 s, Monitoramento a cada 15 s), então o cenário
+// continua conservador. Com PAUSA_MIN=1 PAUSA_MAX=3 o script vira um teste de estresse
+// (~4x mais requisições); ver "Ritmo dos usuários" no carga/README.md.
 
 import http from "k6/http"
 import { check, fail, sleep } from "k6"
@@ -22,6 +30,11 @@ import { textSummary } from "https://jslib.k6.io/k6-summary/0.1.0/index.js"
 const BASE_URL = (__ENV.BASE_URL || "http://host.docker.internal:8000").replace(/\/+$/, "")
 const VUS = Number(__ENV.VUS || 100)
 const DURACAO = __ENV.DURACAO || "3m"
+const PAUSA_MIN = Number(__ENV.PAUSA_MIN || 5)
+const PAUSA_MAX = Number(__ENV.PAUSA_MAX || 15)
+if (!(PAUSA_MIN >= 0 && PAUSA_MAX >= PAUSA_MIN)) {
+  throw new Error(`Pausa inválida: PAUSA_MIN=${__ENV.PAUSA_MIN} PAUSA_MAX=${__ENV.PAUSA_MAX}`)
+}
 
 export const options = {
   scenarios: {
@@ -107,17 +120,25 @@ export default function (dados) {
   check(resposta, {
     "status 200": (r) => r.status === 200,
   })
-  // Tempo de leitura da tela entre um clique e outro (1 a 3 s), como um usuário real
-  sleep(1 + Math.random() * 2)
+  // Tempo de leitura da tela entre um clique e outro (padrão: 5 a 15 s; ver o cabeçalho)
+  sleep(PAUSA_MIN + Math.random() * (PAUSA_MAX - PAUSA_MIN))
 }
 
 // Resumo no terminal e cópia em JSON (carga/resultados/), para anexar ao TCC.
 export function handleSummary(resumo) {
   const quando = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
-  const alvo = BASE_URL.includes("host.docker.internal") || BASE_URL.includes("localhost") ? "local" : "remoto"
+  // Produção é sempre HTTPS; o resto (api:8000, localhost, host.docker.internal) é local
+  const alvo = BASE_URL.startsWith("https://") ? "remoto" : "local"
+  // A configuração vai junto do resumo: sem ela o número não é comparável (evidência do TCC)
+  const configuracao =
+    `Configuração: ${VUS} usuários, patamar de ${DURACAO}, pausa de ${PAUSA_MIN} a ${PAUSA_MAX} s, alvo ${alvo}\n`
   return {
-    stdout: textSummary(resumo, { indent: " ", enableColors: true }),
-    [`resultados/rnf01-rnf02-${alvo}-${quando}.json`]: JSON.stringify(resumo, null, 2),
-    [`resultados/rnf01-rnf02-${alvo}-${quando}.txt`]: textSummary(resumo, { indent: " ", enableColors: false }),
+    stdout: configuracao + textSummary(resumo, { indent: " ", enableColors: true }),
+    [`resultados/rnf01-rnf02-${alvo}-${quando}.json`]: JSON.stringify(
+      { configuracao: { VUS, DURACAO, PAUSA_MIN, PAUSA_MAX, alvo }, ...resumo },
+      null,
+      2,
+    ),
+    [`resultados/rnf01-rnf02-${alvo}-${quando}.txt`]: configuracao + textSummary(resumo, { indent: " ", enableColors: false }),
   }
 }

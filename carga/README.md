@@ -15,7 +15,7 @@ Evidência dos requisitos não funcionais de desempenho do [RFC](../docs/RFC.md#
 
 | Requisito | O que o RFC pede | Como é verificado |
 |---|---|---|
-| **RNF01** | Ao menos 100 usuários simultâneos sem degradação | 100 usuários virtuais navegando ao mesmo tempo por 3 min; aprovado se < 1% das requisições falharem |
+| **RNF01** | Ao menos 100 usuários simultâneos sem degradação | 100 usuários virtuais navegando ao mesmo tempo por 3 min (5 a 15 s entre ações; ver [Ritmo dos usuários](#ritmo-dos-usuários)); aprovado se < 1% das requisições falharem |
 | **RNF02** | Rotas da API < 300 ms no P95 | Aprovado se o percentil 95 do tempo de resposta for < 300 ms |
 | **RNF03** | Arquivos de até 50.000 registros | Importar um lote de 50.000 devedores e registrar o tempo de processamento |
 
@@ -62,11 +62,14 @@ Opcional: ative uma ou duas regras na Régua e use "Executar agora", para o Dash
 
 ```powershell
 cd carga
-docker run --rm -v "${PWD}:/scripts" -w /scripts -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
+docker run --rm --network back-end_default -v "${PWD}:/scripts" -w /scripts -e BASE_URL=http://api:8000 -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
 cd ..
 ```
 
-Dura cerca de 4 minutos (30 s subindo até 100 usuários, 3 min no patamar, 15 s descendo). Ajustes opcionais: `-e VUS=150` (mais usuários) e `-e DURACAO=5m` (patamar mais longo; no máximo 12 min, porque a sessão de acesso vale 15 min).
+Dura cerca de 4 minutos (30 s subindo até 100 usuários, 3 min no patamar, 15 s descendo). Ajustes opcionais: `-e VUS=150` (mais usuários), `-e DURACAO=5m` (patamar mais longo; no máximo 12 min, porque a sessão de acesso vale 15 min) e `-e PAUSA_MIN=1 -e PAUSA_MAX=3` (cenário de estresse; ver [Ritmo dos usuários](#ritmo-dos-usuários)).
+
+> [!IMPORTANT]
+> O k6 roda **na mesma rede Docker da API** (`--network back-end_default` e `BASE_URL=http://api:8000`), como o Caddy em produção. Pelo caminho `host.docker.internal`, no Windows, cada requisição sai do Docker, passa pelo redirecionamento de portas do Docker Desktop e volta: em 23/11/2026 isso derrubou 2,5% das requisições (que nem chegaram à API, com 100% de respostas 200 nos logs dela) e somou segundos à abertura de conexões. A medida ficava sendo da rede do Windows, não da API.
 
 ### 4. Ler o resultado
 
@@ -99,6 +102,46 @@ python carga/gerar_massa.py --quantidade 50000   # carga/massa-50000.csv (~5 MB)
 Importe pela tela **Importar lote** e, ao terminar, abra o **Relatório de validação**: ele mostra "Enviado em ..." e "processado em ...". A diferença é o tempo de processamento, e o total deve ser 50.000 novos e 0 rejeitados. Faça a captura dessa tela.
 
 > Importar os 50.000 **depois** do teste de carga, ou em uma base separada: com 55.000 devedores, as consultas do passo 3 ficam mais pesadas que o cenário planejado. Também é uma medição válida, mas registre qual foi o tamanho da base.
+
+---
+
+## Ritmo dos usuários
+
+"100 usuários simultâneos" (RNF01) significa 100 pessoas com o painel aberto ao mesmo tempo, não 100 robôs clicando sem parar. Entre uma ação e outra (abrir o dashboard, filtrar ou paginar devedores, ver jobs), o operador lê a tabela ou o gráfico. O script sorteia uma pausa de **5 a 15 s** (média de 10 s) entre as ações de cada usuário.
+
+O próprio front-end serve de referência: parado na tela, ele consulta a API **a cada 60 s no Dashboard** e **a cada 15 s no Monitoramento** (atualização automática). Uma pausa média de 10 s é mais frequente que isso, então o cenário continua conservador. Com 100 usuários, dá cerca de 9 requisições por segundo.
+
+O **cenário de estresse** (`-e PAUSA_MIN=1 -e PAUSA_MAX=3`) gera cerca de 3 vezes mais requisições. Ele não é o critério do RNF01/RNF02: serve para mostrar o limite da máquina.
+
+O resumo de cada execução começa com uma linha `Configuração:` (usuários, patamar, pausa), para que o número nunca fique sem o cenário que o produziu.
+
+---
+
+## Resultados
+
+Medições de **23/11/2026**, ambiente local, k6 na rede Docker da API.
+
+**Máquina:** notebook Intel Core i3-7020U (2 núcleos, 4 threads, 2,3 GHz, sem turbo), 4 GB de RAM e SSD, com Windows 10 e Docker Desktop (WSL 2: 4 CPUs e 1,8 GB para os contêineres). Na mesma máquina rodavam a API (2 processos, como em produção), o PostgreSQL, o Redis, o RabbitMQ, o worker, o beat e o próprio k6. Grafana e Prometheus estavam desligados.
+
+**Base:** 5.042 devedores (massa de 5.000 do `gerar_massa.py` mais os de testes anteriores).
+
+| Cenário | Pausa | Req/s | P95 da API | Falhas | Resultado |
+|---|---|---|---|---|---|
+| **Realista (RNF01/RNF02)** | 5–15 s | 8,7 | **99 ms** | **0,00%** | ✅ aprovado nos três limites (checks 100%) |
+| Estresse | 1–3 s | 27,1 | 976 ms | 1,62% | ✗ acima do limite: capacidade da máquina esgotada |
+
+- No cenário realista, a mediana foi de 42 ms, o P90 de 75 ms e o P99 de 778 ms (picos isolados, abaixo de 1% das requisições).
+- No estresse, os 2 processos da API ficam com a CPU no máximo (~175% no `docker stats`), e a fila faz parte das requisições esperar mais de 30 s por uma conexão com o banco. Em uma máquina com mais núcleos, ou com mais processos da API, o limite sobe.
+
+### O que o teste revelou e foi corrigido
+
+As primeiras execuções (pausa de 1 a 3 s, via `host.docker.internal`) reprovaram com P95 de 5,4 s e 3,1% de falhas. A investigação encontrou três problemas, corrigidos antes da medição acima:
+
+1. **Dashboard com consultas em excesso:** a linha do tempo fazia uma consulta por dia (30 com `dias=30`), passando de 35 idas ao banco por requisição. Agora o gráfico e a conversão usam uma consulta cada, e a rota caiu de 150–250 ms para 40–60 ms sem carga.
+2. **Conexão presa entre a autenticação e a rota:** com rotas síncronas, o FastAPI roda a dependência de login e a rota em threads diferentes (40 por processo), e o pool tem 10 conexões. A conexão ficava presa entre as duas etapas, e sob carga as requisições esperavam umas pelas outras até o timeout de 30 s do pool. Agora o `get_current_user` devolve a conexão antes de a rota rodar.
+3. **Rede do Windows na medição:** o caminho `host.docker.internal` derrubava requisições que nem chegavam à API. Agora o k6 roda na rede Docker da API.
+
+Também foi desligado o *busy-wait* do Erlang no RabbitMQ, que gastava CPU com a fila vazia (em produção, isso economiza crédito de CPU da `t3.small`).
 
 ---
 
@@ -147,5 +190,6 @@ O resultado em produção **não substitui** o local para o RNF02. O k6 mede do 
 ## Se reprovar
 
 - **P95 acima de 300 ms:** descubra qual rota pesa mais. O resumo do k6 mostra o conjunto; por rota, use o monitoramento (item 3 das evidências) com a consulta `histogram_quantile(0.95, sum by (le, rota) (rate(cobranca_http_request_duration_seconds_bucket[1m])))`. Suspeitos naturais: `GET /dashboard` (agrega a base toda) e a busca de devedores. Confira também se a máquina não estava ocupada com outra coisa durante o teste.
-- **Erros acima de 1%:** veja os logs da API (`docker compose logs --tail=200 api` na pasta `back-end`). Erros 401 no meio do teste indicam sessão expirada (patamar longo demais); 5xx indicam problema real.
+- **Erros acima de 1%:** veja os logs da API (`docker compose logs --tail=200 api` na pasta `back-end`). Erros 401 no meio do teste indicam sessão expirada (patamar longo demais); 5xx indicam problema real. Se o k6 conta falhas mas os logs da API só mostram respostas 200, as requisições morreram no caminho: confira se o k6 está rodando com `--network back-end_default` e `BASE_URL=http://api:8000`.
+- **`QueuePool limit ... reached` nos logs:** a API ficou sem conexões com o banco. Isso é sinal de CPU saturada (veja o `docker stats` durante o teste): feche outros programas, desligue o Grafana e o Prometheus ou reduza a carga.
 - **"Login falhou":** confira EMAIL/SENHA e se a API responde em <http://localhost:8000/health>.

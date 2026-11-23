@@ -11,7 +11,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - **Back-end concluído** e na `main`.
 - **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. Não há mais mocks nas telas.
 - **Deploy na AWS concluído (17/11/2026)**: a `feature/deploy-aws` entrou na `main` pelo PR #38 e o primeiro deploy pelo CI passou de primeira. Produção no ar em **https://cobranca-tcc.duckdns.org** (detalhes em "Produção (`deploy/`)"). Testado em produção: login, dashboard, upload de lotes com polling e erros por linha, troca de senha, logout/login.
-- **`develop` à frente da `main` (e já no GitHub), aguardando teste local antes do PR**: filtro de devedores por canal (RF05, back + front), `deploy/README.md` ajustado, `docs/DEPLOY.md` (registro do deploy para o TCC) e o teste de carga em `carga/`. A Mariele **não** quis abrir o PR para a `main` antes de testar no PC de casa, que tem Docker (o PC do trabalho não tem Docker rodando). O roteiro está na seção abaixo.
+- **`develop` à frente da `main` (e já no GitHub), aguardando teste local antes do PR**: filtro de devedores por canal (RF05, back + front), `deploy/README.md` ajustado, `docs/DEPLOY.md` (registro do deploy para o TCC), o teste de carga em `carga/` e as correções de desempenho que ele revelou (dashboard, conexão do `get_current_user`, busy-wait do RabbitMQ também no compose de produção). A Mariele **não** quis abrir o PR para a `main` antes de testar no PC de casa, que tem Docker (o PC do trabalho não tem Docker rodando). O roteiro está na seção abaixo.
 - **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo). Os provedores reais (SendGrid/Twilio) ficaram para depois, por decisão da Mariele.
 
 ## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
@@ -41,16 +41,14 @@ Se o RabbitMQ atrasar ("dependency rabbitmq failed to start"), rode o `up -d` de
 - Front (`cd front-end; npm run dev`, <http://localhost:8443>): na tela Devedores, o seletor "Com E-mail/SMS/WhatsApp" só traz quem não tem o canal riscado na coluna Contatos; combina com status/atraso; "Limpar filtros" zera (itens novos no `ROTEIRO_TESTES.md`, seção 4).
 - API: em <http://localhost:8000/docs>, `GET /devedores/` com `canal=sms`; `canal=fax` deve dar 422.
 
-**3. Teste de carga RNF01/RNF02** (passo a passo completo em `carga/README.md`). **O script nunca foi executado de verdade**: só passou por checagem de sintaxe e simulação da lógica no Node. Na primeira execução, qualquer erro é provavelmente do script, não da API; corrija com base na saída.
+**3. Teste de carga RNF01/RNF02: ✅ feito em 23/11/2026** (aprovado: 100 usuários, pausa de 5 a 15 s, P95 de 99 ms, 0% de falhas; resultados e justificativa do ritmo em `carga/README.md`, seções "Ritmo dos usuários" e "Resultados"). O teste revelou e corrigiu: dashboard com 1 consulta por dia na timeline, conexão presa entre o `get_current_user` e a rota (impasse threadpool 40 × pool 10) e falhas do `host.docker.internal` no Windows. Comando oficial (k6 **na rede Docker da API**):
 ```powershell
-python carga/gerar_massa.py          # carga/massa-5000.csv; importar pela tela "Importar lote" (5.000 novos, 0 rejeitados)
 cd carga
-docker run --rm -v "${PWD}:/scripts" -w /scripts -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
+docker run --rm --network back-end_default -v "${PWD}:/scripts" -w /scripts -e BASE_URL=http://api:8000 -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
 cd ..
 ```
-- Aprovado = ✓ em `http_req_duration{tipo:api} p(95)<300` (RNF02), `http_req_failed{tipo:api} rate<0.01` (RNF01) e `checks`. O resumo fica em `carga/resultados/*.txt` (fora do git).
-- Pontos que podem falhar na 1ª execução: o `import` do `textSummary` vem de `jslib.k6.io` (precisa de internet); `host.docker.internal` precisa resolver (Docker Desktop resolve); a pasta `carga/resultados/` precisa existir (tem `.gitkeep`).
-- Guardar para o TCC: print do resumo, o `.txt`, a configuração da máquina e o tamanho da base.
+- Estresse (`-e PAUSA_MIN=1 -e PAUSA_MAX=3`, ~27 req/s): P95 de 976 ms e 1,6% de falhas, que é o limite do PC de casa (i3-7020U, 2 núcleos, 4 GB). Não é critério do RFC; está registrado como capacidade da máquina.
+- Falta a Mariele guardar o print do resumo para o TCC (os `.txt` ficam em `carga/resultados/`, fora do git).
 
 **4. RNF03 (lote de 50.000)**, depois do teste de carga: `python carga/gerar_massa.py --quantidade 50000`, importar e capturar o Relatório de validação ("Enviado em" → "processado em", 50.000 novos). O gerador já foi validado: as 50.000 linhas passam no `validar_linha` do back-end.
 
@@ -97,7 +95,7 @@ cd ..
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
 - Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123` (o seed recusa a senha padrão em produção; lá ele usa `ADMIN_EMAIL`/`ADMIN_SENHA_INICIAL` do `.env`, e a senha do admin de produção já foi trocada).
 - Máquina com pouca RAM: o RabbitMQ pode demorar a ficar *healthy* (alarme `system_memory_high_watermark` nos logs) e o `up` falhar com "dependency rabbitmq failed to start", deixando api/worker/beat em "Created". Não é defeito: rode `docker compose up -d` de novo (sem `--build`) e, se precisar, pare o monitoramento (`docker stop back-end-grafana-1 back-end-prometheus-1`).
-- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`, dentro de `back-end/`), `pytest` em `back-end/` (789 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
+- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`, dentro de `back-end/`), `pytest` em `back-end/` (791 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
 - Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Teste dos provedores reais: `docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`.
 - Produção (`ENVIRONMENT=production` em `app/core/config.py`): exige `COOKIE_SECURE=true` (HTTPS) e senha do admin diferente da padrão; `COOKIE_SAMESITE` (`lax` padrão) e `CORS_ORIGINS` precisam refletir o domínio real do front.
 
@@ -173,7 +171,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 Ordem sugerida:
 1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
 2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
-3. **Evidência dos RNF01/RNF02/RNF03**: o teste está pronto em `carga/` (k6 via Docker com os limites do RFC como *thresholds*, gerador de massa com CPFs válidos validado contra `validar_linha`, override do Compose com a API igual à de produção). **Falta a Mariele rodar** no PC com Docker (ver "Próxima sessão: checklist no PC com Docker", passos 3 e 4) e capturar as evidências. O script nunca foi executado de fato: só passou por checagem de sintaxe e simulação da lógica no Node (baixar o k6 foi bloqueado na sessão). Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
+3. **Evidência dos RNF01/RNF02/RNF03**: RNF01/RNF02 **atendidos** em 23/11/2026 no ambiente local (ver checklist, passo 3, e `carga/README.md#resultados`). **Falta o RNF03** (lote de 50.000, checklist passo 4) e o print do resumo do k6. Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
 4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 

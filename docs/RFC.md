@@ -240,8 +240,8 @@ O gestor **não** cria, edita nem promove gestores ou administradores.
 
 | ID | Requisito | Situação |
 |---|---|:---:|
-| **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. | 🧪 teste pronto em [`carga/`](../carga/README.md) |
-| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | 🧪 teste pronto em [`carga/`](../carga/README.md) |
+| **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. | ✅ 100 usuários com 0% de falhas ([resultados](../carga/README.md#resultados)) |
+| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | ✅ P95 de 99 ms com 100 usuários ([resultados](../carga/README.md#resultados)) |
 | **RNF03** | Processar arquivos de até 50.000 registros. | ✅ limite aplicado; 🧪 evidência em [`carga/`](../carga/README.md) |
 | **RNF04** | Autenticação JWT com tokens de curta duração e refresh token. | ✅ |
 | **RNF05** | Dados sensíveis armazenados com criptografia em repouso. | ✅ |
@@ -675,7 +675,8 @@ Detalhes da produção em [`DEPLOY.md`](./DEPLOY.md).
 ### 8.3 Pendências conhecidas
 
 - [ ] **Provedores reais:** validar SendGrid e Twilio com chaves reais (o sistema roda em modo simulado).
-- [ ] **RNF01/RNF02/RNF03:** executar o teste de carga e registrar os resultados ([`carga/`](../carga/README.md)).
+- [x] **RNF01/RNF02:** teste de carga executado em 23/11/2026 (100 usuários, P95 de 99 ms, 0% de falhas, ambiente local; [resultados](../carga/README.md#resultados)).
+- [ ] **RNF03:** importar o lote de 50.000 registros e registrar o tempo de processamento ([`carga/`](../carga/README.md)).
 - [ ] **Retenção da auditoria:** a proposta previa logs por 90 dias com anonimização posterior; hoje os registros são mantidos sem expurgo automático.
 - [ ] **CSP e Dependabot:** o cabeçalho `Content-Security-Policy` e a atualização automática de dependências não foram configurados.
 - [ ] **Status `entregue`:** depende de webhooks dos provedores; hoje "enviado" significa aceito pelo provedor.

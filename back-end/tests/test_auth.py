@@ -398,3 +398,27 @@ def test_auditoria_nao_grava_a_senha(client, criar_usuario, db):
     db.expire_all()
     for registro in db.scalars(select(LogAuditoria)):
         assert "SenhaSecretaDoTeste" not in str(registro.__dict__)
+
+
+# --------------------------------------------------------------------------
+# Conexão com o banco (achado do teste de carga, carga/README.md)
+# --------------------------------------------------------------------------
+
+
+def test_get_current_user_devolve_a_conexao_ao_pool(db, criar_usuario):
+    """Entre a dependência e a rota não pode sobrar transação (conexão presa)."""
+    from app.api.deps import get_current_user
+    from app.core.database import SessionLocal
+    from app.core.security import create_access_token
+
+    usuario = criar_usuario(CargoEnum.gestor)
+    token = create_access_token({"sub": str(usuario.id)})
+
+    sessao = SessionLocal()
+    try:
+        logado = get_current_user(token=token, db=sessao)
+        assert not sessao.in_transaction()  # conexão já devolvida ao pool
+        assert logado not in sessao  # desanexado, mas com os dados já lidos
+        assert (logado.id, logado.cargo, logado.nome) == (usuario.id, CargoEnum.gestor, usuario.nome)
+    finally:
+        sessao.close()
