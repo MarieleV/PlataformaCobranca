@@ -241,7 +241,7 @@ O gestor **não** cria, edita nem promove gestores ou administradores.
 | ID | Requisito | Situação |
 |---|---|:---:|
 | **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. | ✅ 100 usuários com 0% de falhas ([resultados](../carga/README.md#resultados)) |
-| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | ✅ P95 de 99 ms com 100 usuários ([resultados](../carga/README.md#resultados)) |
+| **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | ✅ P95 de 75–99 ms com 100 usuários ([resultados](../carga/README.md#resultados)) |
 | **RNF03** | Processar arquivos de até 50.000 registros. | ✅ lote de 50.000 em 115,7 s, 0 rejeitados ([resultados](../carga/README.md#rnf03-lote-de-50000-registros)) |
 | **RNF04** | Autenticação JWT com tokens de curta duração e refresh token. | ✅ |
 | **RNF05** | Dados sensíveis armazenados com criptografia em repouso. | ✅ |

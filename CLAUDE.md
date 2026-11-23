@@ -7,60 +7,26 @@ TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobra
 
 Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 
-## Situação atual (atualizado em 17/11/2026)
-- **Back-end concluído** e na `main`.
-- **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. Não há mais mocks nas telas.
-- **Deploy na AWS concluído (17/11/2026)**: a `feature/deploy-aws` entrou na `main` pelo PR #38 e o primeiro deploy pelo CI passou de primeira. Produção no ar em **https://cobranca-tcc.duckdns.org** (detalhes em "Produção (`deploy/`)"). Testado em produção: login, dashboard, upload de lotes com polling e erros por linha, troca de senha, logout/login.
-- **`develop` à frente da `main` (e já no GitHub), aguardando teste local antes do PR**: filtro de devedores por canal (RF05, back + front), `deploy/README.md` ajustado, `docs/DEPLOY.md` (registro do deploy para o TCC), o teste de carga em `carga/` e as correções de desempenho que ele revelou (dashboard, conexão do `get_current_user`, busy-wait do RabbitMQ também no compose de produção). A Mariele **não** quis abrir o PR para a `main` antes de testar no PC de casa, que tem Docker (o PC do trabalho não tem Docker rodando). O roteiro está na seção abaixo.
+## Situação atual (atualizado em 23/11/2026)
+- **Back-end e front-end concluídos**, na `main` (front pelo PR #25; não há mais mocks nas telas).
+- **Produção no ar** em **https://cobranca-tcc.duckdns.org** (deploy inicial em 17/11/2026, PR #38; detalhes em "Produção (`deploy/`)"). Esteve fora do ar na tarde de 17/11 e voltou. Se cair de novo, seguir "Diagnóstico: o site não abre" no `deploy/README.md`.
+- **PR #39 (`develop` → `main`) mergeado e implantado em 23/11/2026**: filtro de devedores por canal (RF05, testado pela Mariele na tela e na API e conferido no bundle de produção), correções de desempenho (dashboard, conexão do `get_current_user`, busy-wait do RabbitMQ também no compose de produção), teste de carga em `carga/` com resultados, RFC v1.2 e `docs/DEPLOY.md`. Depois dele, a `develop` recebeu só documentação (capturas dos testes, este arquivo, roadmap do README), que vai para a `main` no próximo PR (dispara deploy, sem risco).
+- **RNF01/RNF02/RNF03 atendidos** (ambiente local, 23/11/2026; ver "Testes de desempenho" abaixo).
 - **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo). Os provedores reais (SendGrid/Twilio) ficaram para depois, por decisão da Mariele.
 
-## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
-Quando a Mariele voltar a falar disto, retome por aqui. Pergunte o que ela já fez e peça a saída de qualquer passo que falhou. Comandos em PowerShell, a partir da raiz do repositório.
-
-**Produção:** esteve fora do ar em 17/11/2026 (tarde) e **voltou** (conferido em 23/11/2026: site 200 e `/health` com Postgres, Redis e RabbitMQ ok). Se cair de novo, seguir "Diagnóstico: o site não abre" no `deploy/README.md`.
-
-**0. Atualizar a máquina**
+## Testes de desempenho (concluídos em 23/11/2026)
+Feitos no PC de casa da Mariele (o único com Docker): notebook i3-7020U (2 núcleos, 4 threads), 4 GB de RAM, Docker Desktop com 4 CPUs e 1,8 GB (não há como dar mais). Resultados completos em `carga/README.md` ("Ritmo dos usuários" e "Resultados").
+- **RNF01/RNF02:** 100 usuários, pausa de 5 a 15 s entre ações (justificada pela atualização automática do front: Dashboard 60 s, Monitoramento 15 s) → P95 de **75 ms** e **99 ms** (duas rodadas), 0% de falhas, ~8,7 req/s; repetido com a base de ~55.000 devedores → P95 de **225 ms**, 0% de falhas. Estresse (pausa de 1 a 3 s, ~27 req/s): P95 de 976 ms e 1,6% de falhas, registrado como limite da máquina, não como critério do RFC.
+- **RNF03:** `massa-50000.csv` (`--semente 2026`; a semente padrão repete os 5.000 da massa menor) → 49.999 novos, 1 atualizado (CPF já existente), 0 rejeitados, **115,7 s** no worker (~25.900 registros/min; meta do RFC > 10.000/min). O tempo exato vem do log do worker (a tela só mostra hora:minuto).
+- O teste revelou e corrigiu: timeline do dashboard com uma consulta por dia; conexão presa entre o `get_current_user` e a rota (impasse threadpool 40 × pool 10, com `QueuePool limit ... timeout 30`); busy-wait do RabbitMQ; e falhas do caminho `host.docker.internal` no Windows (requisições que nem chegavam à API).
+- **Como rodar de novo** (back-end com `docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml up -d` na pasta `back-end`; Grafana desligado). O k6 roda **na rede Docker da API**. Esta versão funciona de qualquer subpasta do repositório (a Mariele já errou a pasta duas vezes com `cd carga`):
 ```powershell
-git switch develop
-git pull
-cd front-end; npm install; cd ..
+docker run --rm --network back-end_default -v "$(git rev-parse --show-toplevel)/carga:/scripts" -w /scripts -e BASE_URL=http://api:8000 -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
 ```
-O `back-end/venv` desta máquina (se existir) precisa das dependências atuais: `back-end\venv\Scripts\python -m pip install -r back-end\requirements-dev.txt`.
+- Depois: voltar ao modo de desenvolvimento com `cd back-end; docker compose up -d`.
+- **Opcional:** k6 contra a produção (o RF05 já está lá), com patamar curto (`-e DURACAO=1m`) por causa do crédito de CPU da `t3.small`; ver "Contra a produção" no `carga/README.md`. Não substitui o resultado local do RNF02 (soma a latência até Ohio).
 
-**1. Subir o back-end igual à produção** (API com 2 processos, sem `--reload`; ver `carga/docker-compose.carga.yml`)
-```powershell
-cd back-end
-docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml up -d --build
-docker compose ps
-docker exec -it cobranca_api python -m app.seed   # se o admin ainda não existir
-cd ..
-```
-Se o RabbitMQ atrasar ("dependency rabbitmq failed to start"), rode o `up -d` de novo, sem `--build`.
-
-**2. Testar o RF05 (filtro por canal)**, que ainda não foi testado com a API rodando, só pelo pytest:
-- Front (`cd front-end; npm run dev`, <http://localhost:8443>): na tela Devedores, o seletor "Com E-mail/SMS/WhatsApp" só traz quem não tem o canal riscado na coluna Contatos; combina com status/atraso; "Limpar filtros" zera (itens novos no `ROTEIRO_TESTES.md`, seção 4).
-- API: em <http://localhost:8000/docs>, `GET /devedores/` com `canal=sms`; `canal=fax` deve dar 422.
-
-**3. Teste de carga RNF01/RNF02: ✅ feito em 23/11/2026** (aprovado: 100 usuários, pausa de 5 a 15 s, P95 de 99 ms, 0% de falhas; resultados e justificativa do ritmo em `carga/README.md`, seções "Ritmo dos usuários" e "Resultados"). O teste revelou e corrigiu: dashboard com 1 consulta por dia na timeline, conexão presa entre o `get_current_user` e a rota (impasse threadpool 40 × pool 10) e falhas do `host.docker.internal` no Windows. Comando oficial (k6 **na rede Docker da API**):
-```powershell
-cd carga
-docker run --rm --network back-end_default -v "${PWD}:/scripts" -w /scripts -e BASE_URL=http://api:8000 -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
-cd ..
-```
-- Estresse (`-e PAUSA_MIN=1 -e PAUSA_MAX=3`, ~27 req/s): P95 de 976 ms e 1,6% de falhas, que é o limite do PC de casa (i3-7020U, 2 núcleos, 4 GB). Não é critério do RFC; está registrado como capacidade da máquina.
-- Falta a Mariele guardar o print do resumo para o TCC (os `.txt` ficam em `carga/resultados/`, fora do git).
-
-**4. RNF03 (lote de 50.000): ✅ feito em 23/11/2026.** `massa-50000.csv` com `--semente 2026` (a semente padrão repete os 5.000 da massa menor): 49.999 novos, 1 atualizado (CPF que já existia), 0 rejeitados, **115,7 s** no worker (~25.900 registros/min; meta do RFC > 10.000/min). Base local agora com ~55.000 devedores. Resultados em `carga/README.md`.
-
-**5. Opcional: Grafana durante o teste** (`docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml -f docker-compose.monitoring.yml up -d` na pasta `back-end`; a consulta PromQL está no `carga/README.md`).
-
-**6. Voltar ao modo de desenvolvimento:** `cd back-end; docker compose up -d; cd ..`
-
-**7. Registrar os números: ✅ feito** (`carga/README.md` "Resultados", `docs/DEPLOY.md` seção 8, `docs/RFC.md` 2.4 e 8.3).
-
-**8. PR `develop` → `main`.** Leva o RF05 + docs + `carga/`. **Dispara deploy em produção** (aprovar em "Revisar implantações"). Risco baixo: sem migração, sem mudança no `.env`, no Caddyfile ou no compose de produção. Depois do deploy, conferir o filtro por canal em https://cobranca-tcc.duckdns.org. Só então, se quiser, o k6 contra a produção (patamar curto, `-e DURACAO=1m`; ver "Contra a produção" no `carga/README.md`).
-
-**9. Prints do deploy** para o TCC: a lista está na seção 10 do `docs/DEPLOY.md` (site com cadeado, Actions verde com o job Deploy, aprovação do ambiente, Ruleset, EC2, RDS, security group, `docker compose ps`, Packages e orçamento). Não precisam de Docker local.
+**Capturas dos testes:** em `docs/imagens/carga/` (k6 com bases de 5.042 e ~55.000, relatórios dos lotes de 5.000 e 50.000, log do worker), exibidas em `carga/README.md` (seção "Capturas"); os prints do terminal foram cortados para não mostrar o caminho da pasta do usuário. **Falta para o TCC (não precisa de Docker):** levar essas capturas ao documento do TCC (que fica fora do repositório) e fazer os prints do deploy da seção 10 do `docs/DEPLOY.md` (site com cadeado, Actions verde com o job Deploy, aprovação do ambiente, Ruleset, EC2, RDS, security group, `docker compose ps`, Packages e orçamento).
 
 ## Como trabalhar com a Mariele
 - Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\silva\Repositórios GitHub\tcc-cobranca\PlataformaCobranca` ou `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
@@ -170,8 +136,8 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 ## Pendências do projeto (próxima fase)
 Ordem sugerida:
 1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
-2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
-3. ~~**Evidência dos RNF01/RNF02/RNF03**~~ **✅ concluída em 23/11/2026** no ambiente local: RNF01/RNF02 com P95 de 99 ms e 0% de falhas (100 usuários, pausa de 5 a 15 s; 225 ms com a base de ~55.000); RNF03 com 50.000 registros em 115,7 s. Falta só a Mariele levar os prints (resumo do k6 e Relatório de validação) ao documento do TCC. Contra produção (opcional), só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
+2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC. Os prints de Actions/aprovação podem ser do deploy do PR #39 (23/11/2026).
+3. ~~**Evidência dos RNF01/RNF02/RNF03**~~ **✅ concluída em 23/11/2026** (ver "Testes de desempenho"). Falta só levar os prints ao documento do TCC.
 4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 
@@ -185,5 +151,5 @@ Rotina de produção: acompanhar os créditos no Faturamento uma vez por semana;
 - `carga/README.md`: teste de carga (RNF01/RNF02 com k6) e lote de 50.000 registros (RNF03).
 - `docs/DEPLOY.md`: registro da implantação para o TCC (decisões, justificativa da região, rastreabilidade com o RFC e lista de capturas).
 - `docs/RFC.md`: **documento único de requisitos**, v1.2 (17/11/2026). Consolida a v1.0 (proposta) e a v1.1 (revisão): diagramas Mermaid (casos de uso, fluxos, navegação, C4, ER, Gantt), situação de cada RF/RNF e a seção 8 "Implementação e desvios" (inclui o que **não** foi implementado: retenção de 90 dias da auditoria, CSP, Dependabot). O `RFC-v1.0.md` foi apagado (fica no histórico do git). Ao concluir uma pendência, atualize a situação no RFC (tabelas 2.3/2.4 e seção 8.3).
-- `docs/imagens/`: capturas das telas usadas nos READMEs (1440×900, dados fictícios). Foram geradas com Playwright e a API simulada no navegador (rotas `localhost:8000` interceptadas), sem banco. Se a interface mudar visivelmente, refaça as capturas do mesmo jeito.
+- `docs/imagens/`: capturas das telas usadas nos READMEs (1440×900, dados fictícios). Foram geradas com Playwright e a API simulada no navegador (rotas `localhost:8000` interceptadas), sem banco. Se a interface mudar visivelmente, refaça as capturas do mesmo jeito. **Exceção: `docs/imagens/carga/`** são prints reais das execuções de 23/11/2026 (evidência dos RNF01/RNF02/RNF03 para o TCC), com os prints do terminal cortados para não mostrar o caminho local. Não substitua por imagens simuladas.
 - **Padrão visual da documentação** (para recrutadores, "nativo do GitHub"): cabeçalho centralizado com título, subtítulo em negrito, selos `img.shields.io` na paleta do GitHub (`59636e` cinza para tecnologias, `0969da` azul para links, `1a7f37` verde para estado bom) e a barra de navegação `<sub>` entre os documentos (README · RFC · Back-end · Front-end · Deploy…); alertas `> [!NOTE]/[!TIP]/[!IMPORTANT]/[!WARNING]/[!CAUTION]`; `<details>` para conteúdo longo; diagramas Mermaid **sem cores customizadas** (adaptam ao tema claro/escuro) e sem `<sub>` dentro deles. Nada de serviços externos decorativos (animação de digitação, ondas). O README da raiz tem selos dinâmicos do CI e do SonarCloud; não use selo de "site no ar" (mostraria "down" se a EC2 estiver parada).

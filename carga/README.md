@@ -127,11 +127,11 @@ Medições de **23/11/2026**, ambiente local, k6 na rede Docker da API.
 
 | Cenário | Pausa | Req/s | P95 da API | Falhas | Resultado |
 |---|---|---|---|---|---|
-| **Realista (RNF01/RNF02)** | 5–15 s | 8,7 | **99 ms** | **0,00%** | ✅ aprovado nos três limites (checks 100%) |
+| **Realista (RNF01/RNF02)** | 5–15 s | 8,7 | **75 ms** (99 ms em outra rodada) | **0,00%** | ✅ aprovado nos três limites (checks 100%) |
 | **Realista, base de ~55.000** | 5–15 s | 8,7 | **225 ms** | **0,00%** | ✅ aprovado nos três limites (repetido depois do lote de 50.000) |
 | Estresse | 1–3 s | 27,1 | 976 ms | 1,62% | ✗ acima do limite: capacidade da máquina esgotada |
 
-- No cenário realista, a mediana foi de 42 ms, o P90 de 75 ms e o P99 de 778 ms (picos isolados, abaixo de 1% das requisições).
+- No cenário realista houve duas rodadas com a base de 5.042: P95 de 75 ms (mediana de 32 ms, P99 de 145 ms; [captura](#capturas)) e P95 de 99 ms (mediana de 42 ms, P99 de 778 ms). A diferença entre rodadas vem da máquina compartilhada com outros processos; as duas ficam bem abaixo do limite.
 - Com a base 11 vezes maior (~55.000 devedores, depois do RNF03), o P95 subiu para 225 ms (mediana de 60 ms, P99 de 343 ms) e continuou abaixo do limite: as listagens são paginadas e as contagens usam índices.
 - No estresse, os 2 processos da API ficam com a CPU no máximo (~175% no `docker stats`), e a fila faz parte das requisições esperar mais de 30 s por uma conexão com o banco. Em uma máquina com mais núcleos, ou com mais processos da API, o limite sobe.
 
@@ -149,6 +149,40 @@ Importado em 23/11/2026, na mesma máquina, com a base já com 5.042 devedores:
 O "1 atualizado" é um CPF sorteado que já existia na base (a chance de uma coincidência entre 50.000 sorteios e ~5.000 CPFs existentes é de uns 25%). O sistema atualizou o devedor em vez de duplicá-lo, como manda a regra de reimportação. A tela do Relatório de validação mostra só horas e minutos ("Enviado em 23/11 11:35, processado em 23/11 11:37"); o tempo exato vem do log do worker (`docker logs cobranca_worker`).
 
 > Use outra semente (`--semente`) para o lote grande: com a semente padrão (42), os 5.000 primeiros registros repetem a massa de 5.000 e entram como "atualizados".
+
+### Capturas
+
+Evidências das execuções de 23/11/2026 (imagens em [`docs/imagens/carga/`](../docs/imagens/carga/)).
+
+**RNF01/RNF02: resumo do k6, base de 5.042 devedores** (P95 de 74,67 ms, 0% de falhas, checks 100%):
+
+![Resumo do k6 com a base de 5.042 devedores](../docs/imagens/carga/k6-realista-base-5mil.png)
+
+**RNF01/RNF02: resumo do k6, base de ~55.000 devedores** (depois do lote de 50.000; P95 de 225,06 ms, 0% de falhas):
+
+![Resumo do k6 com a base de 55.000 devedores](../docs/imagens/carga/k6-realista-base-55mil.png)
+
+<details>
+<summary><b>Massa do teste de carga: lote de 5.000 registros</b></summary>
+
+![Relatório de validação do lote de 5.000 registros](../docs/imagens/carga/lote-5000-relatorio.png)
+
+</details>
+
+**RNF03: lote de 50.000 registros**. O Relatório de validação mostra 49.999 novos, 1 atualizado e 0 rejeitados:
+
+![Relatório de validação do lote de 50.000 registros](../docs/imagens/carga/lote-50000-relatorio.png)
+
+O log do worker mostra o tempo exato de processamento, `succeeded in 115.75s`:
+
+![Log do worker com o tempo de processamento do lote](../docs/imagens/carga/lote-50000-log-worker.png)
+
+<details>
+<summary><b>Tela de importação ao final do lote de 50.000</b></summary>
+
+![Tela Importar lote com o lote de 50.000 processado](../docs/imagens/carga/lote-50000-importacao.png)
+
+</details>
 
 ### O que o teste revelou e foi corrigido
 
