@@ -110,9 +110,22 @@ def contagem_total(db: Session, inicio: datetime, fim: datetime) -> Contagem:
 
 
 def conversao(db: Session, inicio: datetime, fim: datetime) -> tuple[int, int]:
-    """(devedores alcançados, destes quantos estão quitados) no período."""
-    base = (
-        select(func.count(distinct(Comunicacao.devedor_id)))
+    """(devedores alcançados, destes quantos estão quitados) no período.
+
+    Uma consulta só (as duas contagens no mesmo SELECT): o dashboard é a rota
+    mais acessada e cada ida ao banco pesa no P95 (RNF02).
+    """
+    consulta = (
+        select(
+            func.count(distinct(Comunicacao.devedor_id)),
+            func.count(
+                distinct(
+                    case(
+                        (Devedor.status == StatusDevedorEnum.quitado, Comunicacao.devedor_id)
+                    )
+                )
+            ),
+        )
         .join(Devedor, Devedor.id == Comunicacao.devedor_id)
         .where(
             _COND_SUCESSO,
@@ -120,9 +133,8 @@ def conversao(db: Session, inicio: datetime, fim: datetime) -> tuple[int, int]:
             Comunicacao.criado_em < fim,
         )
     )
-    alcancados = db.scalar(base) or 0
-    quitados = db.scalar(base.where(Devedor.status == StatusDevedorEnum.quitado)) or 0
-    return int(alcancados), int(quitados)
+    alcancados, quitados = db.execute(consulta).one()
+    return int(alcancados or 0), int(quitados or 0)
 
 
 def devedores_por_status(db: Session) -> dict[StatusDevedorEnum, int]:
@@ -135,13 +147,38 @@ def devedores_por_status(db: Session) -> dict[StatusDevedorEnum, int]:
 
 
 def timeline(db: Session, dia_final: date, dias: int) -> list[tuple[date, Contagem]]:
-    """Um ponto por dia (do mais antigo ao mais recente), inclusive dias zerados."""
-    pontos = []
-    for deslocamento in range(dias - 1, -1, -1):
-        dia = dia_final - timedelta(days=deslocamento)
-        inicio, fim = limites_do_periodo(dia, 1)
-        pontos.append((dia, contagem_total(db, inicio, fim)))
-    return pontos
+    """Um ponto por dia (do mais antigo ao mais recente), inclusive dias zerados.
+
+    Uma consulta só para a janela inteira (antes era uma por dia: 30 idas ao banco
+    com dias=30, o que esgotava o pool de conexões no teste de carga). Cada
+    comunicação cai na "faixa" do seu dia por um CASE com os limites dos dias de
+    Brasília já convertidos para UTC; assim a consulta não depende de funções de
+    fuso do banco e roda igual no PostgreSQL e no SQLite dos testes.
+    """
+    dias_da_janela = [dia_final - timedelta(days=d) for d in range(dias - 1, -1, -1)]
+    limites = [inicio_do_dia_utc(dia) for dia in dias_da_janela]
+    fim = inicio_do_dia_utc(dia_final + timedelta(days=1))
+
+    # Do dia mais recente para o mais antigo: o primeiro limite alcançado é o do dia.
+    faixa = case(
+        *[(Comunicacao.criado_em >= limite, indice) for indice, limite in reversed(list(enumerate(limites)))],
+        else_=-1,
+    ).label("faixa")
+    consulta = (
+        select(
+            faixa,
+            func.coalesce(func.sum(case((_COND_SUCESSO, 1), else_=0)), 0),
+            func.coalesce(func.sum(case((_COND_FALHA, 1), else_=0)), 0),
+            func.coalesce(func.sum(case((_COND_AGUARDANDO, 1), else_=0)), 0),
+        )
+        .where(Comunicacao.criado_em >= limites[0], Comunicacao.criado_em < fim)
+        .group_by(faixa)
+    )
+    contagens = [Contagem() for _ in dias_da_janela]
+    for indice, sucesso, falhas, aguardando in db.execute(consulta):
+        if 0 <= indice < len(contagens):
+            contagens[indice] = Contagem(int(sucesso), int(falhas), int(aguardando))
+    return list(zip(dias_da_janela, contagens))
 
 
 def ultimos_lotes(db: Session, limite: int = 5) -> list[Lote]:

@@ -92,6 +92,38 @@ def test_comunicacao_fora_do_periodo_nao_entra(db, cenario):
     assert c.sucesso + c.falhas + c.aguardando == 4
 
 
+def test_timeline_separa_os_dias_de_brasilia_em_uma_consulta(db, cenario):
+    """Cada comunicação cai no seu dia de Brasília; fora da janela não entra."""
+    from datetime import timedelta
+
+    from sqlalchemy import event
+
+    from app.core.datas import inicio_do_dia_utc
+
+    def comunicacao_de(nome):
+        return db.scalar(select(Comunicacao).join(Devedor).where(Devedor.nome == nome))
+
+    meia_noite_hoje = inicio_do_dia_utc(hoje())
+    comunicacao_de("Ana").criado_em = meia_noite_hoje - timedelta(minutes=1)  # 23h59 de ontem (sucesso)
+    comunicacao_de("Bia").criado_em = meia_noite_hoje  # 00h00 de hoje (bounce)
+    comunicacao_de("Caio").criado_em = meia_noite_hoje - timedelta(days=3)  # aguardando
+    comunicacao_de("Duda").criado_em = meia_noite_hoje - timedelta(days=10)  # fora da janela
+    db.commit()
+
+    consultas = []
+    ouvinte = lambda *args: consultas.append(1)  # noqa: E731
+    event.listen(db.get_bind(), "before_cursor_execute", ouvinte)
+    try:
+        pontos = servico.timeline(db, hoje(), 7)
+    finally:
+        event.remove(db.get_bind(), "before_cursor_execute", ouvinte)
+
+    assert len(consultas) == 1
+    assert [dia for dia, _ in pontos] == [hoje() - timedelta(days=d) for d in range(6, -1, -1)]
+    resumo = [(c.sucesso, c.falhas, c.aguardando) for _, c in pontos]
+    assert resumo == [(0, 0, 0)] * 3 + [(0, 0, 1), (0, 0, 0), (1, 0, 0), (0, 1, 0)]
+
+
 # ----------------------------------------------------------------------
 # GET /dashboard
 # ----------------------------------------------------------------------
