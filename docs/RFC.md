@@ -119,7 +119,7 @@ O projeto é desenvolvido em parceria com a **Consulth Soluções Empresariais**
 | KPI | Meta | Como é verificado |
 |---|---|---|
 | Tempo de resposta da API (P95) | < 300 ms | Teste de carga com k6 ([`carga/`](../carga/README.md)) |
-| Throughput de processamento de lote | > 10.000 registros/min | Lote de 50.000 registros (RNF03) |
+| Throughput de processamento de lote | > 10.000 registros/min | Lote de 50.000 registros (RNF03): ~25.900 registros/min em 23/11/2026 |
 | Cobertura de testes (back-end) | ≥ 80% | pytest no CI (hoje ~97%) |
 | Cobertura de testes (front-end) | ≥ 25% | Vitest no CI (exigido 80%; hoje ~91% na lógica) |
 | Disponibilidade do serviço | ≥ 99% | Teste de `/health` a cada deploy |
@@ -242,7 +242,7 @@ O gestor **não** cria, edita nem promove gestores ou administradores.
 |---|---|:---:|
 | **RNF01** | Suportar ao menos 100 usuários simultâneos sem degradação. | ✅ 100 usuários com 0% de falhas ([resultados](../carga/README.md#resultados)) |
 | **RNF02** | Tempo de resposta das rotas de API < 300 ms no P95. | ✅ P95 de 99 ms com 100 usuários ([resultados](../carga/README.md#resultados)) |
-| **RNF03** | Processar arquivos de até 50.000 registros. | ✅ limite aplicado; 🧪 evidência em [`carga/`](../carga/README.md) |
+| **RNF03** | Processar arquivos de até 50.000 registros. | ✅ lote de 50.000 em 115,7 s, 0 rejeitados ([resultados](../carga/README.md#rnf03-lote-de-50000-registros)) |
 | **RNF04** | Autenticação JWT com tokens de curta duração e refresh token. | ✅ |
 | **RNF05** | Dados sensíveis armazenados com criptografia em repouso. | ✅ |
 | **RNF06** | Cobertura mínima de 80% nos testes do backend (pytest). | ✅ ~97% |
@@ -676,7 +676,7 @@ Detalhes da produção em [`DEPLOY.md`](./DEPLOY.md).
 
 - [ ] **Provedores reais:** validar SendGrid e Twilio com chaves reais (o sistema roda em modo simulado).
 - [x] **RNF01/RNF02:** teste de carga executado em 23/11/2026 (100 usuários, P95 de 99 ms, 0% de falhas, ambiente local; [resultados](../carga/README.md#resultados)).
-- [ ] **RNF03:** importar o lote de 50.000 registros e registrar o tempo de processamento ([`carga/`](../carga/README.md)).
+- [x] **RNF03:** lote de 50.000 registros processado em 115,7 s (~25.900 registros/min), 0 rejeitados, em 23/11/2026 ([resultados](../carga/README.md#rnf03-lote-de-50000-registros)).
 - [ ] **Retenção da auditoria:** a proposta previa logs por 90 dias com anonimização posterior; hoje os registros são mantidos sem expurgo automático.
 - [ ] **CSP e Dependabot:** o cabeçalho `Content-Security-Policy` e a atualização automática de dependências não foram configurados.
 - [ ] **Status `entregue`:** depende de webhooks dos provedores; hoje "enviado" significa aceito pelo provedor.

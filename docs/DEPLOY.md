@@ -172,7 +172,8 @@ Pontos de controle:
 | **RNF07** — CI/CD bloqueia deploy sem testes/Quality Gate | Atendido (deploy depende dos quatro jobs e da `main` protegida) |
 | **RNF09** — tudo em contêineres com Docker Compose | Atendido (seis serviços no Compose; o banco é gerenciado, ver desvios) |
 | **RNF08** — métricas Prometheus | A API expõe `/metrics`; o Prometheus/Grafana roda no ambiente local, não em produção (ver limitações) |
-| **RNF01 / RNF02** — 100 usuários simultâneos, P95 < 300 ms | Atendido no ambiente local em 23/11/2026: 100 usuários, P95 de 99 ms e 0% de falhas (k6, [`carga/`](../carga/README.md#resultados)) |
+| **RNF01 / RNF02** — 100 usuários simultâneos, P95 < 300 ms | Atendido no ambiente local em 23/11/2026: 100 usuários, P95 de 99 ms (225 ms com a base de ~55.000 devedores) e 0% de falhas (k6, [`carga/`](../carga/README.md#resultados)) |
+| **RNF03** — lotes de até 50.000 registros | Atendido no ambiente local em 23/11/2026: 50.000 registros em 115,7 s (~25.900/min), 0 rejeitados ([`carga/`](../carga/README.md#rnf03-lote-de-50000-registros)) |
 | **M6** — Deploy com Docker e HTTPS | Concluído em 17/11/2026 |
 
 ### 8.1 Diferenças em relação à proposta

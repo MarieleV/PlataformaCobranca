@@ -17,7 +17,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 ## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
 Quando a Mariele voltar a falar disto, retome por aqui. Pergunte o que ela já fez e peça a saída de qualquer passo que falhou. Comandos em PowerShell, a partir da raiz do repositório.
 
-**Primeiro: a produção estava fora do ar em 17/11/2026 (tarde).** `https://cobranca-tcc.duckdns.org` não respondia (porta 443 sem resposta; o DuckDNS resolvia para o Elastic IP 3.134.59.65; o shields.io também via o site "down", então não era só a rede do trabalho). Conferir com a Mariele seguindo "Diagnóstico: o site não abre" no `deploy/README.md` (instância ligada? créditos/conta? `docker compose ps`? certificado?).
+**Produção:** esteve fora do ar em 17/11/2026 (tarde) e **voltou** (conferido em 23/11/2026: site 200 e `/health` com Postgres, Redis e RabbitMQ ok). Se cair de novo, seguir "Diagnóstico: o site não abre" no `deploy/README.md`.
 
 **0. Atualizar a máquina**
 ```powershell
@@ -50,13 +50,13 @@ cd ..
 - Estresse (`-e PAUSA_MIN=1 -e PAUSA_MAX=3`, ~27 req/s): P95 de 976 ms e 1,6% de falhas, que é o limite do PC de casa (i3-7020U, 2 núcleos, 4 GB). Não é critério do RFC; está registrado como capacidade da máquina.
 - Falta a Mariele guardar o print do resumo para o TCC (os `.txt` ficam em `carga/resultados/`, fora do git).
 
-**4. RNF03 (lote de 50.000)**, depois do teste de carga: `python carga/gerar_massa.py --quantidade 50000`, importar e capturar o Relatório de validação ("Enviado em" → "processado em", 50.000 novos). O gerador já foi validado: as 50.000 linhas passam no `validar_linha` do back-end.
+**4. RNF03 (lote de 50.000): ✅ feito em 23/11/2026.** `massa-50000.csv` com `--semente 2026` (a semente padrão repete os 5.000 da massa menor): 49.999 novos, 1 atualizado (CPF que já existia), 0 rejeitados, **115,7 s** no worker (~25.900 registros/min; meta do RFC > 10.000/min). Base local agora com ~55.000 devedores. Resultados em `carga/README.md`.
 
 **5. Opcional: Grafana durante o teste** (`docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml -f docker-compose.monitoring.yml up -d` na pasta `back-end`; a consulta PromQL está no `carga/README.md`).
 
 **6. Voltar ao modo de desenvolvimento:** `cd back-end; docker compose up -d; cd ..`
 
-**7. Registrar os números** que a Mariele trouxer: P95, taxa de erro, requisições/s, usuários, tamanho da base, máquina, tempo do lote de 50.000. Lugar: uma seção "Resultados" no `carga/README.md` e a linha RNF01/RNF02/RNF03 da tabela de rastreabilidade do `docs/DEPLOY.md` (seção 8). Em seguida, atualizar a pendência 3 deste arquivo.
+**7. Registrar os números: ✅ feito** (`carga/README.md` "Resultados", `docs/DEPLOY.md` seção 8, `docs/RFC.md` 2.4 e 8.3).
 
 **8. PR `develop` → `main`.** Leva o RF05 + docs + `carga/`. **Dispara deploy em produção** (aprovar em "Revisar implantações"). Risco baixo: sem migração, sem mudança no `.env`, no Caddyfile ou no compose de produção. Depois do deploy, conferir o filtro por canal em https://cobranca-tcc.duckdns.org. Só então, se quiser, o k6 contra a produção (patamar curto, `-e DURACAO=1m`; ver "Contra a produção" no `carga/README.md`).
 
@@ -171,7 +171,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 Ordem sugerida:
 1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
 2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
-3. **Evidência dos RNF01/RNF02/RNF03**: RNF01/RNF02 **atendidos** em 23/11/2026 no ambiente local (ver checklist, passo 3, e `carga/README.md#resultados`). **Falta o RNF03** (lote de 50.000, checklist passo 4) e o print do resumo do k6. Contra produção, só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
+3. ~~**Evidência dos RNF01/RNF02/RNF03**~~ **✅ concluída em 23/11/2026** no ambiente local: RNF01/RNF02 com P95 de 99 ms e 0% de falhas (100 usuários, pausa de 5 a 15 s; 225 ms com a base de ~55.000); RNF03 com 50.000 registros em 115,7 s. Falta só a Mariele levar os prints (resumo do k6 e Relatório de validação) ao documento do TCC. Contra produção (opcional), só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
 4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
 5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
 

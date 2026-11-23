@@ -96,7 +96,7 @@ No fim, o k6 mostra o resumo. O que importa:
 ### 5. RNF03: lote de 50.000 registros
 
 ```powershell
-python carga/gerar_massa.py --quantidade 50000   # carga/massa-50000.csv (~5 MB)
+python carga/gerar_massa.py --quantidade 50000 --semente 2026   # carga/massa-50000.csv (~5 MB)
 ```
 
 Importe pela tela **Importar lote** e, ao terminar, abra o **Relatório de validação**: ele mostra "Enviado em ..." e "processado em ...". A diferença é o tempo de processamento, e o total deve ser 50.000 novos e 0 rejeitados. Faça a captura dessa tela.
@@ -128,10 +128,27 @@ Medições de **23/11/2026**, ambiente local, k6 na rede Docker da API.
 | Cenário | Pausa | Req/s | P95 da API | Falhas | Resultado |
 |---|---|---|---|---|---|
 | **Realista (RNF01/RNF02)** | 5–15 s | 8,7 | **99 ms** | **0,00%** | ✅ aprovado nos três limites (checks 100%) |
+| **Realista, base de ~55.000** | 5–15 s | 8,7 | **225 ms** | **0,00%** | ✅ aprovado nos três limites (repetido depois do lote de 50.000) |
 | Estresse | 1–3 s | 27,1 | 976 ms | 1,62% | ✗ acima do limite: capacidade da máquina esgotada |
 
 - No cenário realista, a mediana foi de 42 ms, o P90 de 75 ms e o P99 de 778 ms (picos isolados, abaixo de 1% das requisições).
+- Com a base 11 vezes maior (~55.000 devedores, depois do RNF03), o P95 subiu para 225 ms (mediana de 60 ms, P99 de 343 ms) e continuou abaixo do limite: as listagens são paginadas e as contagens usam índices.
 - No estresse, os 2 processos da API ficam com a CPU no máximo (~175% no `docker stats`), e a fila faz parte das requisições esperar mais de 30 s por uma conexão com o banco. Em uma máquina com mais núcleos, ou com mais processos da API, o limite sobe.
+
+### RNF03: lote de 50.000 registros
+
+Importado em 23/11/2026, na mesma máquina, com a base já com 5.042 devedores:
+
+| Medida | Resultado |
+|---|---|
+| Registros no arquivo | 50.000 (`massa-50000.csv`, semente 2026) |
+| Novos / atualizados / rejeitados | 49.999 / 1 / **0** |
+| Tempo de processamento (worker) | **115,7 s** (log do Celery: `processar_lote_task ... succeeded in 115.75s`) |
+| Vazão | **~25.900 registros/min** (meta do RFC: > 10.000/min) ✅ |
+
+O "1 atualizado" é um CPF sorteado que já existia na base (a chance de uma coincidência entre 50.000 sorteios e ~5.000 CPFs existentes é de uns 25%). O sistema atualizou o devedor em vez de duplicá-lo, como manda a regra de reimportação. A tela do Relatório de validação mostra só horas e minutos ("Enviado em 23/11 11:35, processado em 23/11 11:37"); o tempo exato vem do log do worker (`docker logs cobranca_worker`).
+
+> Use outra semente (`--semente`) para o lote grande: com a semente padrão (42), os 5.000 primeiros registros repetem a massa de 5.000 e entram como "atualizados".
 
 ### O que o teste revelou e foi corrigido
 
