@@ -198,6 +198,7 @@ def trocar_propria_senha(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Serviço de sessão indisponível",
         )
+    db.add(current_user)  # o get_current_user entrega o usuário desanexado da sessão
     current_user.senha_hash = get_password_hash(dados.nova_senha)
     registrar_auditoria(
         db, current_user.id, "alterar_propria_senha", "usuario", current_user.id,

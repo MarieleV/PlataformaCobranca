@@ -67,6 +67,17 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Usuário inativo"
         )
+
+    # Devolve a conexão ao pool antes de a rota rodar. As rotas são síncronas: o
+    # FastAPI roda esta dependência numa thread e a rota em outra, tiradas do mesmo
+    # threadpool (40 por processo), enquanto o pool do banco tem 10 conexões. Se a
+    # conexão ficasse presa entre as duas etapas, sob carga as 40 threads ficavam
+    # esperando conexão e as 10 conexões esperando thread, até o timeout de 30 s
+    # do pool (achado no teste de carga do RNF01/RNF02, carga/README.md).
+    # O expunge mantém os atributos já lidos (cargo, nome...) sem nova consulta;
+    # a rota que for alterar o próprio usuário precisa reanexá-lo com db.add().
+    db.expunge(usuario)
+    db.rollback()
     return usuario
 
 
