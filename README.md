@@ -245,7 +245,7 @@ flowchart LR
 - **Deploy sem acesso manual ao servidor:** o pipeline publica as imagens no GitHub Container Registry (tag = commit), atualiza os contêineres na EC2 por SSH, espera todos ficarem saudáveis e testa o domínio público. Voltar uma versão é subir a tag de um commit anterior.
 - **Migrações testadas de verdade:** o CI aplica as migrações num PostgreSQL 15 real, confere se os modelos e o esquema estão em sincronia e testa desfazer/refazer a última.
 - **Fluxo de trabalho:** git-flow (`feature/*` → `develop` → PR para `main`) e [Conventional Commits](https://www.conventionalcommits.org/pt-br/).
-- **Desempenho:** teste de carga com k6 em [`carga/`](./carga/README.md) (100 usuários simultâneos, P95 < 300 ms como critério automático).
+- **Desempenho medido:** teste de carga com k6 em [`carga/`](./carga/README.md), com os limites do RFC como critério automático. Com 100 usuários simultâneos, o P95 ficou em 75–99 ms (limite de 300 ms) e não houve falhas, mesmo num notebook de entrada. O teste também revelou duas correções de código.
 
 ---
 
@@ -357,8 +357,9 @@ PlataformaCobranca/
 - [x] Autenticação, RBAC, auditoria e LGPD
 - [x] Dashboard, monitoramento e métricas Prometheus
 - [x] CI/CD com Quality Gate e deploy na AWS
+- [x] Filtro de devedores por canal de contato (RF05)
+- [x] Requisitos de desempenho comprovados com teste de carga: 100 usuários com P95 de 75–99 ms e 0% de falhas; lote de 50.000 registros em 116 s ([resultados](./carga/README.md#resultados))
 - [ ] Validação com os provedores reais (SendGrid e Twilio)
-- [ ] Evidência dos requisitos de desempenho com o teste de carga
 - [ ] Webhooks de confirmação de entrega (`entregue`)
 - [ ] Templates aprovados do WhatsApp Business
 
