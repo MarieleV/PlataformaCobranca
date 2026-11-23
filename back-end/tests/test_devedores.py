@@ -41,13 +41,18 @@ def criar_devedor(db, lote):
         valor="1500.00",
         dias_atraso=10,
         status=StatusDevedorEnum.ativo,
+        email="d@exemplo.com",
+        telefone=None,
+        whatsapp=None,
     ) -> Devedor:
         _contador["n"] += 1
         devedor = Devedor(
             lote_id=lote.id,
             cpf_cnpj=cpf_cnpj or f"{_contador['n']:011d}",
             nome=nome,
-            email="d@exemplo.com",
+            email=email,
+            telefone=telefone,
+            whatsapp=whatsapp,
             valor_divida_enc=criptografar_decimal(Decimal(valor)),
             data_vencimento=hoje() - timedelta(days=dias_atraso),
             status=status,
@@ -163,7 +168,45 @@ def test_paginacao(logar, criar_devedor):
     assert len(pagina["itens"]) == 2
 
 
-@pytest.mark.parametrize("query", ["limit=0", "limit=201", "skip=-1", "atraso_minimo=-1", "status=inexistente", "busca=a"])
+@pytest.fixture
+def devedores_com_contatos(criar_devedor):
+    """Um devedor por combinação de contatos; string vazia não conta como contato."""
+    return {
+        "so_email": criar_devedor(nome="Só E-mail", email="a@exemplo.com"),
+        "so_sms": criar_devedor(nome="Só SMS", email=None, telefone="47999990001"),
+        "so_whatsapp": criar_devedor(nome="Só WhatsApp", email="", whatsapp="47999990002"),
+        "todos": criar_devedor(nome="Todos", email="t@exemplo.com", telefone="47999990003", whatsapp="47999990004"),
+        "nenhum": criar_devedor(nome="Nenhum", email=None, telefone="", whatsapp=None),
+    }
+
+
+@pytest.mark.parametrize(
+    ("canal", "esperados"),
+    [
+        ("email", {"Só E-mail", "Todos"}),
+        ("sms", {"Só SMS", "Todos"}),
+        ("whatsapp", {"Só WhatsApp", "Todos"}),
+    ],
+)
+def test_filtro_por_canal_traz_quem_tem_o_contato(logar, devedores_com_contatos, canal, esperados):
+    corpo = logar().get(f"/devedores/?canal={canal}").json()
+    assert {d["nome"] for d in corpo["itens"]} == esperados
+    assert corpo["total"] == len(esperados)
+
+
+def test_sem_filtro_de_canal_traz_todos(logar, devedores_com_contatos):
+    assert logar().get("/devedores/").json()["total"] == len(devedores_com_contatos)
+
+
+def test_filtro_por_canal_combinado_com_status(logar, criar_devedor):
+    criar_devedor(nome="Ativo com SMS", telefone="47999990001")
+    criar_devedor(nome="Quitado com SMS", telefone="47999990002", status=StatusDevedorEnum.quitado)
+    criar_devedor(nome="Ativo sem SMS")
+    itens = logar().get("/devedores/?canal=sms&status=ativo").json()["itens"]
+    assert [d["nome"] for d in itens] == ["Ativo com SMS"]
+
+
+@pytest.mark.parametrize("query", ["limit=0", "limit=201", "skip=-1", "atraso_minimo=-1", "status=inexistente", "busca=a", "canal=fax"])
 def test_parametros_invalidos_retornam_422(logar, query):
     assert logar().get(f"/devedores/?{query}").status_code == 422
 

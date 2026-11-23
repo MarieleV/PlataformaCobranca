@@ -9,13 +9,14 @@ from app.api.deps import get_current_user, role_required
 from app.core.auditoria import registrar_auditoria
 from app.core.database import get_db
 from app.core.datas import hoje
-from app.models.domain import CargoEnum, Comunicacao, Devedor, StatusDevedorEnum, Usuario
+from app.models.domain import CanalEnum, CargoEnum, Comunicacao, Devedor, StatusDevedorEnum, Usuario
 from app.schemas.devedor import (
     AlterarStatusRequest,
     ComunicacaoResponse,
     DevedorResponse,
     PaginaDevedores,
 )
+from app.services.regua import tem_contato_do_canal
 from app.worker.validadores import somente_digitos
 
 router = APIRouter(prefix="/devedores", tags=["Devedores"])
@@ -35,10 +36,13 @@ def listar_devedores(
     status_devedor: StatusDevedorEnum | None = Query(None, alias="status"),
     atraso_minimo: int | None = Query(None, ge=0, description="Dias mínimos de atraso"),
     busca: str | None = Query(None, min_length=2, max_length=100, description="Nome ou CPF/CNPJ"),
+    canal: CanalEnum | None = Query(
+        None, description="Só devedores com contato para o canal (e-mail, telefone para SMS ou WhatsApp)"
+    ),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    """Lista devedores com filtros por status, prazo de atraso e busca (RF05)."""
+    """Lista devedores com filtros por status, prazo de atraso, canal e busca (RF05)."""
     filtros = []
     if status_devedor:
         filtros.append(Devedor.status == status_devedor)
@@ -50,6 +54,8 @@ def listar_devedores(
         if digitos:
             criterio = criterio | Devedor.cpf_cnpj.contains(digitos, autoescape=True)
         filtros.append(criterio)
+    if canal:
+        filtros.append(tem_contato_do_canal(canal))
 
     total = db.execute(select(func.count()).select_from(Devedor).where(*filtros)).scalar_one()
     devedores = (

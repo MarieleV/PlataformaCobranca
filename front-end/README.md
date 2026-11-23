@@ -1,84 +1,159 @@
-# Front-end — Plataforma de Cobrança Automatizada
+<div align="center">
 
-React 19 + Vite 8 + TypeScript + Tailwind CSS v4 (+ Recharts para gráficos).
-O layout nasceu no Figma Make e ainda está em evolução.
+# Front-end
 
-## Pré-requisitos
+**Painel web da plataforma: SPA em React com sessão por cookies e sistema visual próprio**
 
-- Node.js 22 LTS (inclui o npm).
-- Back-end no ar (`docker compose up -d --build` na pasta `back-end`) e o seed aplicado
-  (`docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123`).
+<img src="https://img.shields.io/badge/React_19-59636e?logo=react&logoColor=white" alt="React 19" />
+<img src="https://img.shields.io/badge/TypeScript-59636e?logo=typescript&logoColor=white" alt="TypeScript" />
+<img src="https://img.shields.io/badge/Vite_8-59636e?logo=vite&logoColor=white" alt="Vite 8" />
+<img src="https://img.shields.io/badge/Tailwind_v4-59636e?logo=tailwindcss&logoColor=white" alt="Tailwind v4" />
+<img src="https://img.shields.io/badge/Recharts-59636e" alt="Recharts" />
+<img src="https://img.shields.io/badge/testes-72_·_~91%25-1a7f37?logo=vitest&logoColor=white" alt="72 testes, cerca de 91% de cobertura" />
 
-## Como rodar (PowerShell)
+<sub>[README](../README.md) · [RFC](../docs/RFC.md) · [Back-end](../back-end/DOC.md) · **Front-end** · [Deploy](../deploy/README.md) · [Roteiro de testes](./ROTEIRO_TESTES.md)</sub>
+
+<br/>
+
+<img src="../docs/imagens/dashboard.png" alt="Dashboard: faixa de indicadores, volume de disparos por dia e distribuição por canal" width="100%" />
+
+</div>
+
+---
+
+## Visão geral
+
+Nove telas (login, dashboard, importação, relatório de validação, devedores, régua, monitoramento, usuários e auditoria) consumindo a API REST, com as permissões de cada perfil refletidas na interface.
+
+| | |
+|---|---|
+| **Sem dependências desnecessárias** | `fetch` nativo, navegação por estado e Context API: só React, Tailwind e Recharts em produção |
+| **Sessão segura** | O token nunca passa pelo JavaScript: cookies `httpOnly` gravados pelo back-end |
+| **72 testes** | Vitest + Testing Library; ~91% de cobertura na lógica (`lib`, `hooks`, `auth`), mínimo de 80% no CI |
+| **Sem avisos** | ESLint com `--max-warnings 0` e TypeScript estrito no CI |
+| **Imagem de produção** | Build do Vite servido pelo Caddy (HTTPS e proxy da API no mesmo domínio) |
+
+---
+
+## Como executar
+
+> [!IMPORTANT]
+> Pré-requisitos: **Node.js 22 LTS** e o back-end no ar (`docker compose up -d --build` na pasta `back-end` e o seed aplicado). Veja o [README do back-end](../back-end/DOC.md#como-executar).
 
 ```powershell
 cd front-end
-Copy-Item .env.example .env   # só na primeira vez
-npm install                   # só na primeira vez / quando o package.json mudar
-npm run dev                   # http://localhost:8443
+Copy-Item .env.example .env     # primeira vez
+npm install                     # primeira vez ou quando o package.json mudar
+npm run dev                     # http://localhost:8443
 ```
+
+Login de desenvolvimento: `admin@consulth.com.br` / `admin123`.
 
 | Script | O que faz |
 |---|---|
-| `npm run dev` | Servidor de desenvolvimento na porta 8443 (hot reload) |
-| `npm run lint` | ESLint (TypeScript + hooks do React); falha com qualquer aviso |
-| `npm run typecheck` | Checagem de tipos do TypeScript (inclui os testes) |
-| `npm test` | Testes unitários (Vitest), uma vez |
-| `npm run test:watch` | Testes em modo observação, enquanto programa |
+| `npm run dev` | Servidor de desenvolvimento na porta 8443, com *hot reload* |
+| `npm run verificar` | **Tudo o que o CI roda:** lint, tipos, testes com cobertura e build |
+| `npm run lint` | ESLint (TypeScript + regras de hooks); falha com qualquer aviso |
+| `npm run typecheck` | Checagem de tipos, incluindo os testes |
+| `npm test` · `npm run test:watch` | Testes uma vez · em modo observação |
 | `npm run test:coverage` | Testes com cobertura (mínimo de 80%); relatório HTML em `coverage/` |
-| `npm run verificar` | Tudo o que o CI roda: lint, tipos, testes com cobertura e build |
-| `npm run build` | Build de produção em `dist/` |
-| `npm run preview` | Serve o build de produção localmente |
+| `npm run build` · `npm run preview` | Build de produção em `dist/` · servir o build localmente |
 
-## Testes e CI
-
-- Testes em `src/**/*.test.ts(x)` (Vitest + jsdom + Testing Library). Cobrem a lógica: cliente HTTP
-  (`api.ts`: refresh em 401, refresh único para chamadas simultâneas, mensagens de erro), `AuthContext`,
-  `useApi` (polling e `pararQuando`), formatadores, janela de disparo e validações. As telas são
-  validadas pelo `ROTEIRO_TESTES.md`.
-- Ao mockar o `apiFetch`, crie um `vi.fn()` novo por teste (no `beforeEach`) em vez de `mockReset()`:
-  no Vitest 5 o reset faz promises rejeitadas pelo mock virarem "unhandled rejection".
-- O job **"Front-end (lint, tipos, testes e build)"** do `.github/workflows/ci.yml` roda `npm ci` e os
-  mesmos scripts do `verificar`, com Node 22.
-- `npm audit` acusa vulnerabilidades *moderate* no `minimatch` usado pelo ESLint: só ferramenta de
-  desenvolvimento (não vai para o bundle) e o conserto exige `--force` com versões incompatíveis.
-  `npm audit --omit=dev` deve ficar zerado.
+---
 
 ## Integração com a API
 
-- A URL da API vem de `VITE_API_URL` (`.env`); padrão `http://localhost:8000`.
-- Autenticação por **cookies httpOnly** gravados pelo back-end: o JavaScript não vê o token.
-  Todas as chamadas passam por `apiFetch` (`src/lib/api.ts`), que envia `credentials: "include"`,
-  renova a sessão uma vez em caso de 401 (`POST /auth/refresh`) e devolve `ApiError` com
-  mensagem pronta para a tela.
-- **Use sempre `localhost`** (no navegador e no `VITE_API_URL`). Misturar `localhost` com
-  `127.0.0.1` faz o navegador tratar como sites diferentes e não enviar os cookies.
-- A origem do front precisa estar em `CORS_ORIGINS` no `.env` do back-end
-  (`http://localhost:8443` já está no padrão).
-- Formatos de request/response: `http://localhost:8000/docs` ou `/openapi.json`.
+```mermaid
+sequenceDiagram
+    participant T as Tela
+    participant C as apiFetch
+    participant A as API
+
+    T->>C: GET /devedores/
+    C->>A: credentials: "include" (cookies)
+    A-->>C: 401 (acesso expirou)
+    C->>A: POST /auth/refresh (uma vez, compartilhado)
+    A-->>C: 200 + cookies novos
+    C->>A: repete GET /devedores/
+    A-->>C: 200
+    C-->>T: dados tipados
+    Note over C,T: se o refresh falhar, volta para o login
+```
+
+- **Um único cliente HTTP.** Toda chamada passa por `apiFetch` (`src/lib/api.ts`): envia `credentials: "include"`, faz **um** refresh compartilhado entre as requisições que recebem 401 ao mesmo tempo e devolve `ApiError` com a mensagem pronta para a tela (os 422 do Pydantic chegam em português).
+- **Mesma origem dos cookies.** Use sempre `localhost`, no navegador e no `VITE_API_URL`: misturar com `127.0.0.1` faz o navegador tratar como sites diferentes e não enviar os cookies. A origem do front precisa estar no `CORS_ORIGINS` do back-end (`http://localhost:8443` já está no padrão).
+- **Sem proxy no desenvolvimento.** O cookie de refresh tem `path=/auth`; um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Em produção, o Caddy serve front e API no mesmo domínio, sem prefixo.
+- **Tipos da API** escritos à mão em `src/lib/tipos.ts` e conferidos no `/openapi.json`.
+- **Atualização sem "piscar".** `useApi(path, { intervaloMs, pararQuando })` faz *polling* mantendo os dados anteriores na tela, e para sozinho quando o lote ou o job termina.
+- **Permissões.** `src/auth/permissoes.ts` espelha o RBAC do back-end (`PERFIS_POR_PAGINA`, `PERFIS_POR_ACAO`); `pode([...])` esconde ações que o perfil não pode fazer.
+
+---
+
+## Sistema visual
+
+<table>
+  <tr>
+    <td width="50%"><img src="../docs/imagens/regua.png" alt="Régua de cobrança com a linha do tempo D+N" /></td>
+    <td width="50%"><img src="../docs/imagens/relatorio.png" alt="Relatório de validação com totais e erros por linha" /></td>
+  </tr>
+</table>
+
+| Decisão | Detalhe |
+|---|---|
+| **Cor só para estado** | Interface em preto, branco e cinza. Verde = resolvido/sucesso, âmbar = atenção, vermelho = falha, azul = em cobrança, violeta = comunicado. Mapa único em `STATUS_*` (`src/lib/formatos.ts`). Canais e perfis não têm cor própria, para não competir com os estados. |
+| **Acessível para daltonismo** | Nos gráficos, sucesso é grafite e falha é vermelho (verde × vermelho empilhados não se distinguem na deuteranopia). Estado nunca é só cor: há texto, ícone ou legenda. |
+| **Tipografia** | IBM Plex Sans; IBM Plex Mono só para identificadores (CPF/CNPJ, IDs). Números tabulares no corpo inteiro, para valores e datas alinharem em coluna. |
+| **Escala** | Espaço base de 4 px; raio 6 (selo), 8 (campo e botão), 12 (painel) e 16 (modal); tipo 12/13/14/16/20/30 px; rótulos em caixa normal. |
+| **Assinatura** | A própria régua (marcas D+N) aparece na tela da régua, no marcador de atraso dos devedores e no login. |
+| **Qualidade básica** | Foco visível em todo elemento interativo, `prefers-reduced-motion` respeitado e menu em gaveta no celular. |
+
+Os componentes compartilhados ficam em `src/components/ui.tsx` (cabeçalho de página, painel, avisos, estado vazio, *skeleton*, paginação, modal) e as classes em `src/components/estilos.ts`.
+
+---
 
 ## Estrutura
 
-```
+```text
 src/
-├── main.tsx              # monta o App dentro do AuthProvider
-├── App.tsx               # verifica a sessão, mostra Login ou a área logada (navegação por estado)
+├── main.tsx              monta o App dentro do AuthProvider
+├── App.tsx               sessão, Login ou área logada, navegação por estado
 ├── auth/
-│   ├── AuthContext.tsx   # useAuth(): usuario, login, logout, recarregarUsuario, pode(perfis)
-│   └── permissoes.ts     # páginas e ações x perfis (espelha o RBAC do back-end)
+│   ├── AuthContext.tsx   useAuth(): usuário, login, logout, pode(perfis)
+│   └── permissoes.ts     páginas e ações × perfis (espelha o RBAC da API)
 ├── lib/
-│   ├── api.ts            # cliente HTTP (cookies, refresh, erros, download, /health)
-│   ├── tipos.ts          # tipos da API
-│   ├── formatos.ts       # números, R$, CPF/CNPJ, datas em Brasília, rótulos de status
-│   └── lotes.ts, regua.ts, janela.ts, jobs.ts, usuarios.ts  # regras de cada domínio
-├── hooks/                # useApi (GET + polling), useSaude, useDebounce, useFecharComEsc
-├── components/           # Sidebar, ui.tsx (Badge, Painel, Modal...), painéis e modais
-├── pages/                # uma tela por arquivo
-└── test/setup.ts         # configuração do Vitest
+│   ├── api.ts            cliente HTTP: cookies, refresh, erros, download, /health
+│   ├── tipos.ts          tipos da API
+│   ├── formatos.ts       números, R$, CPF/CNPJ, datas de Brasília, rótulos e cores de status
+│   └── lotes · regua · janela · jobs · usuarios   regras de cada domínio
+├── hooks/                useApi (GET + polling), useSaude, useDebounce, useFecharComEsc
+├── components/           ui.tsx, estilos.ts, Sidebar, painéis e modais
+├── pages/                uma tela por arquivo
+└── test/setup.ts         configuração do Vitest
 ```
 
-## Convenções
+---
 
-- Estilo com classes do Tailwind direto no JSX; CSS global em `src/index.css`.
-- Componentes exportados como `default`.
+## Testes e qualidade
+
+- **O que é testado:** a lógica que pode quebrar silenciosamente. Cliente HTTP (refresh em 401, refresh único para chamadas simultâneas, mensagens de erro), `AuthContext`, `useApi` (polling e `pararQuando`), formatadores, janela de disparo e validações de lote, régua e usuários.
+- **O que é validado manualmente:** as telas, pelo [roteiro de testes](./ROTEIRO_TESTES.md).
+- **No CI:** o job *Front-end (lint, tipos, testes e build)* roda `npm ci` e os mesmos passos do `verificar`, com Node 22. É um dos checks obrigatórios para o merge na `main`.
+
+<details>
+<summary><b>Convenções e armadilhas conhecidas</b></summary>
+<br/>
+
+- Arquivos `.tsx` de componente exportam só componentes (exigência do *hot reload*); helpers vão para `lib/` ou `hooks/`.
+- Ao mockar `apiFetch` nos testes, crie um `vi.fn()` novo no `beforeEach`: o `mockReset()` do Vitest 5 transforma promises rejeitadas em "unhandled rejection".
+- Dentro de `<label>` não vão grupos de botões (use `CampoForm grupo`).
 - **LGPD:** não registre CPF/CNPJ nem corpos de requisição no console.
+- `npm audit` acusa *moderate* só no `minimatch` usado pelo ESLint (ferramenta de desenvolvimento, fora do bundle); `npm audit --omit=dev` fica zerado.
+- No Windows, se **todas** as suítes falharem com "Vitest failed to find the current suite", entre de novo na pasta com `cd C:\...\front-end` (letra do drive em minúsculo faz o Vitest carregar módulos duas vezes).
+
+</details>
+
+---
+
+## Imagem de produção
+
+O `Dockerfile` tem dois estágios: `node:22-alpine` gera o build do Vite com `VITE_API_URL=""` (mesma origem) e `caddy:2-alpine` serve o `dist/`. O [`Caddyfile`](./Caddyfile) cuida do HTTPS automático, dos cabeçalhos de segurança, do cache dos *assets* e do proxy das rotas da API. Teste local da imagem: fim do [guia de deploy](../deploy/README.md#testar-a-imagem-do-front-localmente-opcional).

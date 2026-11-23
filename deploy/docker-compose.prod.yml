@@ -52,6 +52,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      # Desliga o "busy-wait" dos agendadores do Erlang: sem isso o RabbitMQ ocioso
+      # gasta CPU à toa (na t3.small, crédito de CPU). Achado no teste de carga.
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+sbwt none +sbwtdcpu none +sbwtdio none"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:

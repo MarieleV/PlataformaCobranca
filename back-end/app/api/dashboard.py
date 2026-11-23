@@ -42,7 +42,9 @@ def dashboard(
     """KPIs do período (padrão: 7 dias, contando hoje). Todos os perfis podem ver."""
     dia_final = hoje()
     inicio, fim = servico.limites_do_periodo(dia_final, dias)
-    inicio_hoje, fim_hoje = servico.limites_do_periodo(dia_final, 1)
+    # O último ponto da linha do tempo já é a contagem de hoje (evita outra consulta).
+    pontos = servico.timeline(db, dia_final, dias)
+    contagem_hoje = pontos[-1][1]
 
     por_canal = servico.contagem_por_canal(db, inicio, fim)
     total_periodo = servico.Contagem()
@@ -60,7 +62,7 @@ def dashboard(
             total=sum(por_status.values()),
             por_status={status.value: total for status, total in por_status.items()},
         ),
-        hoje=ContagemResponse(**_contagem(servico.contagem_total(db, inicio_hoje, fim_hoje))),
+        hoje=ContagemResponse(**_contagem(contagem_hoje)),
         periodo=KPIsPeriodo(
             **_contagem(total_periodo),
             devedores_alcancados=alcancados,
@@ -78,7 +80,7 @@ def dashboard(
                 sucesso=c.sucesso,
                 falhas=c.falhas,
             )
-            for dia, c in servico.timeline(db, dia_final, dias)
+            for dia, c in pontos
         ],
         ultimos_lotes=[
             LoteResponse.model_validate(lote) for lote in servico.ultimos_lotes(db)

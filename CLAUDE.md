@@ -7,43 +7,101 @@ TCC da Mariele (Católica SC), com a empresa parceira Consulth. Sistema de cobra
 
 Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 
-## Situação atual (atualizado em 13/11/2026)
+## Situação atual (atualizado em 17/11/2026)
 - **Back-end concluído** e na `main`.
-- **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. `main` e `develop` estão no mesmo commit. Não há mais mocks nas telas.
-- **Próxima fase: as pendências do projeto** (seção "Pendências", mais abaixo), começando pelo teste real dos provedores e pelo deploy na AWS.
-- **Deploy (16/11/2026, `feature/deploy-aws`)**: arquivos prontos e testados localmente (imagem do front com Caddy, `deploy/docker-compose.prod.yml`, passo Deploy do CI); falta a Mariele provisionar a AWS seguindo `deploy/README.md`.
+- **Front-end concluído**: as 8 etapas de integração foram mergeadas na `develop`, testadas pela Mariele (`front-end/ROTEIRO_TESTES.md`) e levadas à `main` pelo PR #25. Não há mais mocks nas telas.
+- **Deploy na AWS concluído (17/11/2026)**: a `feature/deploy-aws` entrou na `main` pelo PR #38 e o primeiro deploy pelo CI passou de primeira. Produção no ar em **https://cobranca-tcc.duckdns.org** (detalhes em "Produção (`deploy/`)"). Testado em produção: login, dashboard, upload de lotes com polling e erros por linha, troca de senha, logout/login.
+- **`develop` à frente da `main` (e já no GitHub), aguardando teste local antes do PR**: filtro de devedores por canal (RF05, back + front), `deploy/README.md` ajustado, `docs/DEPLOY.md` (registro do deploy para o TCC), o teste de carga em `carga/` e as correções de desempenho que ele revelou (dashboard, conexão do `get_current_user`, busy-wait do RabbitMQ também no compose de produção). A Mariele **não** quis abrir o PR para a `main` antes de testar no PC de casa, que tem Docker (o PC do trabalho não tem Docker rodando). O roteiro está na seção abaixo.
+- **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo). Os provedores reais (SendGrid/Twilio) ficaram para depois, por decisão da Mariele.
+
+## Próxima sessão: checklist no PC com Docker (pendente desde 17/11/2026)
+Quando a Mariele voltar a falar disto, retome por aqui. Pergunte o que ela já fez e peça a saída de qualquer passo que falhou. Comandos em PowerShell, a partir da raiz do repositório.
+
+**Produção:** esteve fora do ar em 17/11/2026 (tarde) e **voltou** (conferido em 23/11/2026: site 200 e `/health` com Postgres, Redis e RabbitMQ ok). Se cair de novo, seguir "Diagnóstico: o site não abre" no `deploy/README.md`.
+
+**0. Atualizar a máquina**
+```powershell
+git switch develop
+git pull
+cd front-end; npm install; cd ..
+```
+O `back-end/venv` desta máquina (se existir) precisa das dependências atuais: `back-end\venv\Scripts\python -m pip install -r back-end\requirements-dev.txt`.
+
+**1. Subir o back-end igual à produção** (API com 2 processos, sem `--reload`; ver `carga/docker-compose.carga.yml`)
+```powershell
+cd back-end
+docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml up -d --build
+docker compose ps
+docker exec -it cobranca_api python -m app.seed   # se o admin ainda não existir
+cd ..
+```
+Se o RabbitMQ atrasar ("dependency rabbitmq failed to start"), rode o `up -d` de novo, sem `--build`.
+
+**2. Testar o RF05 (filtro por canal)**, que ainda não foi testado com a API rodando, só pelo pytest:
+- Front (`cd front-end; npm run dev`, <http://localhost:8443>): na tela Devedores, o seletor "Com E-mail/SMS/WhatsApp" só traz quem não tem o canal riscado na coluna Contatos; combina com status/atraso; "Limpar filtros" zera (itens novos no `ROTEIRO_TESTES.md`, seção 4).
+- API: em <http://localhost:8000/docs>, `GET /devedores/` com `canal=sms`; `canal=fax` deve dar 422.
+
+**3. Teste de carga RNF01/RNF02: ✅ feito em 23/11/2026** (aprovado: 100 usuários, pausa de 5 a 15 s, P95 de 99 ms, 0% de falhas; resultados e justificativa do ritmo em `carga/README.md`, seções "Ritmo dos usuários" e "Resultados"). O teste revelou e corrigiu: dashboard com 1 consulta por dia na timeline, conexão presa entre o `get_current_user` e a rota (impasse threadpool 40 × pool 10) e falhas do `host.docker.internal` no Windows. Comando oficial (k6 **na rede Docker da API**):
+```powershell
+cd carga
+docker run --rm --network back-end_default -v "${PWD}:/scripts" -w /scripts -e BASE_URL=http://api:8000 -e EMAIL=admin@consulth.com.br -e SENHA=admin123 grafana/k6:1.0.0 run rnf01-rnf02.js
+cd ..
+```
+- Estresse (`-e PAUSA_MIN=1 -e PAUSA_MAX=3`, ~27 req/s): P95 de 976 ms e 1,6% de falhas, que é o limite do PC de casa (i3-7020U, 2 núcleos, 4 GB). Não é critério do RFC; está registrado como capacidade da máquina.
+- Falta a Mariele guardar o print do resumo para o TCC (os `.txt` ficam em `carga/resultados/`, fora do git).
+
+**4. RNF03 (lote de 50.000): ✅ feito em 23/11/2026.** `massa-50000.csv` com `--semente 2026` (a semente padrão repete os 5.000 da massa menor): 49.999 novos, 1 atualizado (CPF que já existia), 0 rejeitados, **115,7 s** no worker (~25.900 registros/min; meta do RFC > 10.000/min). Base local agora com ~55.000 devedores. Resultados em `carga/README.md`.
+
+**5. Opcional: Grafana durante o teste** (`docker compose -f docker-compose.yml -f ../carga/docker-compose.carga.yml -f docker-compose.monitoring.yml up -d` na pasta `back-end`; a consulta PromQL está no `carga/README.md`).
+
+**6. Voltar ao modo de desenvolvimento:** `cd back-end; docker compose up -d; cd ..`
+
+**7. Registrar os números: ✅ feito** (`carga/README.md` "Resultados", `docs/DEPLOY.md` seção 8, `docs/RFC.md` 2.4 e 8.3).
+
+**8. PR `develop` → `main`.** Leva o RF05 + docs + `carga/`. **Dispara deploy em produção** (aprovar em "Revisar implantações"). Risco baixo: sem migração, sem mudança no `.env`, no Caddyfile ou no compose de produção. Depois do deploy, conferir o filtro por canal em https://cobranca-tcc.duckdns.org. Só então, se quiser, o k6 contra a produção (patamar curto, `-e DURACAO=1m`; ver "Contra a produção" no `carga/README.md`).
+
+**9. Prints do deploy** para o TCC: a lista está na seção 10 do `docs/DEPLOY.md` (site com cadeado, Actions verde com o job Deploy, aprovação do ambiente, Ruleset, EC2, RDS, security group, `docker compose ps`, Packages e orçamento). Não precisam de Docker local.
 
 ## Como trabalhar com a Mariele
-- Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
+- Responda em **português do Brasil**, direto e prático. Ela usa **Windows + PowerShell** (o repositório pode estar em pastas diferentes conforme a máquina, ex.: `C:\Users\silva\Repositórios GitHub\tcc-cobranca\PlataformaCobranca` ou `C:\Users\mariele.vieira\Desktop\TCC\PlataformaCobranca`); dê comandos que funcionem em PowerShell.
 - Para cada etapa ela espera: **nome de branch** (git-flow: `feature/...`, `hotfix/...`), **árvore de pastas/arquivos** com `← NOVO` / `← SUBSTITUI`, **commits no padrão Conventional Commits** e instruções claras de teste.
 - Commits: use `git add` por nome de arquivo (nada de `git add .` sem olhar o `git status`). Mesmo que você, Claude me ajude, peço que não cite nos commits Co-Authored-By ou Claude-Session.
   - Quem faz os commits é a Mariele: entregue os comandos, não commite por ela.
   - Cuidado com `git mv`/`git rm`: eles já deixam a mudança *staged* e ela entra no próximo commit, seja qual for. E um `git add` com um caminho que não existe mais falha **inteiro** (nenhum arquivo da linha é adicionado). Monte os comandos de commit considerando isso.
-- Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL`, `Build da imagem Docker` e `Front-end (lint, tipos, testes e build)`. Não use bypass.
+- Fluxo de branches: `feature/*` → `develop` (merge local com `--no-ff`) → PR `develop` → `main`. A `main` é protegida por Ruleset ("Proteção da Main"): exige PR e os checks `Testes e SonarCloud`, `Migrações no PostgreSQL`, `Build da imagem Docker` e `Front-end (lint, tipos, testes e build)` (os quatro confirmados no Ruleset em 17/11/2026). Não use bypass.
+- **Todo merge na `main` dispara um deploy em produção** (com aprovação manual no ambiente `producao`). Avise a Mariele disso quando um PR para a `main` mexer em algo sensível (migrações, `.env`, Caddyfile, compose de produção).
 - Se algo for ambíguo e caro de refazer, pergunte antes. Se for barato de refazer, decida, diga a decisão e siga.
 - **Validação a cada entrega:** rode você mesmo `npm run verificar` (front: lint, tipos, testes com cobertura e build) e/ou `pytest` (back), e teste chamadas reais à API (via `curl` com cookie de sessão) quando mexer em contrato. Ações destrutivas (quitar, excluir) não devem ser testadas na massa dela sem pedir. Mudou comportamento visível na tela? Atualize `front-end/ROTEIRO_TESTES.md`.
 
 ## CI/CD (já funcionando)
-`.github/workflows/ci.yml`: testes do back (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches; o Sonar só analisa `back-end/app`). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O job `Build da imagem Docker` constrói as imagens da API e do front e valida o `Caddyfile` e o `deploy/docker-compose.prod.yml`. O **Deploy** (só push na `main`, depois dos quatro jobs, ambiente `producao`) publica `ghcr.io/marielev/cobranca-api` e `cobranca-web` (tags = SHA do commit e `latest`), copia o compose para `~/cobranca/` na EC2 por SSH, roda `docker compose pull` + `up -d --wait` e testa `https://DOMINIO/health`. Segredos do ambiente `producao`: `EC2_HOST`, `EC2_USUARIO`, `EC2_CHAVE_SSH`, `EC2_KNOWN_HOSTS`; variável `DOMINIO`. Na `main` o `concurrency` não cancela execuções (deploy pela metade). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset.
+`.github/workflows/ci.yml`: testes do back (cobertura mínima 80%), migrações em PostgreSQL 15, build do Docker e SonarCloud com Quality Gate (só em PRs e na `main`; o plano gratuito não analisa outras branches; o Sonar só analisa `back-end/app`). Job do front: **`Front-end (lint, tipos, testes e build)`** (Node 22, `npm ci`, `lint` sem avisos, `typecheck`, `test:coverage` com mínimo de 80% e `build`). O job `Build da imagem Docker` constrói as imagens da API e do front e valida o `Caddyfile` e o `deploy/docker-compose.prod.yml`. O **Deploy** (só push na `main`, depois dos quatro jobs, ambiente `producao`) publica `ghcr.io/marielev/cobranca-api` e `cobranca-web` (tags = SHA do commit e `latest`), copia o compose para `~/cobranca/` na EC2 por SSH, roda `docker compose pull` + `up -d --wait` e testa `https://DOMINIO/health`. Na `main` o `concurrency` não cancela execuções (deploy pela metade). Ao criar um job novo, inclua o nome dele nos checks obrigatórios do Ruleset (use o nome **exato** do job; um check adicionado manualmente com nome que nunca roda trava todos os PRs).
+
+**Ambiente `producao` no GitHub** (configurado): *Required reviewers* = Mariele (cada deploy pausa em "Aguardando" até ela clicar em **Revisar implantações → Aprovar e implantar**); *Deployment branches* = só `main`. Segredos: `EC2_HOST` (= `cobranca-tcc.duckdns.org`), `EC2_USUARIO` (= `ubuntu`), `EC2_CHAVE_SSH`, `EC2_KNOWN_HOSTS`; variável `DOMINIO` (= `cobranca-tcc.duckdns.org`). O `EC2_HOST` e a linha do `EC2_KNOWN_HOSTS` usam o **mesmo** nome (o domínio). Os pacotes do GHCR herdaram a visibilidade pública do repositório no primeiro deploy (não foi preciso torná-los públicos à mão).
 
 ### Produção (`deploy/`)
-- EC2 Ubuntu 24.04 `t3.small` (+ swap de 2 GB, `deploy/preparar-ec2.sh`) com Docker Compose: `web` (Caddy), `api`, `worker`, `beat`, `redis`, `rabbitmq`. Banco no **RDS PostgreSQL 15** (`DATABASE_URL` com `?sslmode=require`, sem acesso público, SG só da EC2). Região **`us-east-2` (Ohio)**, escolhida para economizar créditos (São Paulo é bem mais cara); o custo é latência maior e dados fora do Brasil (LGPD art. 33), aceitável porque o TCC usa só dados fictícios. Produção real com a Consulth: recriar em `sa-east-1` (o código não depende da região).
+- **No ar:** https://cobranca-tcc.duckdns.org (DuckDNS → Elastic IP da EC2; campo IPv6 do DuckDNS **vazio**, porque a EC2 não tem IPv6 e o Let's Encrypt falharia).
+- **Conta AWS:** plano gratuito (login pelo "ID do builder AWS", com MFA). Créditos de ~US$ 140 válidos até **16/05/2027**; quando os créditos ou o prazo acabam, o acesso aos serviços termina (a demo cai). Orçamento `tcc-cobranca-mensal` de **US$ 16/mês** com o tipo de cobrança **Crédito excluído** (senão o gasto aparece sempre como US$ 0), alertas em 80% (real) e 100% (previsto).
+- **Região `us-east-2` (Ohio)**, escolhida para economizar créditos (São Paulo é bem mais cara); o custo é latência maior e dados fora do Brasil (LGPD art. 33), aceitável porque o TCC usa só dados fictícios. Produção real com a Consulth: recriar em `sa-east-1` (o código não depende da região).
+- **EC2** `cobranca`: Ubuntu 24.04 LTS (x86), `t3.small` com **especificação de crédito Padrão** (sem cobrança extra por CPU), 20 GB gp3 criptografado, Elastic IP, security group `cobranca-ec2` (entrada 80, 443 e 22 de `0.0.0.0/0`). Swap de 2 GB e Docker instalados com `deploy/preparar-ec2.sh`. Docker Compose com `web` (Caddy), `api`, `worker`, `beat`, `redis`, `rabbitmq`. Não fazer `do-release-upgrade` para a 26.04 (o `preparar-ec2.sh` foi pensado para a 24.04).
+- **RDS** `cobranca-db`: PostgreSQL **15.19**, `db.t4g.micro` (nível gratuito), Single-AZ, 20 GB gp3 sem autoscaling, sem acesso público, criptografado, banco `cobranca_db`, usuário `cobranca_app`, grupo de parâmetros `default.postgres15` (já exige TLS). Security group `cobranca-rds`: só a porta 5432 com origem no SG `cobranca-ec2`. **Retenção de backup: 1 dia** (o plano gratuito recusa mais que isso); antes de algo arriscado (migração nova, véspera da banca), tirar snapshot manual (RDS → Ações → Tirar snapshot).
 - `front-end/Dockerfile` (multi-stage: `npm run build` com `VITE_API_URL=""` → Caddy com o `dist/`). O **`front-end/Caddyfile`** serve o front e faz proxy, **no mesmo domínio e sem prefixo**, de `/auth`, `/lotes`, `/devedores`, `/usuarios`, `/auditoria`, `/regras`, `/jobs`, `/dashboard`, `/health` para `api:8000`; `/docs`, `/openapi.json` e `/metrics` não são expostos. **Rota nova na API = acrescentar o prefixo no `@api` do Caddyfile.** HTTPS automático (Let's Encrypt) para `DOMINIO`; certificados no volume `caddy_data`.
-- A API roda com `FORWARDED_ALLOW_IPS=*` (IP real do usuário para o bloqueio de login e a auditoria; seguro porque a porta 8000 não é publicada) e `--workers 2`.
-- Segredos só em `~/cobranca/.env` na EC2 (modelo `deploy/.env.example`). Rollback: `IMAGE_TAG=<sha> docker compose up -d`. Teste local da imagem do front: ver o fim de `deploy/README.md`.
+- A API roda com `FORWARDED_ALLOW_IPS=*` (IP real do usuário para o bloqueio de login e a auditoria; confirmado nos logs de produção; seguro porque a porta 8000 não é publicada) e `--workers 2`.
+- Segredos só em `~/cobranca/.env` na EC2 (modelo `deploy/.env.example`, `chmod 600`, `ENVIO_SIMULADO=true`). Cópia dos segredos (inclusive a `ENCRYPTION_KEY` e a senha do RDS) no gerenciador de senhas da Mariele. Nunca peça nem exiba os valores; para conferir o `.env`, use `sed -E 's/=.+/=***/' .env`. Rollback: `IMAGE_TAG=<sha> docker compose up -d`. Teste local da imagem do front: ver o fim de `deploy/README.md`.
+- **Acesso SSH** (chave em `C:\Users\silva\.ssh\cobranca-ec2.pem`, fora do repositório): `ssh -o ServerAliveInterval=60 -i "$env:USERPROFILE\.ssh\cobranca-ec2.pem" ubuntu@cobranca-tcc.duckdns.org` (sem o `ServerAliveInterval` a conexão cai quando fica ociosa). O `ssh-keyscan` do Windows falha com `choose_kex: unsupported KEX method sntrup761x25519-sha512@openssh.com`; para obter a linha do `EC2_KNOWN_HOSTS`, use o `~/.ssh/known_hosts` do PC ou rode o `ssh-keyscan` na própria EC2.
+- **Operação:** `cd ~/cobranca` e `docker compose ps`, `docker compose logs -f --tail=100 api`, `docker stats --no-stream` (mais comandos em `deploy/README.md`). Nos logs, `127.0.0.1 ... GET /health` a cada poucos segundos é o healthcheck do Docker, e um `POST /auth/refresh 401` isolado é alguém abrindo o site sem sessão (normal).
 - `.gitattributes` força LF em `*.sh`, `Caddyfile` e `*.yml` (rodam em Linux).
 
 ## Back-end em uma página
 - Python 3.14, FastAPI, SQLAlchemy 2.1, Alembic (migrações `0001`–`0005`, aplicadas ao subir a API), PostgreSQL 15, Redis, RabbitMQ, Celery (worker + beat). Tudo em Docker Compose (`back-end/docker-compose.yml`): `docker compose up -d --build` na pasta `back-end`. API em `http://localhost:8000`, docs interativas em `/docs`, esquema em `/openapi.json` (**fonte da verdade dos formatos de request/response** — consulte-o em vez de adivinhar).
-- Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123` (o seed recusa a senha padrão em produção).
+- Seed (admin de desenvolvimento): `docker exec -it cobranca_api python -m app.seed` → `admin@consulth.com.br` / `admin123` (o seed recusa a senha padrão em produção; lá ele usa `ADMIN_EMAIL`/`ADMIN_SENHA_INICIAL` do `.env`, e a senha do admin de produção já foi trocada).
 - Máquina com pouca RAM: o RabbitMQ pode demorar a ficar *healthy* (alarme `system_memory_high_watermark` nos logs) e o `up` falhar com "dependency rabbitmq failed to start", deixando api/worker/beat em "Created". Não é defeito: rode `docker compose up -d` de novo (sem `--build`) e, se precisar, pare o monitoramento (`docker stop back-end-grafana-1 back-end-prometheus-1`).
-- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`), `pytest` em `back-end/` (783 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
+- Testes do back-end: no venv (`venv\Scripts\Activate.ps1`, dentro de `back-end/`), `pytest` em `back-end/` (791 testes, ~97% de cobertura). Dependências de teste em `requirements-dev.txt`.
 - Envio real **desligado** por padrão (`ENVIO_SIMULADO=true`): o cliente simulado trata e-mail começando com `bounce` ou telefone terminando em `0000` como bounce e e-mail `falha...`/telefone `...9999` como falha temporária; o resto é "enviado". Teste dos provedores reais: `docker compose exec api python -m app.testar_provedores email|sms|whatsapp <destino>`.
 - Produção (`ENVIRONMENT=production` em `app/core/config.py`): exige `COOKIE_SECURE=true` (HTTPS) e senha do admin diferente da padrão; `COOKIE_SAMESITE` (`lax` padrão) e `CORS_ORIGINS` precisam refletir o domínio real do front.
 
 ### Autenticação (importante para o front)
 - Login: `POST /auth/login` com JSON `{"email": ..., "password": ...}` (resposta: `{message, user:{id,nome,email,perfil}}`). O servidor **grava dois cookies httpOnly** (access, 15 min; refresh, 7 dias, com `path=/auth`). **O JavaScript não vê o token.**
-- O front envia as requisições com **`credentials: 'include'`**. CORS com `allow_credentials=True`; origens em `CORS_ORIGINS` no `.env` (padrão: `http://localhost:8443`, `http://localhost:5173`, `http://127.0.0.1:8443`). **Nunca** use `*`.
+- O front envia as requisições com **`credentials: 'include'`**. CORS com `allow_credentials=True`; origens em `CORS_ORIGINS` no `.env` (padrão: `http://localhost:8443`, `http://localhost:5173`, `http://127.0.0.1:8443`; produção: `https://cobranca-tcc.duckdns.org`). **Nunca** use `*`.
 - `POST /auth/refresh` renova (rotação do refresh); `DELETE /auth/logout`; `GET /auth/me` devolve o usuário logado; `PUT /auth/senha` troca a própria senha. Em 401, o front tenta um refresh uma vez e, se falhar, volta ao login.
 - Senha: 8–128 caracteres com ao menos uma letra e um número. 5 falhas de login → bloqueio temporário (HTTP 429).
 - Perfis (RBAC, RN06): `administrador`, `gestor`, `operador`. **No JSON o campo se chama `perfil`** (no banco é `cargo`).
@@ -53,7 +111,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 |---|---|---|
 | Auth | `POST /auth/login`, `POST /auth/refresh`, `DELETE /auth/logout`, `GET /auth/me`, `PUT /auth/senha` | login público; demais autenticados |
 | Lotes | `POST /lotes/upload` (multipart, campo `file`; 422 formato/vazio, 413 grande), `GET /lotes/`, `GET /lotes/{id}`, `GET /lotes/{id}/erros`, `GET /lotes/{id}/erros/csv` | todos os perfis |
-| Devedores | `GET /devedores/` (query: `status`, `atraso_minimo`, `busca` [nome ou CPF/CNPJ, mín. 2 caracteres], `skip`, `limit` ≤ 200), `GET /devedores/{id}`, `GET /devedores/{id}/comunicacoes`, `PATCH /devedores/{id}/status`, `DELETE /devedores/{id}` (LGPD) | leitura: todos; **excluir: só administrador**; **marcar `quitado`: só gestor/administrador**; quitado não reabre (409) |
+| Devedores | `GET /devedores/` (query: `status`, `atraso_minimo`, `canal` [`email`/`sms`/`whatsapp` = tem o contato do canal, RF05], `busca` [nome ou CPF/CNPJ, mín. 2 caracteres], `skip`, `limit` ≤ 200), `GET /devedores/{id}`, `GET /devedores/{id}/comunicacoes`, `PATCH /devedores/{id}/status`, `DELETE /devedores/{id}` (LGPD) | leitura: todos; **excluir: só administrador**; **marcar `quitado`: só gestor/administrador**; quitado não reabre (409) |
 | Usuários | `GET/POST /usuarios/`, `GET/PATCH/DELETE /usuarios/{id}`, `POST /usuarios/{id}/ativar`, `/desativar`, `/redefinir-senha` | gestor (só gerencia operadores) e administrador (todos); operador não acessa |
 | Auditoria | `GET /auditoria/` (filtros `usuario_id`, `acao`, `entidade`, `de`, `ate`) | só administrador |
 | Régua | `GET/POST /regras/`, `GET/PATCH/DELETE /regras/{id}`, `POST /regras/{id}/ativar` e `/desativar`, `GET /regras/status`, `GET /regras/variaveis`, `POST /regras/preview`, `GET /regras/{id}/elegiveis`, `POST /regras/{id}/executar` (202) | gestor e administrador (listar/consultar: todos) |
@@ -77,7 +135,7 @@ Confirme os perfis exatos de cada rota em `back-end/app/api/*.py` (`role_require
 React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 LTS. Rodar: `cd front-end; npm install; npm run dev`. Validar: `npm run verificar` (= o que o CI roda). Detalhes em `front-end/README.md`; roteiro de teste manual em `front-end/ROTEIRO_TESTES.md`.
 
 ### Decisões de arquitetura
-- **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`. **No deploy vale o mesmo cuidado**: o `/auth` da API precisa ficar acessível no caminho `/auth` (sem prefixo).
+- **Chamadas direto em `http://localhost:8000`** (`VITE_API_URL`), sem proxy do Vite: o cookie de refresh tem `path=/auth`, e um proxy com prefixo (`/api/auth/refresh`) faria o navegador não enviá-lo. Sempre `localhost`, nunca misturar com `127.0.0.1`. **No deploy vale o mesmo cuidado**: o `/auth` da API precisa ficar acessível no caminho `/auth` (sem prefixo) — é o que o Caddyfile faz.
 - Todo acesso à API passa por `apiFetch` (`src/lib/api.ts`); sessão em `useAuth()` (`src/auth/AuthContext.tsx`); páginas e ações × perfis em `src/auth/permissoes.ts` (`PERFIS_POR_PAGINA`, `PERFIS_POR_ACAO`; use `pode([...])` para esconder ações restritas).
 - `fetch` nativo (sem axios); tipos da API escritos à mão em `src/lib/tipos.ts`, conferidos no `/openapi.json`.
 - Navegação por `useState` em `App.tsx` (sem `react-router`); `App.tsx` guarda o lote/job aberto (`abrirRelatorio(id)`, `abrirJob(id)`) e desmonta a área logada no logout.
@@ -94,7 +152,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 
 ### Desvios do protótipo/RFC já combinados (cada um por falta de endpoint ou por LGPD)
 - Dashboard: painel "Alertas" virou "Distribuição por canal" + conversão.
-- Devedores: sem filtro por canal (a API não filtra), sem "último contato" e sem "Exportar CSV" (LGPD); a coluna "Contatos" mostra os canais possíveis. **Atenção: o RF05 do RFC pede filtro por canal** (ver Pendências).
+- Devedores: sem "último contato" e sem "Exportar CSV" (LGPD); a coluna "Contatos" mostra os canais possíveis. O filtro por canal (RF05) foi implementado em nov/2026 e significa "tem o contato do canal" (mesmo critério da elegibilidade da régua, `tem_contato_do_canal` em `app/services/regua.py`).
 - Régua: cards sem métricas por regra. Monitoramento: o "console de logs" fictício virou saúde dos serviços + janela de disparo + jobs.
 - Login: "Esqueceu a senha?" virou "Fale com o administrador".
 
@@ -111,17 +169,21 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 
 ## Pendências do projeto (próxima fase)
 Ordem sugerida:
-1. **Confirmar o Ruleset da `main`** com o check `Front-end (lint, tipos, testes e build)` (o job já rodou no GitHub).
-2. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente.
-3. **RF05 — filtro de devedores por canal**: implementar no back (`GET /devedores/?canal=` = tem contato para o canal) e no front, ou registrar o desvio no RFC.
-4. **Deploy na AWS** (RDS PostgreSQL, EC2): código pronto (ver "Produção (`deploy/`)"). Falta provisionar seguindo `deploy/README.md` (security groups, RDS, EC2 + Elastic IP, domínio, `.env` na EC2, ambiente `producao` no GitHub, pacotes do GHCR públicos após o 1º deploy, seed do admin) e registrar os resultados (URL, prints) na documentação do TCC.
-5. **Evidência dos RNF01/RNF02** (100 usuários simultâneos, P95 < 300 ms): não há teste de carga no repositório (ex.: k6 ou Locust + métricas do Prometheus/Grafana).
-6. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
-7. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
+1. **Teste real do SendGrid/Twilio** (`app.testar_provedores`) e autenticação de domínio do remetente. Em produção: chaves no `~/cobranca/.env` da EC2, `ENVIO_SIMULADO=false` e `docker compose up -d`.
+2. **Registrar o deploy na documentação do TCC**: o texto está em `docs/DEPLOY.md` (arquitetura, recursos, região, CI/CD, segurança, desvios do RFC, limitações). Falta a Mariele fazer as capturas listadas na seção 10 dele e levar o conteúdo ao documento do TCC.
+3. ~~**Evidência dos RNF01/RNF02/RNF03**~~ **✅ concluída em 23/11/2026** no ambiente local: RNF01/RNF02 com P95 de 99 ms e 0% de falhas (100 usuários, pausa de 5 a 15 s; 225 ms com a base de ~55.000); RNF03 com 50.000 registros em 115,7 s. Falta só a Mariele levar os prints (resumo do k6 e Relatório de validação) ao documento do TCC. Contra produção (opcional), só depois do deploy do RF05 (`canal=`) e com patamar curto (crédito de CPU da `t3.small`).
+4. **Webhooks de status de entrega** (`entregue`) e **templates aprovados do WhatsApp** (produção).
+5. Opcionais: code-splitting do front (`React.lazy` por página), monitoramento (`docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d` — Prometheus :9090, Grafana :3000), limpeza de branches remotas antigas.
+
+Rotina de produção: acompanhar os créditos no Faturamento uma vez por semana; snapshot manual do RDS antes de mudanças arriscadas; no fim do TCC, desabilitar a proteção contra exclusão (se ligada), apagar EC2 e RDS e **liberar o Elastic IP**.
 
 ## Documentação
 - `README.md`: visão geral, como rodar, status do projeto.
 - `back-end/DOC.md`: execução, testes, CI/CD, métricas, regras e limitações conhecidas.
 - `front-end/README.md` e `front-end/ROTEIRO_TESTES.md`: front e roteiro de teste manual.
-- `docs/RFC.md`: requisitos (RF/RN/RNF), v1.1 — o texto da proposta; a stack citada nele (ex.: "React 18") é a da época e não foi reescrita.
-- `docs/RFC-v1.0.md`: proposta original; a v1.1 remete a ela para os diagramas de casos de uso, mockups e C4.
+- `deploy/README.md`: arquitetura de produção e passo a passo da AWS (guia operacional).
+- `carga/README.md`: teste de carga (RNF01/RNF02 com k6) e lote de 50.000 registros (RNF03).
+- `docs/DEPLOY.md`: registro da implantação para o TCC (decisões, justificativa da região, rastreabilidade com o RFC e lista de capturas).
+- `docs/RFC.md`: **documento único de requisitos**, v1.2 (17/11/2026). Consolida a v1.0 (proposta) e a v1.1 (revisão): diagramas Mermaid (casos de uso, fluxos, navegação, C4, ER, Gantt), situação de cada RF/RNF e a seção 8 "Implementação e desvios" (inclui o que **não** foi implementado: retenção de 90 dias da auditoria, CSP, Dependabot). O `RFC-v1.0.md` foi apagado (fica no histórico do git). Ao concluir uma pendência, atualize a situação no RFC (tabelas 2.3/2.4 e seção 8.3).
+- `docs/imagens/`: capturas das telas usadas nos READMEs (1440×900, dados fictícios). Foram geradas com Playwright e a API simulada no navegador (rotas `localhost:8000` interceptadas), sem banco. Se a interface mudar visivelmente, refaça as capturas do mesmo jeito.
+- **Padrão visual da documentação** (para recrutadores, "nativo do GitHub"): cabeçalho centralizado com título, subtítulo em negrito, selos `img.shields.io` na paleta do GitHub (`59636e` cinza para tecnologias, `0969da` azul para links, `1a7f37` verde para estado bom) e a barra de navegação `<sub>` entre os documentos (README · RFC · Back-end · Front-end · Deploy…); alertas `> [!NOTE]/[!TIP]/[!IMPORTANT]/[!WARNING]/[!CAUTION]`; `<details>` para conteúdo longo; diagramas Mermaid **sem cores customizadas** (adaptam ao tema claro/escuro) e sem `<sub>` dentro deles. Nada de serviços externos decorativos (animação de digitação, ondas). O README da raiz tem selos dinâmicos do CI e do SonarCloud; não use selo de "site no ar" (mostraria "down" se a EC2 estiver parada).
