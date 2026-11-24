@@ -12,7 +12,7 @@ Repositório (raiz = esta pasta): `back-end/` (FastAPI) e `front-end/` (React).
 - **Produção no ar** em **https://cobranca-tcc.duckdns.org** (deploy inicial em 17/11/2026, PR #38; detalhes em "Produção (`deploy/`)"). Esteve fora do ar na tarde de 17/11 e voltou. Se cair de novo, seguir "Diagnóstico: o site não abre" no `deploy/README.md`.
 - **PR #39 (`develop` → `main`) mergeado e implantado em 23/11/2026**: filtro de devedores por canal (RF05, testado pela Mariele na tela e na API e conferido no bundle de produção), correções de desempenho (dashboard, conexão do `get_current_user`, busy-wait do RabbitMQ também no compose de produção), teste de carga em `carga/` com resultados, RFC v1.2 e `docs/DEPLOY.md`. Depois dele, a `develop` recebeu só documentação (capturas dos testes, este arquivo, roadmap do README), que vai para a `main` no próximo PR (dispara deploy, sem risco).
 - **RNF01/RNF02/RNF03 atendidos** (ambiente local, 23/11/2026; ver "Testes de desempenho" abaixo).
-- **SendGrid configurado em 24/11/2026**: teste de envio para o e-mail pessoal da Mariele recebido. Produção continua com `ENVIO_SIMULADO=true` (ver pendência 1: a Twilio ainda falta e o envio real só deve ser ligado para a demonstração, com uma base controlada).
+- **SendGrid configurado em 24/11/2026**: chaves no `~/cobranca/.env` da EC2 e teste em produção com `app.testar_provedores email` para o e-mail pessoal da Mariele: recebido. Produção continua com `ENVIO_SIMULADO=true` (ver pendência 1: a Twilio ainda falta e o envio real só deve ser ligado para a demonstração, com uma base controlada).
 - **Próxima fase: as demais pendências do projeto** (seção "Pendências", mais abaixo).
 
 ## Testes de desempenho (concluídos em 23/11/2026)
@@ -136,7 +136,7 @@ React 19 + Vite 8 + TypeScript + Tailwind v4 + Recharts, porta 8443, Node.js 22 
 
 ## Pendências do projeto (próxima fase)
 Ordem sugerida:
-1. **Provedores reais.** **SendGrid: ✅ configurado e testado em 24/11/2026** (e-mail recebido na caixa pessoal da Mariele). **Twilio (SMS/WhatsApp): falta.** Cuidados para ligar o envio real:
+1. **Provedores reais.** **SendGrid: ✅ configurado e testado em 24/11/2026** (teste na EC2 de produção com `app.testar_provedores`; e-mail recebido na caixa pessoal da Mariele). **Twilio (SMS/WhatsApp): falta.** Cuidados para ligar o envio real:
    - **Hoje o `ENVIO_SIMULADO` é um só para os três canais**, e em produção `ENVIO_SIMULADO=false` exige **também** as seis variáveis da Twilio (`_validar_segredos` em `app/core/config.py`): sem elas a API, o worker e o beat **não sobem**. Ou seja, só com o SendGrid não dá para ligar o envio real em produção sem mudar o código (proposta: chave por canal, ex. `ENVIO_REAL_CANAIS=email`, exigindo só as credenciais dos canais listados). Não preencher a Twilio com valores falsos para contornar a validação.
    - O modo é configuração do servidor (`~/cobranca/.env` + `docker compose up -d`), **não há controle pela tela** (decisão: um "liga/desliga" no site deixaria um clique disparar cobrança real para a base inteira).
    - **Não ligar com a base atual de produção**: os devedores têm e-mails fictícios dos testes de upload; tudo voltaria como bounce e o SendGrid pode suspender a conta. Para a demonstração: lote só com contatos reais que aceitaram receber, regras ajustadas para só esses serem elegíveis (atraso **exato**), depois ligar o envio real; acompanhar em SendGrid → Activity. Depois da demo, voltar para `true`.
