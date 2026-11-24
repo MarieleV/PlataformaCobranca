@@ -213,3 +213,44 @@ def test_producao_com_envio_real_e_chaves_completas_sobe():
     )
 
     assert config.envio_simulado is False
+    assert config.canais_envio_real == {"email", "sms", "whatsapp"}
+
+
+def test_producao_so_com_email_real_exige_apenas_o_sendgrid():
+    config = _config(
+        envio_simulado=False,
+        envio_real_canais="email",
+        sendgrid_api_key="SG.x",
+        email_remetente="cobranca@empresa.com",
+        **_PRODUCAO,
+    )
+
+    assert config.canais_envio_real == {"email"}
+
+
+def test_producao_com_email_real_sem_sendgrid_nao_sobe():
+    with pytest.raises(ValueError, match="SENDGRID_API_KEY, EMAIL_REMETENTE"):
+        _config(envio_simulado=False, envio_real_canais="email", **_PRODUCAO)
+
+
+def test_producao_com_sms_real_exige_so_as_chaves_do_sms():
+    with pytest.raises(ValueError) as erro:
+        _config(envio_simulado=False, envio_real_canais="sms", **_PRODUCAO)
+
+    mensagem = str(erro.value)
+    assert "TWILIO_SMS_FROM" in mensagem
+    assert "TWILIO_WHATSAPP_FROM" not in mensagem and "SENDGRID_API_KEY" not in mensagem
+
+
+def test_envio_real_canais_normaliza_espacos_e_maiusculas():
+    assert _config(envio_real_canais=" Email , SMS ").envio_real_canais == "email,sms"
+
+
+@pytest.mark.parametrize("valor", ["telegram", "email,fax", "", " , "])
+def test_envio_real_canais_invalido_e_recusado(valor):
+    with pytest.raises(ValueError, match="ENVIO_REAL_CANAIS"):
+        _config(envio_real_canais=valor)
+
+
+def test_modo_simulado_nao_usa_nenhum_canal_real():
+    assert _config(envio_real_canais="email").canais_envio_real == frozenset()

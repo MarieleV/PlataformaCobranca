@@ -219,7 +219,8 @@ docker stats --no-stream                       # memória e CPU por contêiner
 | Tarefa | Como |
 |---|---|
 | Atualizar segredos | Edite `~/cobranca/.env` e rode `docker compose up -d` (recria só o que mudou) |
-| Ligar o envio real | Depois do teste dos provedores: chaves do SendGrid/Twilio no `.env` e `ENVIO_SIMULADO=false`. Teste: `docker compose exec api python -m app.testar_provedores email voce@exemplo.com` |
+| Testar um provedor | `docker compose exec api python -m app.testar_provedores email voce@exemplo.com` (uma mensagem, sem tocar no banco e sem desligar o modo simulado) |
+| Ligar o envio real | `ENVIO_SIMULADO=false` e `ENVIO_REAL_CANAIS` só com os canais que têm chaves (ex.: `email`), depois `docker compose up -d`. **Só com uma base controlada**: com os e-mails fictícios dos testes, tudo volta como bounce e o SendGrid pode suspender a conta. Ver "Demonstração com envio real", abaixo |
 | Backup | Automático diário (retenção de 1 dia); snapshot manual antes de algo arriscado |
 | Créditos | Conferir o saldo no Faturamento uma vez por semana |
 | Memória no limite | Reduza `--workers` da API ou `--concurrency` do worker no `docker-compose.prod.yml`, ou suba para `t3.medium` |
@@ -238,6 +239,23 @@ docker stats --no-stream                       # memória e CPU por contêiner
 3. **Os contêineres estão saudáveis?** Por SSH: `cd ~/cobranca && docker compose ps`. Algum parado → `docker compose up -d` e `docker compose logs --tail=100 <serviço>`.
 4. **O certificado foi emitido?** `docker compose logs web | grep -i -E "certificate|acme|error"`. Falhas de ACME costumam ser IPv6 preenchido no DuckDNS ou a porta 80 fechada no security group.
 5. **A API responde por dentro?** `docker compose exec api python -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').read())"`.
+
+</details>
+
+<details>
+<summary><b>Demonstração com envio real (e-mail)</b></summary>
+<br/>
+
+Num dia útil, entre 8h e 19h55 (Brasília), fora de feriado. SMS e WhatsApp continuam simulados.
+
+1. **Snapshot do RDS** (RDS → `cobranca-db` → Ações → Tirar snapshot).
+2. **Escolha um atraso que ninguém da base tem** (ex.: 37 dias) e calcule o vencimento: dia da demo − 37 dias.
+3. **Importe um lote** só com pessoas que aceitaram receber (o seu e-mail, colegas), com esse vencimento. O modo ainda é simulado.
+4. **Na Régua:** desative as **outras regras de e-mail** e crie a regra da demo (e-mail, 37 dias, horário 08:00). **Não a ative ainda**: se ela rodar no modo simulado, o envio simulado conta como sucesso do dia (RN03) e o real não sai mais.
+5. **Confira os elegíveis** da regra da demo: só podem aparecer as pessoas do lote.
+6. **Ligue o envio real** por SSH: no `~/cobranca/.env`, `ENVIO_SIMULADO=false` e `ENVIO_REAL_CANAIS=email`; depois `docker compose up -d` e `docker compose ps` (todos *healthy*).
+7. **Ative a regra da demo.** O beat dispara em até 5 minutos. Acompanhe em Monitoramento (job e comunicações) e no SendGrid → Activity.
+8. **Depois da demo:** desative a regra, volte a `ENVIO_SIMULADO=true` e rode `docker compose up -d`.
 
 </details>
 

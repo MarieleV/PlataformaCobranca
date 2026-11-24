@@ -140,7 +140,7 @@ Login: `admin@consulth.com.br` / `admin123`. Em produção o seed usa `ADMIN_SEN
 | Segurança | `JWT_SECRET`, `ENCRYPTION_KEY` | A `ENCRYPTION_KEY` cifra o valor das dívidas: perdê-la é perder os valores |
 | Sessão | `CORS_ORIGINS`, `COOKIE_SECURE`, `COOKIE_SAMESITE`, `REFRESH_COOKIE_PATH` | Nunca use `*` em `CORS_ORIGINS` (há credenciais) |
 | Régua | `MAX_TENTATIVAS_ENVIO`, `INTERVALO_REENVIO_MINUTOS`, `JANELA_INICIO_HORA`, `JANELA_FIM_HORA` | Padrões do RFC: 4 tentativas, 30 min, 8h às 20h |
-| Provedores | `SENDGRID_API_KEY`, `EMAIL_REMETENTE`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM`, `ENVIO_SIMULADO` | Com `ENVIO_SIMULADO=false` em produção, todas as chaves são obrigatórias |
+| Provedores | `SENDGRID_API_KEY`, `EMAIL_REMETENTE`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_SMS_FROM`, `TWILIO_WHATSAPP_FROM`, `ENVIO_SIMULADO`, `ENVIO_REAL_CANAIS` | Com `ENVIO_SIMULADO=false`, só os canais de `ENVIO_REAL_CANAIS` (padrão: os três) usam o provedor real; os outros continuam simulados. Em produção, só as chaves desses canais são obrigatórias |
 | Opcionais | `METRICS_TOKEN`, `FERIADOS_EXTRAS`, `FERIADOS_FACULTATIVOS`, `ADMIN_EMAIL`, `ADMIN_SENHA_INICIAL`, `GRAFANA_ADMIN_PASSWORD` | `METRICS_TOKEN` exige `Authorization: Bearer` no `/metrics` |
 
 Com `ENVIRONMENT=production`, a API **se recusa a subir** sem `COOKIE_SECURE=true`, sem `sslmode=require` no banco ou com a senha padrão do administrador.
@@ -261,7 +261,7 @@ docker compose exec api python -m app.testar_provedores sms 47999990000
 docker compose exec api python -m app.testar_provedores whatsapp 47999990000
 ```
 
-Só depois de validar troque para `ENVIO_SIMULADO=false`.
+Só depois de validar troque para `ENVIO_SIMULADO=false`. Para ligar só alguns canais, use `ENVIO_REAL_CANAIS` (ex.: `ENVIO_REAL_CANAIS=email`: SendGrid real, SMS e WhatsApp simulados). Em produção, a API só exige as chaves dos canais listados.
 
 > [!NOTE]
 > No modo simulado, e-mail começando com `bounce` ou telefone terminando em `0000` gera *bounce*; e-mail começando com `falha` ou telefone terminando em `9999` gera falha temporária (com reenvio). Os demais contatos são "enviados".

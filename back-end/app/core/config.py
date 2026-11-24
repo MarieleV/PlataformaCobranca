@@ -14,6 +14,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Usado apenas em desenvolvimento/testes quando JWT_SECRET não é informado.
 _JWT_SECRET_DEV = "dev-only-secret-nao-use-em-producao-0123456789"
 
+# Variáveis de ambiente que cada canal precisa para usar o provedor real.
+CREDENCIAIS_POR_CANAL: dict[str, tuple[str, ...]] = {
+    "email": ("SENDGRID_API_KEY", "EMAIL_REMETENTE"),
+    "sms": ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_SMS_FROM"),
+    "whatsapp": ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"),
+}
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -89,6 +96,10 @@ class Settings(BaseSettings):
     # Modo simulado: não chama SendGrid/Twilio, só finge o envio. É o padrão para
     # nunca mandar cobrança de verdade por engano. Em produção, ENVIO_SIMULADO=false.
     envio_simulado: bool = True
+    # Com ENVIO_SIMULADO=false, só estes canais usam o provedor real; os demais
+    # continuam simulados (ex.: "email" = SendGrid real, SMS/WhatsApp simulados).
+    # Só são exigidas as credenciais dos canais listados.
+    envio_real_canais: str = "email,sms,whatsapp"
     email_assunto: str = "Comunicado de cobrança"
     sendgrid_api_key: str = ""
     email_remetente: str = ""
@@ -127,6 +138,26 @@ class Settings(BaseSettings):
                     )
         return valor
 
+    @field_validator("envio_real_canais")
+    @classmethod
+    def _validar_envio_real_canais(cls, valor: str) -> str:
+        canais = [c.strip().lower() for c in valor.split(",") if c.strip()]
+        invalidos = [c for c in canais if c not in CREDENCIAIS_POR_CANAL]
+        if invalidos:
+            raise ValueError(
+                f"ENVIO_REAL_CANAIS: canal inválido '{invalidos[0]}' (use email, sms e/ou whatsapp)."
+            )
+        if not canais:
+            raise ValueError("ENVIO_REAL_CANAIS precisa de ao menos um canal (email, sms ou whatsapp).")
+        return ",".join(canais)
+
+    @property
+    def canais_envio_real(self) -> frozenset[str]:
+        """Canais que usam o provedor real. Vazio no modo simulado."""
+        if self.envio_simulado:
+            return frozenset()
+        return frozenset(self.envio_real_canais.split(","))
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
@@ -152,17 +183,16 @@ class Settings(BaseSettings):
                 raise ValueError("ENCRYPTION_KEY é obrigatória em produção.")
             if not self.cookie_secure:
                 raise ValueError("COOKIE_SECURE deve ser true em produção.")
-            if not self.envio_simulado and not (
-                self.sendgrid_api_key
-                and self.email_remetente
-                and self.twilio_account_sid
-                and self.twilio_auth_token
-                and self.twilio_sms_from
-                and self.twilio_whatsapp_from
-            ):
+            faltando = [
+                nome
+                for canal in sorted(self.canais_envio_real)
+                for nome in CREDENCIAIS_POR_CANAL[canal]
+                if not getattr(self, nome.lower())
+            ]
+            if faltando:
                 raise ValueError(
-                    "ENVIO_SIMULADO=false exige SENDGRID_API_KEY, EMAIL_REMETENTE, "
-                    "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_SMS_FROM e TWILIO_WHATSAPP_FROM."
+                    f"ENVIO_SIMULADO=false com ENVIO_REAL_CANAIS={self.envio_real_canais} exige "
+                    f"{', '.join(dict.fromkeys(faltando))}."
                 )
             if self.database_exige_ssl and make_url(self.database_url).query.get(
                 "sslmode"
