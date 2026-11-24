@@ -1,6 +1,12 @@
 # Atualização automática de dependências (pendência do RFC 8.3).
 # Os PRs vão para a develop (git-flow) e passam pelo mesmo CI dos PRs normais.
 # Mensal e agrupado por ecossistema, para não encher a fila de PRs.
+#
+# Versões maiores (major) ficam de fora em pip, npm e Docker: costumam quebrar
+# compatibilidade (ex.: TypeScript 7 é recusado pelo typescript-eslint 8, e o
+# Node do Dockerfile precisa ser o mesmo do CI, a LTS 22). Elas são feitas à
+# mão, numa feature/*, quando fizer sentido. O Dependabot lê este arquivo da
+# branch padrão (main): a mudança só vale depois de chegar lá.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -11,6 +17,9 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       back-end:
         patterns: ["*"]
@@ -23,6 +32,9 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       front-end:
         patterns: ["*"]
@@ -45,3 +57,6 @@ updates:
       interval: monthly
     commit-message:
       prefix: "build(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
