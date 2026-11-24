@@ -34,11 +34,11 @@ jobs:
     name: Testes e SonarCloud
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # o SonarCloud precisa do histórico completo
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -91,8 +91,8 @@ jobs:
       run:
         working-directory: back-end
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -111,7 +111,7 @@ jobs:
     name: Build da imagem Docker
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Construir a imagem da API
         run: docker build --tag cobranca-api:ci back-end
       - name: Construir a imagem do front-end (Vite + Caddy)
@@ -132,8 +132,8 @@ jobs:
       run:
         working-directory: front-end
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -164,7 +164,7 @@ jobs:
     env:
       IMAGE_TAG: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Nome do registro (o GHCR exige minúsculas)
         run: echo "REGISTRO=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
