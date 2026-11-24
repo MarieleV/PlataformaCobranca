@@ -1,0 +1,47 @@
+# Atualização automática de dependências (pendência do RFC 8.3).
+# Os PRs vão para a develop (git-flow) e passam pelo mesmo CI dos PRs normais.
+# Mensal e agrupado por ecossistema, para não encher a fila de PRs.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /back-end
+    target-branch: develop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      back-end:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /front-end
+    target-branch: develop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      front-end:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directories: [/back-end, /front-end]
+    target-branch: develop
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "build(deps)"

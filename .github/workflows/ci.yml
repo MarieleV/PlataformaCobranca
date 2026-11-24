@@ -56,8 +56,10 @@ jobs:
 
       # O plano gratuito do SonarCloud só informa o Quality Gate da branch
       # principal (main) e de pull requests; nas demais branches rodam só os testes.
+      # PRs do Dependabot não recebem os segredos do repositório (SONAR_TOKEN),
+      # então pulam a análise; os testes rodam normalmente.
       - name: Análise do SonarCloud e Quality Gate
-        if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+        if: (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

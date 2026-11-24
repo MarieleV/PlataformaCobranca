@@ -149,7 +149,7 @@ Pontos de controle:
 | Credenciais padrão | O administrador inicial de produção é criado com senha própria (o *seed* recusa a senha de desenvolvimento) e a senha foi trocada após o primeiro acesso | — |
 | Acesso ao servidor | SSH apenas por chave (sem senha) | — |
 | Auditoria com IP real | O proxy repassa o IP do usuário à API, usado no bloqueio de tentativas de login e no log de auditoria | RN06 / RF11 |
-| Envio real desligado | `ENVIO_SIMULADO=true` até o teste dos provedores: nenhuma mensagem real é disparada a partir dos dados fictícios | — |
+| Envio real sob controle | `ENVIO_SIMULADO=true` no dia a dia: nenhuma mensagem real sai a partir dos dados fictícios. O envio real é ligado só para demonstrações, com base controlada e por canal (`ENVIO_REAL_CANAIS`), e a API só exige as chaves dos canais ligados. A chave fica no servidor, não na tela: um clique errado não dispara cobrança real | — |
 
 ---
 
@@ -192,7 +192,8 @@ Pontos de controle:
 - **Instância única.** Uma só EC2 e banco Single-AZ: uma falha da máquina ou da zona tira o sistema do ar até a recuperação. Adequado para o TCC; uso real pediria múltiplas zonas.
 - **Observabilidade fora da produção.** Prometheus e Grafana não foram implantados na AWS para não disputar a memória da `t3.small`; as métricas são demonstradas no ambiente local.
 - **CPU com créditos.** No modo Padrão, a `t3.small` fica mais lenta quando esgota os créditos de CPU; testes de carga longos contra produção podem medir essa limitação, e não a aplicação.
-- **Disparos reais pendentes.** O envio por SendGrid/Twilio está desligado até a validação dos provedores.
+- **Disparos reais.** O SendGrid foi validado em produção em 24/11/2026 (e-mail de teste recebido) e é ligado só em demonstrações, com base controlada. SMS e WhatsApp (Twilio) seguem simulados: a conta Twilio não foi configurada, e o WhatsApp em produção exige templates aprovados pela Meta.
+- **Status "entregue".** Depende de webhooks dos provedores, não implementados: "enviado" significa aceito pelo provedor.
 - **Domínio gratuito.** O DuckDNS atende ao TCC; uso real pediria domínio próprio.
 
 ---
@@ -214,3 +215,5 @@ Capturas sugeridas (não incluem segredos; antes de capturar, confira que nenhum
 | 9 | Serviços saudáveis | Terminal SSH na EC2: `docker compose ps` |
 | 10 | Imagens publicadas | GitHub → perfil → Packages (`cobranca-api`, `cobranca-web`) |
 | 11 | Orçamento configurado | Console AWS → Billing → Budgets |
+| 12 | E-mail real entregue pelo SendGrid | SendGrid → Activity, filtrado pelo e-mail do teste (status *Delivered*); de preferência o envio da demonstração com a régua, não só o do `testar_provedores` |
+| 13 | E-mail recebido | Caixa de entrada com a mensagem da régua (oculte o endereço pessoal, se quiser) |

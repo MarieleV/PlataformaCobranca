@@ -8,7 +8,8 @@ __all__ = ["ClienteCanal", "ResultadoEnvio", "StatusEnvio", "obter_cliente"]
 
 
 def obter_cliente(canal: CanalEnum) -> ClienteCanal:
-    if settings.envio_simulado:
+    # Simulado: ENVIO_SIMULADO=true ou canal fora de ENVIO_REAL_CANAIS
+    if canal.value not in settings.canais_envio_real:
         return ClienteSimulado(canal.value)
 
     # Imports tardios: o httpx só é necessário no modo real

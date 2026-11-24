@@ -674,11 +674,13 @@ Detalhes da produção em [`DEPLOY.md`](./DEPLOY.md).
 
 ### 8.3 Pendências conhecidas
 
-- [ ] **Provedores reais:** validar SendGrid e Twilio com chaves reais (o sistema roda em modo simulado).
+- [x] **E-mail real (SendGrid):** validado em produção em 24/11/2026 (mensagem de teste recebida). O envio real é ligado por canal (`ENVIO_SIMULADO=false` + `ENVIO_REAL_CANAIS`), só para demonstrações com base controlada.
+- [ ] **SMS e WhatsApp reais (Twilio):** conta não configurada; os dois canais seguem no modo simulado.
 - [x] **RNF01/RNF02:** teste de carga executado em 23/11/2026 (100 usuários, P95 de 99 ms, 0% de falhas, ambiente local; [resultados](../carga/README.md#resultados)).
 - [x] **RNF03:** lote de 50.000 registros processado em 115,7 s (~25.900 registros/min), 0 rejeitados, em 23/11/2026 ([resultados](../carga/README.md#rnf03-lote-de-50000-registros)).
 - [ ] **Retenção da auditoria:** a proposta previa logs por 90 dias com anonimização posterior; hoje os registros são mantidos sem expurgo automático.
-- [ ] **CSP e Dependabot:** o cabeçalho `Content-Security-Policy` e a atualização automática de dependências não foram configurados.
+- [x] **Dependabot:** configurado em 24/11/2026 (`.github/dependabot.yml`): atualização mensal de pip, npm, GitHub Actions e imagens Docker, com PRs para a `develop` passando pelo CI.
+- [ ] **CSP:** o cabeçalho `Content-Security-Policy` não foi configurado (os demais cabeçalhos de segurança estão no Caddy).
 - [ ] **Status `entregue`:** depende de webhooks dos provedores; hoje "enviado" significa aceito pelo provedor.
 - [ ] **WhatsApp em produção:** exige templates aprovados pela Meta para mensagens iniciadas pela empresa.
 

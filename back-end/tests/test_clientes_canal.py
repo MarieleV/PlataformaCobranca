@@ -79,6 +79,25 @@ def test_modo_real_entrega_os_clientes_de_verdade(monkeypatch):
     assert isinstance(obter_cliente(CanalEnum.whatsapp), WhatsAppClient)
 
 
+def test_envio_real_so_nos_canais_listados(monkeypatch):
+    """ENVIO_REAL_CANAIS=email: SendGrid real, SMS e WhatsApp continuam simulados."""
+    monkeypatch.setattr(settings, "envio_simulado", False)
+    monkeypatch.setattr(settings, "envio_real_canais", "email")
+    monkeypatch.setattr(settings, "sendgrid_api_key", "SG.chave")
+    monkeypatch.setattr(settings, "email_remetente", "cobranca@empresa.com")
+
+    assert isinstance(obter_cliente(CanalEnum.email), EmailClient)
+    assert isinstance(obter_cliente(CanalEnum.sms), ClienteSimulado)
+    assert isinstance(obter_cliente(CanalEnum.whatsapp), ClienteSimulado)
+
+
+def test_envio_simulado_ignora_a_lista_de_canais_reais(monkeypatch):
+    monkeypatch.setattr(settings, "envio_simulado", True)
+    monkeypatch.setattr(settings, "envio_real_canais", "email")
+
+    assert isinstance(obter_cliente(CanalEnum.email), ClienteSimulado)
+
+
 # --------------------------------------------------------------------------
 # SendGrid
 # --------------------------------------------------------------------------
