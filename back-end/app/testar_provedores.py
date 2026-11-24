@@ -16,18 +16,13 @@ import sys
 from collections.abc import Callable
 
 from app.clients.base import ClienteCanal, StatusEnvio
+from app.core.config import CREDENCIAIS_POR_CANAL as _FALTAM
 from app.core.config import settings
 
 TEXTO = (
     "TESTE da Plataforma de Cobrança: esta mensagem verifica a integração com o "
     "provedor. Pode ignorar."
 )
-
-_FALTAM = {
-    "email": ("SENDGRID_API_KEY", "EMAIL_REMETENTE"),
-    "sms": ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_SMS_FROM"),
-    "whatsapp": ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_FROM"),
-}
 
 
 def _ausentes(canal: str) -> list[str]:
