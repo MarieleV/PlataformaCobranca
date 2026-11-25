@@ -20,6 +20,10 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # O Celery 5.7 fixa python-dateutil==2.9.0.post0 e o projeto usa a 3.0.0:
+      # o pip não instala os dois juntos. Rever quando sair uma versão sem essa trava.
+      - dependency-name: celery
+        versions: [">=5.7.0"]
     groups:
       back-end:
         patterns: ["*"]
