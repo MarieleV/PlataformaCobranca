@@ -359,7 +359,8 @@ PlataformaCobranca/
 - [x] CI/CD com Quality Gate e deploy na AWS
 - [x] Filtro de devedores por canal de contato (RF05)
 - [x] Requisitos de desempenho comprovados com teste de carga: 100 usuários com P95 de 75–99 ms e 0% de falhas; lote de 50.000 registros em 116 s ([resultados](./carga/README.md#resultados))
-- [ ] Validação com os provedores reais (SendGrid e Twilio)
+- [x] Envio real de e-mail pelo SendGrid, validado em produção e ligado por canal (`ENVIO_REAL_CANAIS`)
+- [ ] SMS e WhatsApp reais pela Twilio
 - [ ] Webhooks de confirmação de entrega (`entregue`)
 - [ ] Templates aprovados do WhatsApp Business
 
